@@ -1,0 +1,17 @@
+name: gedi_subset
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - boto3
+  - cachetools
+  - gdal>=3.4
+  - geopandas
+  - h5py
+  - returns
+  - shapely
+  - typer
+  - pip
+  - pip:
+      - git+https://github.com/MAAP-Project/maap-py.git#egg=maappy
