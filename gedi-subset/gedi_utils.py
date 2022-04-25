@@ -9,6 +9,7 @@ import h5py
 import numpy as np
 import pandas as pd
 import requests
+from fp import K
 from maap.Result import Granule
 from returns.curry import curry, partial
 from returns.functions import identity
@@ -18,8 +19,6 @@ from returns.pipeline import flow
 from returns.pointfree import bimap, bind_ioresult, map_
 from shapely.geometry import Polygon
 from shapely.geometry.base import BaseGeometry
-
-from fp import K
 
 # Suppress UserWarning: The Shapely GEOS version (3.10.2-CAPI-1.16.0) is incompatible
 # with the GEOS version PyGEOS was compiled with (3.8.1-CAPI-1.13.3). Conversions
@@ -116,9 +115,7 @@ def gdf_to_file(
     props = dict(props, mode="w") if mode == "a" and not os.path.exists(file) else props
 
     logger.debug(
-        f"Empty GeoDataFrame; not writing {file}"
-        if gdf.empty
-        else f"Writing to {file}"
+        f"Empty GeoDataFrame; not writing {file}" if gdf.empty else f"Writing to {file}"
     )
 
     return (

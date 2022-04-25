@@ -1,21 +1,30 @@
+"""Functions providing convenience and safety for maap-py classes and methods.
+
+Collection functions:
+
+- find_collection attempts to find a single collection
+
+Granule functions:
+
+- download_granule attempts to download a granule file
+"""
+
 import logging
 import operator
-from typing import Mapping, TYPE_CHECKING
+from typing import TYPE_CHECKING, Mapping
 
 import boto3
-from cachetools import cached, FIFOCache
+from cachetools import FIFOCache, cached
 from cachetools.func import ttl_cache
+from fp import K
 from maap.maap import MAAP
 from maap.Result import Collection, Granule
 from returns.curry import partial
-from returns.functions import tap
 from returns.io import IOFailure, IOResultE, impure_safe
 from returns.maybe import Maybe, Nothing, Some, maybe
 from returns.pipeline import flow
-from returns.pointfree import bind, bind_ioresult, bind_result, lash, map_
+from returns.pointfree import bind, bind_result, lash, map_
 from returns.result import safe
-
-from fp import K
 
 if TYPE_CHECKING:
     from maap.AWS import AWSCredentials
@@ -67,7 +76,15 @@ def _setup_default_boto3_session(creds: "AWSCredentials") -> boto3.session.Sessi
 
 
 def download_granule(maap: MAAP, todir: str, granule: Granule) -> IOResultE[str]:
-    """Downloads a granule's data file."""
+    """Downloads a granule's data file.
+
+    Automatically fetches S3 credentials appropriate for `granule`, based upon
+    it's S3 URL, and automatically refreshes credentials before expiry.
+
+    Return `IOSuccess[str]` containing the absolute path of the downloaded file
+    upon success; otherwise return `IOFailure[Exception]` containing the reason
+    for failure.
+    """
     ur: str = granule["Granule"]["GranuleUR"]
 
     flow(
@@ -88,6 +105,12 @@ def find_collection(
     cmr_host: str,
     params: Mapping[str, str],
 ) -> IOResultE[Collection]:
+    """Find a collection matching search parameters.
+
+    Return `IOSuccess[Collection]` containing the collection upon successful
+    search; otherwise return `IOFailure[Exception]` containing the reason for
+    failure, which is a `ValueError` when there is no matching collection.
+    """
     return flow(
         impure_safe(maap.searchCollection)(cmr_host=cmr_host, **dict(params, limit=1)),
         bind_result(safe(operator.itemgetter(0))),

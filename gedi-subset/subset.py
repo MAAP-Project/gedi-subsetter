@@ -11,20 +11,8 @@ from pathlib import Path
 from typing import Any, Iterable, Tuple
 
 import geopandas as gpd
+import osx
 import typer
-from maap.maap import MAAP
-from maap.Result import Granule
-from returns.curry import partial
-from returns.functions import raise_exception, tap
-from returns.io import IO, IOResultE, IOSuccess, impure_safe
-from returns.iterables import Fold
-from returns.maybe import Maybe, Some, Nothing
-from returns.methods import unwrap_or_failure
-from returns.pipeline import flow, is_successful, pipe
-from returns.pointfree import bind_ioresult, lash, map_
-from returns.result import Failure, Success
-from returns.unsafe import unsafe_perform_io
-
 from fp import K, filter, map
 from gedi_utils import (
     append_gdf_file,
@@ -34,7 +22,19 @@ from gedi_utils import (
     granule_intersects,
     subset_h5,
 )
+from maap.maap import MAAP
+from maap.Result import Granule
 from maapx import download_granule, find_collection
+from returns.curry import partial
+from returns.functions import raise_exception, tap
+from returns.io import IO, IOResultE, IOSuccess, impure_safe
+from returns.iterables import Fold
+from returns.maybe import Maybe, Nothing, Some
+from returns.methods import unwrap_or_failure
+from returns.pipeline import flow, is_successful, pipe
+from returns.pointfree import bind_ioresult, cond, lash, map_
+from returns.result import Failure, Success
+from returns.unsafe import unsafe_perform_io
 
 
 class CMRHost(str, Enum):
@@ -54,7 +54,6 @@ class ProcessGranuleProps:
     maap: MAAP
     aoi_gdf: gpd.GeoDataFrame
     output_directory: Path
-    overwrite: bool
 
 
 def cpu_count() -> int:
@@ -66,7 +65,7 @@ def cpu_count() -> int:
 
 
 @impure_safe
-def process_granule(props: ProcessGranuleProps) -> Maybe[str]:
+def process_granule(props: ProcessGranuleProps) -> IOResultE[Maybe[str]]:
     filter_cols = [
         "agbd",
         "agbd_se",
@@ -82,15 +81,15 @@ def process_granule(props: ProcessGranuleProps) -> Maybe[str]:
 
     logger.debug(f"Subsetting {inpath} to {outpath}")
 
-    if props.overwrite or not os.path.exists(outpath):
-        flow(
-            subset_h5(inpath, props.aoi_gdf, filter_cols),
-            df_assign("filename", inpath),
-            gdf_to_file(outpath, dict(index=False, driver="FlatGeobuf")),
-            lash(raise_exception),
-        )
+    flow(
+        subset_h5(inpath, props.aoi_gdf, filter_cols),
+        df_assign("filename", inpath),
+        gdf_to_file(outpath, dict(index=False, driver="FlatGeobuf")),
+        bind_ioresult(lambda _: osx.remove(inpath)),
+        lash(raise_exception),
+    )
 
-    return Some(outpath) if os.path.exists(outpath) else Nothing
+    return osx.exists(outpath).bind(cond(Maybe, outpath))
 
 
 def init_process(logging_level: int) -> None:
@@ -107,7 +106,6 @@ def subset_granules(
     aoi_gdf: gpd.GeoDataFrame,
     output_directory: Path,
     dest: Path,
-    overwrite: bool,
     init_args: Tuple[Any, ...],
     granules: Iterable[Granule],
 ) -> IOResultE[Tuple[str, ...]]:
@@ -118,7 +116,7 @@ def subset_granules(
     logger.info(f"Subsetting on {processes} processes (chunksize={chunksize})")
 
     props = (
-        ProcessGranuleProps(granule, maap, aoi_gdf, output_directory, overwrite)
+        ProcessGranuleProps(granule, maap, aoi_gdf, output_directory)
         for granule in granules
     )
 
@@ -129,6 +127,7 @@ def subset_granules(
             map(map_(unwrap_or_failure)),
             map(tap(map_(pipe(f"Appending {{}} to {dest}".format, logger.debug)))),
             map(bind_ioresult(partial(append_gdf_file, dest))),
+            map(bind_ioresult(lambda src: osx.remove(src).map(K(src)))),
             partial(Fold.collect, acc=IOSuccess(())),
         )
 
@@ -169,10 +168,6 @@ def main(
         readable=True,
         resolve_path=True,
     ),
-    overwrite: bool = typer.Option(
-        False,
-        help="Overwrite individual subset files",
-    ),
     verbose: bool = typer.Option(False, help="Provide verbose output"),
 ) -> None:
     logging_level = logging.DEBUG if verbose else logging.INFO
@@ -185,7 +180,7 @@ def main(
     # testing.  When running in the context of a DPS job, there
     # should be no existing file since every job uses a unique
     # output directory.
-    impure_safe(os.remove)(dest)
+    osx.remove(dest)
 
     maap = MAAP("api.ops.maap-project.org")
 
@@ -206,7 +201,6 @@ def main(
             aoi_gdf,
             output_directory,
             dest,
-            overwrite,
             (logging_level,),
             filter(partial(granule_intersects, aoi_gdf.geometry[0]))(granules),
         )
