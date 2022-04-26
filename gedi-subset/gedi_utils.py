@@ -3,20 +3,15 @@ import logging
 import os
 import os.path
 import warnings
-from typing import Any, Callable, Iterable, Mapping, Optional, Sequence, TypeVar, Union
+from typing import Any, Callable, Mapping, Sequence, TypeVar, Union
 
 import h5py
 import numpy as np
 import pandas as pd
 import requests
-from fp import K
 from maap.Result import Granule
-from returns.curry import curry, partial
-from returns.functions import identity
-from returns.io import IOFailure, IOResult, IOResultE, IOSuccess, impure_safe
-from returns.iterables import Fold
-from returns.pipeline import flow
-from returns.pointfree import bimap, bind_ioresult, map_
+from returns.curry import curry
+from returns.io import IOResultE, impure_safe
 from shapely.geometry import Polygon
 from shapely.geometry.base import BaseGeometry
 
@@ -49,20 +44,6 @@ def chext(ext: str, path: str) -> str:
     return f"{os.path.splitext(path)[0]}{ext}"
 
 
-# (_T -> None) -> Iterable _T -> None
-@curry
-def for_each(f: Callable[[_T], None], xs: Iterable[_T]) -> None:
-    """Applies a function to every element of an iterable."""
-    for x in xs:
-        f(x)
-
-
-# (_A -> bool) -> (_A -> _B) -> _A -> _A | _B
-@curry
-def when(pred: Callable[[_A], bool], f: Callable[[_A], _B], a: _A) -> Union[_A, _B]:
-    return f(a) if pred(a) else a
-
-
 # (_B -> _C -> _D) -> (_A -> _B) -> (_A -> _C) -> (_A -> _D)
 @curry
 def converge(
@@ -93,17 +74,6 @@ def append_message(extra_message: str, e: Exception) -> Exception:
     return e
 
 
-def granule_downloader(
-    dest_dir: str, *, overwrite=False
-) -> Callable[[Granule], Optional[str]]:
-    os.makedirs(dest_dir, exist_ok=True)
-
-    def download_granule(granule: Granule) -> Optional[str]:
-        return granule.getData(dest_dir, overwrite)
-
-    return download_granule
-
-
 @curry
 def gdf_to_file(
     file: Union[str, os.PathLike], props: Mapping[str, Any], gdf: gpd.GeoDataFrame
@@ -114,51 +84,20 @@ def gdf_to_file(
     mode = props.get("mode")
     props = dict(props, mode="w") if mode == "a" and not os.path.exists(file) else props
 
-    logger.debug(
-        f"Empty GeoDataFrame; not writing {file}" if gdf.empty else f"Writing to {file}"
-    )
-
-    return (
-        IOSuccess(None)
-        if gdf.empty
-        else impure_safe(gdf.to_file)(file, **props).alt(
-            lambda e: e
-            if f"{file}" in f"{e}"
-            else append_message(f"writing to {file}", e)
-        )
-    )
+    return impure_safe(gdf.to_file)(file, **props)
 
 
 @curry
-def append_gdf_file(
-    dest: Union[str, os.PathLike],
-    src: Union[str, os.PathLike],
-) -> IOResultE[Union[str, os.PathLike]]:
-    to_file_options = {"index": False, "mode": "a", "driver": "GPKG"}
-
-    return flow(
-        src,
-        impure_safe(gpd.read_file),
-        bind_ioresult(partial(gdf_to_file, dest, to_file_options)),
-        map_(K(src)),
-    )
-
-
-@curry
-def combine_gdf_files(
-    dest: Union[str, os.PathLike], srcs: Iterable[Union[str, os.PathLike]]
+def gdf_to_parquet(
+    path: Union[str, os.PathLike], gdf: gpd.GeoDataFrame
 ) -> IOResultE[None]:
-    return flow(
-        srcs,
-        partial(map, append_gdf_file(dest)),
-        partial(map, IOResult.swap),
-        partial(Fold.collect_all, acc=IOSuccess(())),
-        bind_ioresult(
-            lambda errors: (
-                IOFailure(tuple(map(str, errors))) if len(errors) else IOSuccess(None)
-            )
-        ),
-    )
+    """Write a GeoDataFrame to the Parquet format."""
+    return impure_safe(gdf.to_parquet)(path)
+
+
+def gdf_read_parquet(path: Union[str, os.PathLike[str]]) -> IOResultE[gpd.GeoDataFrame]:
+    """Read a Parquet object from a file path and return it as a GeoDataFrame."""
+    return impure_safe(gpd.read_parquet)(path)
 
 
 def get_geo_boundary(iso: str, level: int) -> gpd.GeoDataFrame:

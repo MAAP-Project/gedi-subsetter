@@ -2,8 +2,9 @@ boto3
 cachetools
 geopandas
 h5py
-returns
 pip
+pyarrow
+returns
 shapely
 typer
 git+https://github.com/MAAP-Project/maap-py.git#egg=maappy

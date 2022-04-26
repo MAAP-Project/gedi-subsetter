@@ -9,6 +9,7 @@ dependencies:
   - gdal>=3.4
   - geopandas
   - h5py
+  - pyarrow
   - returns
   - shapely
   - typer

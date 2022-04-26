@@ -1,10 +1,9 @@
-#!/usr/bin/env -S python -W ignore::FutureWarning
+#!/usr/bin/env -S python -W ignore::FutureWarning -W ignore::UserWarning
 
 import logging
 import multiprocessing
 import os
 import os.path
-import sys
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -15,10 +14,11 @@ import osx
 import typer
 from fp import K, filter, map
 from gedi_utils import (
-    append_gdf_file,
     chext,
     df_assign,
+    gdf_read_parquet,
     gdf_to_file,
+    gdf_to_parquet,
     granule_intersects,
     subset_h5,
 )
@@ -30,9 +30,8 @@ from returns.functions import raise_exception, tap
 from returns.io import IO, IOResultE, IOSuccess, impure_safe
 from returns.iterables import Fold
 from returns.maybe import Maybe, Nothing, Some
-from returns.methods import unwrap_or_failure
 from returns.pipeline import flow, is_successful, pipe
-from returns.pointfree import bind_ioresult, cond, lash, map_
+from returns.pointfree import bind, bind_ioresult, lash, map_
 from returns.result import Failure, Success
 from returns.unsafe import unsafe_perform_io
 
@@ -49,23 +48,35 @@ logger = logging.getLogger("gedi_subset")
 
 
 @dataclass
-class ProcessGranuleProps:
+class SubsetGranuleProps:
+    """Properties for calling `subset_granule` with a single argument.
+
+    Since `multiprocessing.Pool.imap_unordered` does not support supplying
+    multiple iterators (like `builtins.map` does) for producing muliple
+    arguments to the supplied function, we must package all "arguments" into a
+    single argument.
+    """
+
     granule: Granule
     maap: MAAP
     aoi_gdf: gpd.GeoDataFrame
-    output_directory: Path
-
-
-def cpu_count() -> int:
-    if sys.platform == "darwin":
-        return os.cpu_count() or 1
-    if sys.platform == "linux":
-        return len(os.sched_getaffinity(0))
-    return 1
+    output_dir: Path
 
 
 @impure_safe
-def process_granule(props: ProcessGranuleProps) -> IOResultE[Maybe[str]]:
+def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
+    """Subset a granule to a GeoParquet file and return the output path.
+
+    Download the specified granule (`props.granule`) obtained from a CMR search
+    to the specified directory (`props.output_dir`), subset it to a GeoParquet
+    file where it overlaps with the specified AOI (`props.aoi_gdf`), remove the
+    downloaded granule file, and return the path to the output file.
+
+    Return `Nothing` if the subset is empty (in which case no GeoParquet file
+    was written), otherwise `Some[str]` indicating the output path of the
+    GeoParquet file.
+    """
+
     filter_cols = [
         "agbd",
         "agbd_se",
@@ -74,22 +85,22 @@ def process_granule(props: ProcessGranuleProps) -> IOResultE[Maybe[str]]:
         "lat_lowestmode",
         "lon_lowestmode",
     ]
-    outdir = str(props.output_directory)
-    io_result = download_granule(props.maap, outdir, props.granule)
+    io_result = download_granule(props.maap, str(props.output_dir), props.granule)
     inpath = unsafe_perform_io(io_result.alt(raise_exception).unwrap())
-    outpath = chext(".fgb", inpath)
 
-    logger.debug(f"Subsetting {inpath} to {outpath}")
+    logger.debug(f"Subsetting {inpath}")
+    gdf = df_assign("filename", inpath, subset_h5(inpath, props.aoi_gdf, filter_cols))
+    osx.remove(inpath)
 
-    flow(
-        subset_h5(inpath, props.aoi_gdf, filter_cols),
-        df_assign("filename", inpath),
-        gdf_to_file(outpath, dict(index=False, driver="FlatGeobuf")),
-        bind_ioresult(lambda _: osx.remove(inpath)),
-        lash(raise_exception),
-    )
+    if gdf.empty:
+        logger.debug(f"Empty subset produced from {inpath}; not writing")
+        return Nothing
 
-    return osx.exists(outpath).bind(cond(Maybe, outpath))
+    outpath = chext(".gpq", inpath)
+    logger.debug(f"Writing subset to {outpath}")
+    gdf_to_parquet(outpath, gdf).alt(raise_exception)
+
+    return Some(outpath)
 
 
 def init_process(logging_level: int) -> None:
@@ -104,30 +115,44 @@ def set_logging_level(logging_level: int) -> None:
 def subset_granules(
     maap: MAAP,
     aoi_gdf: gpd.GeoDataFrame,
-    output_directory: Path,
+    output_dir: Path,
     dest: Path,
     init_args: Tuple[Any, ...],
     granules: Iterable[Granule],
 ) -> IOResultE[Tuple[str, ...]]:
+    def subset_saved(path: IOResultE[Maybe[str]]) -> bool:
+        """Return `True` if `path`'s value is a `Some`, otherwise `False` if it
+        is `Nothing`.  This indicates whether or not a subset file was written
+        (and thus whether or not the subset was empty).
+        """
+        return unsafe_perform_io(map_(is_successful)(path).unwrap())
+
+    def append_subset(src: str) -> IOResultE[str]:
+        to_file_props = dict(index=False, mode="a", driver="GPKG")
+        logger.debug(f"Appending {src} to {dest}")
+
+        return flow(
+            gdf_read_parquet(src),
+            bind_ioresult(partial(gdf_to_file, dest, to_file_props)),
+            tap(K(osx.remove(src))),
+            map_(K(src)),
+        )
+
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool.imap
     chunksize = 10
     processes = os.cpu_count()
+    payloads = (
+        SubsetGranuleProps(granule, maap, aoi_gdf, output_dir) for granule in granules
+    )
 
     logger.info(f"Subsetting on {processes} processes (chunksize={chunksize})")
 
-    props = (
-        ProcessGranuleProps(granule, maap, aoi_gdf, output_directory)
-        for granule in granules
-    )
-
     with multiprocessing.Pool(processes, init_process, init_args) as pool:
         return flow(
-            pool.imap_unordered(process_granule, props, chunksize),
-            filter(lambda r: map_(is_successful)(r) == IOSuccess(True)),
-            map(map_(unwrap_or_failure)),
-            map(tap(map_(pipe(f"Appending {{}} to {dest}".format, logger.debug)))),
-            map(bind_ioresult(partial(append_gdf_file, dest))),
-            map(bind_ioresult(lambda src: osx.remove(src).map(K(src)))),
+            pool.imap_unordered(subset_granule, payloads, chunksize),
+            map(lash(raise_exception)),  # Fail fast (if subsetting errored out)
+            filter(subset_saved),  # Skip granules that produced empty subsets
+            map(bind(bind(append_subset))),  # Append non-empty subset
             partial(Fold.collect, acc=IOSuccess(())),
         )
 
@@ -156,7 +181,7 @@ def main(
         10_000,
         help="Maximum number of granules to subset",
     ),
-    output_directory: Path = typer.Option(
+    output_dir: Path = typer.Option(
         f"{os.path.join(os.path.abspath(os.path.curdir), 'output')}",
         "-d",
         "--output-directory",
@@ -173,8 +198,8 @@ def main(
     logging_level = logging.DEBUG if verbose else logging.INFO
     set_logging_level(logging_level)
 
-    os.makedirs(output_directory, exist_ok=True)
-    dest = output_directory / "gedi_subset.gpkg"
+    os.makedirs(output_dir, exist_ok=True)
+    dest = output_dir / "gedi_subset.gpkg"
 
     # Remove existing combined subset file, primarily to support
     # testing.  When running in the context of a DPS job, there
@@ -199,7 +224,7 @@ def main(
         for subsets in subset_granules(
             maap,
             aoi_gdf,
-            output_directory,
+            output_dir,
             dest,
             (logging_level,),
             filter(partial(granule_intersects, aoi_gdf.geometry[0]))(granules),
