@@ -112,7 +112,7 @@ def find_collection(
     failure, which is a `ValueError` when there is no matching collection.
     """
     return flow(
-        impure_safe(maap.searchCollection)(cmr_host=cmr_host, **dict(params, limit=1)),
+        impure_safe(maap.searchCollection)(cmr_host=cmr_host, limit=1, **params),
         bind_result(safe(operator.itemgetter(0))),
         lash(K(IOFailure(ValueError(f"No collection found at {cmr_host}: {params}")))),
     )

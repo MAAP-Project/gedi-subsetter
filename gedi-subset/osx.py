@@ -12,8 +12,14 @@ Functions:
 
 import os
 import os.path
+from typing import TypeAlias
 
-from returns.io import impure_safe
+from returns.io import IOResultE, impure_safe
+
+StrPath: TypeAlias = str | os.PathLike[str]
 
 exists = impure_safe(os.path.exists)
-remove = impure_safe(os.remove)
+
+
+def remove(path: StrPath) -> IOResultE[None]:
+    return impure_safe(os.remove)(path)
