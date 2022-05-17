@@ -12,11 +12,11 @@ Functions:
 
 import os
 import os.path
-from typing import TypeAlias
+from typing import TypeAlias, Union
 
 from returns.io import IOResultE, impure_safe
 
-StrPath: TypeAlias = str | os.PathLike[str]
+StrPath: TypeAlias = Union[str, os.PathLike[str]]
 
 exists = impure_safe(os.path.exists)
 

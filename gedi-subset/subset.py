@@ -7,7 +7,7 @@ import os.path
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Iterable, Tuple
+from typing import Any, Iterable, List, Sequence, Tuple
 
 import geopandas as gpd
 import osx
@@ -20,7 +20,7 @@ from gedi_utils import (
     gdf_to_file,
     gdf_to_parquet,
     granule_intersects,
-    subset_h5,
+    subset_hdf5,
 )
 from maap.maap import MAAP
 from maap.Result import Granule
@@ -60,6 +60,8 @@ class SubsetGranuleProps:
     granule: Granule
     maap: MAAP
     aoi_gdf: gpd.GeoDataFrame
+    columns: Sequence[str]
+    query: str
     output_dir: Path
 
 
@@ -77,19 +79,14 @@ def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
     GeoParquet file.
     """
 
-    filter_cols = [
-        "agbd",
-        "agbd_se",
-        "l4_quality_flag",
-        "sensitivity",
-        "lat_lowestmode",
-        "lon_lowestmode",
-    ]
     io_result = download_granule(props.maap, str(props.output_dir), props.granule)
     inpath = unsafe_perform_io(io_result.alt(raise_exception).unwrap())
 
     logger.debug(f"Subsetting {inpath}")
-    gdf = df_assign("filename", inpath, subset_h5(inpath, props.aoi_gdf, filter_cols))
+    gdf: gpd.GeoDataFrame = flow(
+        subset_hdf5(inpath, props.aoi_gdf, props.columns, props.query),
+        df_assign("filename", inpath),
+    )
     osx.remove(inpath)
 
     if gdf.empty:
@@ -115,6 +112,8 @@ def set_logging_level(logging_level: int) -> None:
 def subset_granules(
     maap: MAAP,
     aoi_gdf: gpd.GeoDataFrame,
+    columns: Sequence[str],
+    query: str,
     output_dir: Path,
     dest: Path,
     init_args: Tuple[Any, ...],
@@ -142,7 +141,8 @@ def subset_granules(
     chunksize = 10
     processes = os.cpu_count()
     payloads = (
-        SubsetGranuleProps(granule, maap, aoi_gdf, output_dir) for granule in granules
+        SubsetGranuleProps(granule, maap, aoi_gdf, columns, query, output_dir)
+        for granule in granules
     )
 
     logger.info(f"Subsetting on {processes} processes (chunksize={chunksize})")
@@ -169,13 +169,34 @@ def main(
         resolve_path=True,
     ),
     doi=typer.Option(
-        # "10.3334/ORNLDAAC/1986",  # GEDI L4A DOI, v2
         "10.3334/ORNLDAAC/2056",  # GEDI L4A DOI, v2.1
         help="Digital Object Identifier of collection to subset (https://www.doi.org/)",
     ),
     cmr_host: CMRHost = typer.Option(
         CMRHost.maap,
         help="CMR hostname",
+    ),
+    columns: str = typer.Option(
+        ",".join(
+            [
+                "agbd",
+                "agbd_se",
+                "l2_quality_flag",
+                "l4_quality_flag",
+                "lat_lowestmode",
+                "lon_lowestmode",
+                "sensitivity",
+                "sensitivity_a2",
+            ]
+        ),
+        help="Comma-separated list of columns to select",
+    ),
+    query: str = typer.Option(
+        "l2_quality_flag == 1"
+        " and l4_quality_flag == 1"
+        " and sensitivity > 0.95"
+        " and sensitivity_a2 > 0.95",
+        help="Boolean query expression to select rows",
     ),
     limit: int = typer.Option(
         10_000,
@@ -224,6 +245,8 @@ def main(
         for subsets in subset_granules(
             maap,
             aoi_gdf,
+            [c.strip() for c in columns.split(",")],
+            query,
             output_dir,
             dest,
             (logging_level,),

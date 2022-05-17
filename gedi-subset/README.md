@@ -25,9 +25,25 @@ At a high level, the GEDI subsetting algorithm does the following:
 
 To run a GEDI subsetting DPS job, you must supply the following inputs:
 
-- `aoi`: URL to a GeoJSON file representing your area of interest
+- `aoi` (**required**): URL to a GeoJSON file representing your area of interest
+- `columns`: Comma-separated list of column names to include in output file.
+  (**Default:**
+  `agbd, agbd_se, l2_quality_flag, l4_quality_flag, sensitivity, sensitivity_a2`)
+- `query`: Query expression for subsetting the rows in the output file.
+  **IMPORTANT:** The `columns` input must contain at least all of the columns
+  that appear in this query expression, otherwise an error will occur.
+  (**Default:** `l2_quality_flag == 1 and l4_quality_flag == 1 and sensitivity >
+  0.95 and sensitivity_a2 > 0.95"`)
 - `limit`: Maximum number of GEDI granule data files to download (among those
-  that intersect the specified AOI)
+  that intersect the specified AOI).  (**Default:** 10,000)
+
+**IMPORTANT:** When supplying input values via the ADE UI, for convenience, to
+accept _all_ default values, you may leave _all_ optional inputs blank.
+However, if you supply a value for _any_ optional input, you must enter a dash
+(`-`) as the input value for _all other_ optional inputs.  This ensures that
+the input values remain correctly ordered for the underlying script to which the
+inputs are supplied.  Otherwise, your job may fail due to invalid script
+arguments, or might produce unpredictable results.
 
 If your AOI is a publicly available geoBoundary, see
 [Getting the GeoJSON URL for a geoBoundary](#getting-the-geojson-url-for-a-geoboundary)
@@ -233,7 +249,7 @@ able to register the new version of the algorithm, as follows, within the ADE:
 1. Pull the latest code from GitHub (to obtain merged PR, if necessary):
 
    ```bash
-   git pull origin
+   git pull origin main
    git checkout main
    ```
 
@@ -242,6 +258,7 @@ able to register the new version of the algorithm, as follows, within the ADE:
 
    ```bash
    git push --all ade
+   git push --tags ade
    ```
 
 1. In the ADE's File Browser, navigate to
@@ -263,7 +280,9 @@ able to register the new version of the algorithm, as follows, within the ADE:
 
 Country Boundaries from:
 
-Runfola, D. et al. (2020) geoBoundaries: A global database of political administrative boundaries. PLoS ONE 15(4): e0231866. <https://doi.org/10.1371/journal.pone.0231866>
+Runfola, D. et al. (2020) geoBoundaries: A global database of political
+administrative boundaries.  PLoS ONE 15(4): e0231866.
+<https://doi.org/10.1371/journal.pone.0231866>
 
 [geoBoundaries]:
   https://www.geoboundaries.org
