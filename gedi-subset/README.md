@@ -4,6 +4,10 @@
 - [Algorithm Inputs](#algorithm-inputs)
 - [Running a GEDI Subsetting DPS Job](#running-a-gedi-subsetting-dps-job)
 - [Getting the GeoJSON URL for a geoBoundary](#getting-the-geojson-url-for-a-geoboundary)
+- [Contributing](#contributing)
+  - [Repository Setup](#repository-setup)
+  - [Creating an Algorithm Release](#creating-an-algorithm-release)
+  - [Registering an Algorithm Release](#registering-an-algorithm-release)
 - [Citations](#citations)
 
 ## Algorithm Outline
@@ -65,14 +69,13 @@ import uuid
 from maap.maap import MAAP
 
 maap = MAAP(maap_host='api.ops.maap-project.org')
-identifier = uuid.uuid4()
 aoi = "<AOI GeoJSON URL>"  # See previous section
 limit = 2000  # Maximum number of granule files to download
 
 result = maap.submitJob(
-    identifier=f"{identifier}",
+    identifier="<DESCRIPTION>",
     algo_id="gedi-subset_ubuntu",
-    version="main",
+    version="<VERSION>",
     queue="maap-dps-worker-8gb",
     username="<USERNAME>",  # Your Earthdata Login username
     aoi=aoi,
@@ -162,13 +165,113 @@ https://github.com/wmgeolab/geoBoundaries/raw/9f8c9e0f3aa13c5d07efaf10a829e3be02
 You may use this GeoJSON URL for the `aoi` input when running the GEDI
 subsetting DPS job.
 
+## Contributing
+
+### Repository Setup
+
+To contribute to this work, you must obtain access to the following:
+
+1. [MAAP Documentation Examples hosted on GitHub]: For creating new versions
+   (releases) of the algorithms implemented in the repository.
+1. [MAAP Documentation Examples hosted on GitLab]: A copy of the GitHub
+   repository, in order to enable registering new versions of the algorithms
+   from within the ADE (which currently only supports GitLab repositories).
+1. [NASA MAAP]: Where the ADE resides, and thus where algorithms can be
+   registered (from GitLab repositories).
+
+To prepare for contributing, do the following in an ADE workspace:
+
+1. Clone the GitHub repository.
+1. Change directory to the cloned repository.
+1. Add the GitLab repository as another remote (named `ade` here, but you may
+   specify a different name for the remote):
+
+   ```bash
+   git remote add --tags -f ade https://repo.ops.maap-project.org/data-team/maap-documentation-examples.git
+   ```
+
+If you plan to do any development work outside of the ADE (such as on your
+local workstation), perform the steps above in that location as well.
+
+During development, you will create PRs against the GitHub repository, as
+explained below.
+
+### Creating an Algorithm Release
+
+1. Create a new branch based on an appropriate existing branch (typically based
+   on `main`).
+1. In addition to your desired code and/or configuration changes, do the
+   following:
+   1. Update `version` in `gedi-subset/algorithm_config.yaml` according to the
+      versioning convention referenced in the [Changelog](./CHANGELOG.md).
+   1. Add appropriate entries to the [Changelog](./CHANGELOG.md), according to
+      the Changelog convention referenced in the file.  In particular, you
+      should add a new section using the same version as specified in
+      `gedi-subset/algorithm_config.yaml`, with appropriate subsections.
+1. Submit a PR to the GitHub repository.
+1. _Only when_ the PR is on a branch to be merged into the `main` branch _and_
+   it has been approved and merged, create a new release in GitHub as follows:
+   1. Go to
+      <https://github.com/MAAP-Project/maap-documentation-examples/releases/new>
+   1. Click the **Choose a tag** dropdown.
+   1. In the input box that appears, enter the _same_ value as the new value of
+      `version` in `gedi-subset/algorithm_config.yml`, and click the **Create a
+      new tag** label that appears immediately below the input box.
+   1. In the **Release title** input, also enter the _same_ value as the new
+      value of `version` in `gedi-subset/algorithm_config.yml`.
+   1. In the description text box, copy and paste from the Changelog file only
+      the _new version section_ you added earlier to the Changelog.
+   1. Click the **Publish release** button.
+
+### Registering an Algorithm Release
+
+Once a release is published in the GitHub repository (see above), the code from
+the GitHub repository must be pushed to the GitLab repository in order to be
+able to register the new version of the algorithm, as follows, within the ADE:
+
+1. Open a Terminal tab (if necessary) and change directory to the repository.
+1. Pull the latest code from GitHub (to obtain merged PR, if necessary):
+
+   ```bash
+   git pull origin
+   git checkout main
+   ```
+
+1. Push the latest code to GitLab (replace `ade` with the appropriate remote
+   name, if you didn't use `ade` earlier):
+
+   ```bash
+   git push --all ade
+   ```
+
+1. In the ADE's File Browser, navigate to
+   `maap-documentation-examples/gedi-subset`.
+1. Right-click on `algorithm_config.yaml` and choose **Register as MAS
+   Algorithm** from the context menu.
+1. Confirm that the value of the **version** field matches the GitHub release
+   version you created above.  If not, click **Cancel** and review earlier
+   steps.  If so, click **Ok**, which will trigger a build job that will take
+   several minutes.
+1. Check the build job status at
+   <https://repo.ops.maap-project.org/root/register-job/-/jobs>.  If the job
+   fails, you will need to correct the issue (and likely create a patch release,
+   following the release steps again).  Otherwise, you should now be able to
+   open the **DPS/MAS Operations** menu, choose **Execute DPS Job**, and find
+   the new version of the algorithm in the dropdown list for confirmation.
+
 ## Citations
 
 Country Boundaries from:
 
-Runfola, D. et al. (2020) geoBoundaries: A global database of political administrative boundaries. PLoS ONE 15(4): e0231866. https://doi.org/10.1371/journal.pone.0231866
+Runfola, D. et al. (2020) geoBoundaries: A global database of political administrative boundaries. PLoS ONE 15(4): e0231866. <https://doi.org/10.1371/journal.pone.0231866>
 
 [geoBoundaries]:
-    https://www.geoboundaries.org
+  https://www.geoboundaries.org
 [geoBoundaries API]:
-    https://www.geoboundaries.org/api.html
+  https://www.geoboundaries.org/api.html
+[MAAP Documentation Examples hosted on GitHub]:
+  https://github.com/MAAP-Project/maap-documentation-examples.git
+[MAAP Documentation Examples hosted on GitLab]:
+  https://repo.ops.maap-project.org/data-team/maap-documentation-examples.git
+[NASA MAAP]:
+  https://ops.maap-project.org/
