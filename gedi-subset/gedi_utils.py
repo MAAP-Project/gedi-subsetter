@@ -3,7 +3,7 @@ import logging
 import os
 import os.path
 import warnings
-from typing import Any, Callable, Mapping, Sequence, TypeVar, Union
+from typing import Any, Callable, List, Mapping, Sequence, TypeVar, Union
 
 import h5py
 import numpy as np
@@ -67,7 +67,7 @@ def df_assign(col_name: str, val: Any, df: _DF) -> _DF:
 
 @curry
 def append_message(extra_message: str, e: Exception) -> Exception:
-    message, *other_args = e.args if e.args else ("",)
+    message, *other_args = e.args if e.args else ("",)  # pytype: disable=bad-unpacking
     new_message = f"{message}: {extra_message}" if message else extra_message
     e.args = (new_message, *other_args)
 
@@ -177,7 +177,7 @@ def spatial_filter(beam, aoi):
 
 @curry
 def subset_h5(
-    path: Union[str, os.PathLike], aoi: gpd.GeoDataFrame, filter_cols: Sequence[str]
+    path: Union[str, os.PathLike], aoi: gpd.GeoDataFrame, filter_cols: Sequence[str], expr: str
 ) -> gpd.GeoDataFrame:
     """
     Extract the beam data only for the aoi and only columns of interest
@@ -226,10 +226,10 @@ def subset_h5(
                             col_val.append(value[:][indices].tolist())
 
                 # create a pandas dataframe
-                beam_df = pd.DataFrame(map(list, zip(*col_val)), columns=col_names)
+                beam_df = pd.DataFrame(map(list, zip(*col_val)), columns=col_names).query(expr)
                 # Inserting BEAM names
                 beam_df.insert(
-                    0, "BEAM", np.repeat(str(v), len(beam_df.index)).tolist()
+                    0, "BEAM", np.repeat(v[5:], len(beam_df.index)).tolist()
                 )
                 # Appending to the subset_df dataframe
                 subset_df = pd.concat([subset_df, beam_df])
@@ -248,6 +248,36 @@ def subset_h5(
     # print(f"Subset points {subset_gdf.shape}")
 
     return subset_gdf
+
+
+def subset_hdf5(
+    path: str,
+    aoi: gpd.GeoDataFrame,
+    columns: Sequence[str],
+    expr: str,
+) -> gpd.GeoDataFrame:
+    def subset_beam(beam: h5py.Group) -> gpd.GeoDataFrame:
+        def append_series(path: str, value: Union[h5py.Group, h5py.Dataset]) -> None:
+            if (name := path.split("/")[-1]) in columns:
+                series.append(pd.Series(value, name=name))
+
+        series: List[pd.Series] = []
+        beam.visititems(append_series)
+        df = pd.concat(series, axis=1).query(expr)
+        df.insert(0, "BEAM", beam.name[5:])
+
+        x, y = df.lon_lowestmode, df.lat_lowestmode
+        df.drop(["lon_lowestmode", "lat_lowestmode"], axis=1, inplace=True)
+        gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(x, y), crs="EPSG:4326")
+
+        return gdf[gdf.geometry.within(aoi.geometry[0])]
+
+    with h5py.File(path) as hdf5:
+        beams = (value for key, value in hdf5.items() if key.startswith("BEAM"))
+        beam_dfs = (subset_beam(beam) for beam in beams)
+        beams_df = pd.concat(beam_dfs, ignore_index=True, copy=False)
+
+    return beams_df
 
 
 def write_subset(infile, gdf):

@@ -7,7 +7,18 @@ variation of [Semantic Versioning], with the following difference: each version
 is prefixed with `gedi-subset-` (e.g., `gedi-subset-0.1.0`) to allow for
 distinct lines of versioning of independent work in sibling directories.
 
-## [0.1.0] - 2022-05-26
+## [gedi-subset-0.2.0] - 2022-06-01
+
+## Added
+
+- Added inputs `columns` and `query` to refine filtering/subsetting.  See
+  `gedi-subset/README.md` for details.
+
+## Changed
+
+- Improved performance of subsetting/filtering logic, resulting in ~5x speedup.
+
+## [gedi-subset-0.1.0] - 2022-06-01
 
 ### Added
 
