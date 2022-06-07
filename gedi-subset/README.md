@@ -37,13 +37,9 @@ To run a GEDI subsetting DPS job, you must supply the following inputs:
 - `limit`: Maximum number of GEDI granule data files to download (among those
   that intersect the specified AOI).  (**Default:** 10,000)
 
-**IMPORTANT:** When supplying input values via the ADE UI, for convenience, to
-accept _all_ default values, you may leave _all_ optional inputs blank.
-However, if you supply a value for _any_ optional input, you must enter a dash
-(`-`) as the input value for _all other_ optional inputs.  This ensures that
-the input values remain correctly ordered for the underlying script to which the
-inputs are supplied.  Otherwise, your job may fail due to invalid script
-arguments, or might produce unpredictable results.
+**IMPORTANT:** When supplying input values via the ADE UI, to accept a default
+input value, enter a dash (`-`) as the input value, otherwise the UI will show
+an error message if you leave any input blank.
 
 If your AOI is a publicly available geoBoundary, see
 [Getting the GeoJSON URL for a geoBoundary](#getting-the-geojson-url-for-a-geoboundary)
@@ -249,8 +245,8 @@ able to register the new version of the algorithm, as follows, within the ADE:
 1. Pull the latest code from GitHub (to obtain merged PR, if necessary):
 
    ```bash
-   git pull origin main
    git checkout main
+   git pull origin
    ```
 
 1. Push the latest code to GitLab (replace `ade` with the appropriate remote
@@ -268,7 +264,7 @@ able to register the new version of the algorithm, as follows, within the ADE:
 1. Confirm that the value of the **version** field matches the GitHub release
    version you created above.  If not, click **Cancel** and review earlier
    steps.  If so, click **Ok**, which will trigger a build job that will take
-   several minutes.
+   about 30 minutes.
 1. Check the build job status at
    <https://repo.ops.maap-project.org/root/register-job/-/jobs>.  If the job
    fails, you will need to correct the issue (and likely create a patch release,

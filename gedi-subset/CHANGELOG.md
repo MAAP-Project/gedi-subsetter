@@ -7,7 +7,23 @@ variation of [Semantic Versioning], with the following difference: each version
 is prefixed with `gedi-subset-` (e.g., `gedi-subset-0.1.0`) to allow for
 distinct lines of versioning of independent work in sibling directories.
 
-## [gedi-subset-0.2.0] - 2022-06-01
+## [gedi-subset-0.2.1] - 2022-06-07
+
+Hotfix replacement for `gedi-subset-0.2.0`.
+
+### Fixed
+
+- Resolved the following runtime error during DPS job execution that occurs with
+  version `gedi-subset-0.2.0`:
+
+  ```plain
+  ImportError: Missing optional dependency 'pyarrow.parquet'.
+  ```
+
+  This appears to be due to a recent release of one or more unpinned transitive
+  dependencies.  This was resolved with a `conda` lock file.
+
+## [gedi-subset-0.2.0] - 2022-06-01 [YANKED]
 
 ## Added
 
