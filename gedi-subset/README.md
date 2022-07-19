@@ -91,6 +91,8 @@ result = maap.submitJob(
     queue="maap-dps-worker-8gb",
     username="<USERNAME>",  # Your Earthdata Login username
     aoi=aoi,
+    columns="<COLUMNS>", # See previous section
+    query="<QUERY>", # See previous section
     limit=limit,
 )
 
