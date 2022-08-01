@@ -3,9 +3,12 @@
 - [Algorithm Outline](#algorithm-outline)
 - [Algorithm Inputs](#algorithm-inputs)
 - [Running a GEDI Subsetting DPS Job](#running-a-gedi-subsetting-dps-job)
+  - [Submitting a DPS Job](#submitting-a-dps-job)
+  - [Checking the DPS Job Status](#checking-the-dps-job-status)
+  - [Getting the DPS Job Results](#getting-the-dps-job-results)
 - [Getting the GeoJSON URL for a geoBoundary](#getting-the-geojson-url-for-a-geoboundary)
 - [Contributing](#contributing)
-  - [Repository Setup](#repository-setup)
+  - [Development Setup](#development-setup)
   - [Creating an Algorithm Release](#creating-an-algorithm-release)
   - [Registering an Algorithm Release](#registering-an-algorithm-release)
 - [Citations](#citations)
@@ -19,7 +22,7 @@ At a high level, the GEDI subsetting algorithm does the following:
 - Downloads the data file (h5) for each intersecting granule (up to specified limit)
 - Subsets each data file
 - Combines all subset files into a single output file named `gedi_subset.gpkg`,
-  in GeoPackage format, which readable with `geopandas` as a `GeoDataFrame`.
+  in GeoPackage format, readable with `geopandas` as a `GeoDataFrame`.
 
 ## Algorithm Inputs
 
@@ -37,9 +40,9 @@ To run a GEDI subsetting DPS job, you must supply the following inputs:
 - `limit`: Maximum number of GEDI granule data files to download (among those
   that intersect the specified AOI).  (**Default:** 10,000)
 
-**IMPORTANT:** When supplying input values via the ADE UI, to accept a default
-input value, enter a dash (`-`) as the input value, otherwise the UI will show
-an error message if you leave any input blank.
+|**IMPORTANT**
+|:-------------
+|_When supplying input values (either via the ADE UI or programmatically, as shown in the next section), to use the default value (where indicated) for an input, enter a dash (`-`) as the input value, otherwise you will receive an error if you leave any input blank (or unspecified)._
 
 If your AOI is a publicly available geoBoundary, see
 [Getting the GeoJSON URL for a geoBoundary](#getting-the-geojson-url-for-a-geoboundary)
@@ -50,21 +53,27 @@ Alternatively, you can make your own GeoJSON file for your AOI and place it
 within your public bucket within the ADE.  Based upon where you place your
 GeoJSON file, you can construct a URL to specify for the a job's `aoi` input.
 
-Specifically, by placing your GeoJSON file at the following location within the
-ADE:
+Specifically, you should place your GeoJSON file at a location of the following
+form within the ADE (where `path/to/aio.geojson` can be any path and filename
+for your AOI):
 
 ```plain
 ~/my-public-bucket/path/to/aoi.geojson
+^^^^^^^^^^^^^^^^^^
 ```
 
-you would then supply the following URL as the `aoi` input value when running
+You would then supply the following URL as the `aoi` input value when running
 this algorithm as a DPS job, where `<USERNAME>` is your ADE username:
 
 ```plain
 https://maap-ops-workspace.s3.amazonaws.com/shared/<USERNAME>/path/to/aoi.geojson
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      Replace "~/my-public-bucket" with this URL prefix
 ```
 
 ## Running a GEDI Subsetting DPS Job
+
+### Submitting a DPS Job
 
 The GEDI Subsetting DPS Job is named `gedi-subset_ubuntu`, and may be executed
 from your ADE Workspace by opening the **DPS/MAS Operations** menu, choosing
@@ -76,8 +85,6 @@ Alternatively, for greater control of your job configuration, you may use the
 MAAP API from a Notebook (or a Python script), as follows:
 
 ```python
-import uuid
-
 from maap.maap import MAAP
 
 maap = MAAP(maap_host='api.ops.maap-project.org')
@@ -96,14 +103,39 @@ result = maap.submitJob(
     limit=limit,
 )
 
-print(result["job_id"])
+job_id = result["job_id"]
+job_id
 ```
 
-Using the value of `result["job_id"]`, you may use the **DPS/MAS Operations**
-menu for job operations, just as if you had submitted the job from the menu
-(rather than programmatically).  Once the job status is **Succeeded**, you must
-obtain the jobs result (**Get DPS Job Result**), which should display 3 URLs,
-with the first URL of the following form:
+### Checking the DPS Job Status
+
+To check the status of your job via the ADE UI, open the **DPS/MAS Operations**
+menu, choose **Get DPS Job Status**, and enter the value of the `job_id` to
+obtain the status, just as if you had submitted the job from the menu (rather
+than programmatically).
+
+Alternatively, to programmatically check the status of the submitted job, you
+may run the following code.  If using a notebook, use a separate cell so you can
+run it repeatedly until you get a status of either `'Succeeded'` or `'Failed'`:
+
+```python
+import re
+
+# Should evaluate to 'Accepted', 'Running', 'Succeeded', or 'Failed'
+re.search(r"Status>(?P<status>.+)</wps:Status>", maap.getJobStatus(job_id).text).group('status')
+```
+
+### Getting the DPS Job Results
+
+Once the job status is either **Succeeded** or **Failed**, you may obtain the
+job result either via the UI (**DPS/MAS Operations** > **Get DPS Job Result**),
+or programmatically, but given that the programmatic results are in XML format,
+it will be difficult to read, so using the UI is ideal in this case.
+
+If the jobs status is **Failed**, the job results should show failure details.
+
+If the job status is **Succeeded**, the job results should show 3 URLs, with the
+first URL of the following form:
 
 ```plain
 http://.../<USERNAME>/dps_output/gedi-subset_ubuntu/<VERSION>/<DATETIME_PATH>
@@ -181,7 +213,7 @@ subsetting DPS job.
 
 ## Contributing
 
-### Repository Setup
+### Development Setup
 
 To contribute to this work, you must obtain access to the following:
 
@@ -195,7 +227,7 @@ To contribute to this work, you must obtain access to the following:
 
 To prepare for contributing, do the following in an ADE workspace:
 
-1. Clone the GitHub repository.
+1. Clone this GitHub repository.
 1. Change directory to the cloned repository.
 1. Add the GitLab repository as another remote (named `ade` here, but you may
    specify a different name for the remote):
@@ -204,8 +236,21 @@ To prepare for contributing, do the following in an ADE workspace:
    git remote add --tags -f ade https://repo.ops.maap-project.org/data-team/maap-documentation-examples.git
    ```
 
-If you plan to do any development work outside of the ADE (such as on your
-local workstation), perform the steps above in that location as well.
+1. Create the `gedi_subset` virtual environment by running the following
+   commands from within the repository directory (**NOTE:** _you will need to
+   repeat these steps whenever your restart your ADE workspace_):
+
+   ```bash
+   conda update conda -n base -c conda-forge -y
+   conda create -n gedi_subset python=3.10 -c conda-forge -y
+   conda activate gedi_subset
+   pip install -r gedi-subset/requirements-dev.txt
+   ```
+
+If you plan to do any development work outside of the ADE (such as on your local
+workstation), perform the steps above in that location as well.  **NOTE:** _This
+means that you must have `conda` installed (see [conda installation]) in your
+desired development location outside of the ADE workspace._
 
 During development, you will create PRs against the GitHub repository, as
 explained below.
@@ -282,6 +327,8 @@ Runfola, D. et al. (2020) geoBoundaries: A global database of political
 administrative boundaries.  PLoS ONE 15(4): e0231866.
 <https://doi.org/10.1371/journal.pone.0231866>
 
+[conda installation]:
+   https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
 [geoBoundaries]:
   https://www.geoboundaries.org
 [geoBoundaries API]:

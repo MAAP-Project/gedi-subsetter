@@ -7,6 +7,17 @@ variation of [Semantic Versioning], with the following difference: each version
 is prefixed with `gedi-subset-` (e.g., `gedi-subset-0.1.0`) to allow for
 distinct lines of versioning of independent work in sibling directories.
 
+## [gedi-subset-0.2.2] - 2022-08-02
+
+### Changed
+
+- Updated `maap-py` dependency to use `hotfixes` branch until the library
+  employs proper release management.
+- Improved error-handling to add clarity around error messages stemming from
+  authentication errors and other HTTP request errors.
+- Enhanced S3 authentication to automatically use granule metadata containing an
+  online resource URL representing an S3 authentication endpoint.
+
 ## [gedi-subset-0.2.1] - 2022-06-07
 
 Hotfix replacement for `gedi-subset-0.2.0`.
@@ -25,12 +36,12 @@ Hotfix replacement for `gedi-subset-0.2.0`.
 
 ## [gedi-subset-0.2.0] - 2022-06-01 [YANKED]
 
-## Added
+### Added
 
 - Added inputs `columns` and `query` to refine filtering/subsetting.  See
   `gedi-subset/README.md` for details.
 
-## Changed
+### Changed
 
 - Improved performance of subsetting/filtering logic, resulting in ~5x speedup.
 

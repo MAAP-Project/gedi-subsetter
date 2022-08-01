@@ -1,2 +1,5 @@
 [mypy]
-plugins = "returns.contrib.mypy.returns_plugin"
+plugins = [
+    "returns.contrib.mypy.returns_plugin",
+    "pfun.mypy_plugin"
+]
