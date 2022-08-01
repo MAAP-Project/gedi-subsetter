@@ -14,4 +14,4 @@ dependencies:
   - shapely==1.8.2
   - pip
   - pip:
-      - git+https://github.com/MAAP-Project/maap-py.git@1bfa99d#egg=maappy
+      - git+https://github.com/MAAP-Project/maap-py.git@hotfixes#egg=maappy

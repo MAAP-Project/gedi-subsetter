@@ -7,12 +7,12 @@ import os.path
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Iterable, List, Sequence, Tuple
+from typing import Any, Iterable, Sequence, Tuple
 
 import geopandas as gpd
 import osx
 import typer
-from fp import K, filter, map
+from fp import always, filter, map
 from gedi_utils import (
     chext,
     df_assign,
@@ -27,12 +27,11 @@ from maap.Result import Granule
 from maapx import download_granule, find_collection
 from returns.curry import partial
 from returns.functions import raise_exception, tap
-from returns.io import IO, IOResultE, IOSuccess, impure_safe
+from returns.io import IOFailure, IOResult, IOResultE, IOSuccess, impure_safe
 from returns.iterables import Fold
 from returns.maybe import Maybe, Nothing, Some
 from returns.pipeline import flow, is_successful, pipe
 from returns.pointfree import bind, bind_ioresult, lash, map_
-from returns.result import Failure, Success
 from returns.unsafe import unsafe_perform_io
 
 
@@ -133,8 +132,8 @@ def subset_granules(
         return flow(
             gdf_read_parquet(src),
             bind_ioresult(partial(gdf_to_file, dest, to_file_props)),
-            tap(K(osx.remove(src))),
-            map_(K(src)),
+            tap(pipe(always(src), osx.remove)),
+            map_(always(src)),
         )
 
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool.imap
@@ -230,10 +229,8 @@ def main(
 
     maap = MAAP("api.ops.maap-project.org")
 
-    result = IO.do(
-        Success(subsets)
-        if subsets
-        else Failure(ValueError("No granules intersect AOI"))
+    IOResult.do(
+        subsets
         for aoi_gdf in impure_safe(gpd.read_file)(aoi)
         for collection in find_collection(maap, cmr_host, {"doi": doi})
         for granules in impure_safe(maap.searchGranule)(
@@ -252,12 +249,14 @@ def main(
             (logging_level,),
             filter(partial(granule_intersects, aoi_gdf.geometry[0]))(granules),
         )
-    )
-
-    flow(
-        unsafe_perform_io(result),
-        map_(pipe(len, f"Subset {{}} granule(s) to {dest}".format, logger.info)),
-        lash(raise_exception),
+    ).bind_ioresult(
+        lambda subsets: IOSuccess(subsets)
+        if subsets
+        else IOFailure(ValueError(f"No granules intersect the AOI: {aoi}"))
+    ).map(
+        lambda subsets: logger.info(f"Subset {len(subsets)} granule(s) to {dest}")
+    ).alt(
+        raise_exception
     )
 
 

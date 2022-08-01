@@ -16,15 +16,14 @@ from typing import TYPE_CHECKING, Mapping
 import boto3
 from cachetools import FIFOCache, cached
 from cachetools.func import ttl_cache
-from fp import K
+from fp import always, find
 from maap.maap import MAAP
 from maap.Result import Collection, Granule
 from returns.curry import partial
 from returns.io import IOFailure, IOResultE, impure_safe
-from returns.maybe import Maybe, Nothing, Some, maybe
-from returns.pipeline import flow
-from returns.pointfree import bind, bind_result, lash, map_
-from returns.result import safe
+from returns.pipeline import flow, pipe
+from returns.pointfree import bind, bind_ioresult, bind_result, lash, map_
+from returns.result import ResultE, safe
 
 if TYPE_CHECKING:
     from maap.AWS import AWSCredentials
@@ -32,24 +31,24 @@ if TYPE_CHECKING:
 logger = logging.getLogger(f"gedi_subset.{__name__}")
 
 
-# https://nasa-openscapes.github.io/2021-Cloud-Workshop-AGU/how-tos/Earthdata_Cloud__Single_File__Direct_S3_Access_COG_Example.html
-_S3_CREDENTIALS_ENDPOINT_BY_DAAC: Mapping[str, str] = dict(
-    po="https://archive.podaac.earthdata.nasa.gov/s3credentials",
-    gesdisc="https://data.gesdisc.earthdata.nasa.gov/s3credentials",
-    lp="https://data.lpdaac.earthdatacloud.nasa.gov/s3credentials",
-    ornl="https://data.ornldaac.earthdata.nasa.gov/s3credentials",
-    ghrc="https://data.ghrc.earthdata.nasa.gov/s3credentials",
-)
+def _is_s3_credentials_online_resource(resource) -> bool:
+    url = resource.get("URL", "").lower()
+    description = resource.get("Description", "").lower()
+
+    # TODO: is this sufficient for identifying URL for obtaining S3 credentials?
+    return url and url.endswith("/s3credentials") or "credentials" in description
 
 
-def _s3_credentials_endpoint(download_url: str) -> Maybe[str]:
-    endpoints = [
-        endpoint
-        for key, endpoint in _S3_CREDENTIALS_ENDPOINT_BY_DAAC.items()
-        if key in download_url
-    ]
+def _s3_credentials_endpoint(granule: Granule) -> ResultE[str]:
+    granule_ur = granule["Granule"]["GranuleUR"]
+    endpoint_error = ValueError(f"Granule {granule_ur} has no S3 credentials endpoint")
 
-    return Some(endpoints[0]) if endpoints else Nothing
+    return flow(
+        granule.get("Granule", {}).get("OnlineResources", {}).get("OnlineResource", []),
+        find(_is_s3_credentials_online_resource),
+        bind(safe(operator.itemgetter("URL"))),
+        lash(always(IOFailure(endpoint_error))),
+    )
 
 
 @ttl_cache(ttl=55 * 60)
@@ -71,33 +70,36 @@ def _setup_default_boto3_session(creds: "AWSCredentials") -> boto3.session.Sessi
         aws_access_key_id=creds["accessKeyId"],
         aws_secret_access_key=creds["secretAccessKey"],
         aws_session_token=creds["sessionToken"],
+        # TODO: make this configurable
         region_name="us-west-2",
     )
 
 
 def download_granule(maap: MAAP, todir: str, granule: Granule) -> IOResultE[str]:
-    """Downloads a granule's data file.
+    """Download a granule's data file.
 
-    Automatically fetches S3 credentials appropriate for `granule`, based upon
+    Automatically fetch S3 credentials appropriate for `granule`, based upon
     it's S3 URL, and automatically refreshes credentials before expiry.
 
     Return `IOSuccess[str]` containing the absolute path of the downloaded file
     upon success; otherwise return `IOFailure[Exception]` containing the reason
     for failure.
     """
-    ur: str = granule["Granule"]["GranuleUR"]
+    granule_ur = granule["Granule"]["GranuleUR"]
+    logger.debug(f"Downloading granule {granule_ur} to directory {todir}")
 
-    flow(
-        maybe(granule.getDownloadUrl)(),
-        lash(K(IOFailure(ValueError(f"Missing download URL for granule {ur}")))),
-        bind(_s3_credentials_endpoint),
+    return flow(
+        _s3_credentials_endpoint(granule),
         bind(partial(_earthdata_s3_credentials, maap)),
         map_(_setup_default_boto3_session),
+        # We don't need to directly use the boto3 session object, so we discard it by
+        # mapping to the constant `todir`.  We simply want to download the granule file
+        # to `todir` after the S3 credentials are obtained and applied to the boto3
+        # default session.  If obtaining S3 credentials fails, we bypass the download
+        # attempt and return the failure.
+        map_(always(todir)),
+        bind(impure_safe(granule.getData)),
     )
-
-    logger.debug(f"Downloading granule {ur} to directory {todir}")
-
-    return impure_safe(granule.getData)(todir)
 
 
 def find_collection(
@@ -111,8 +113,14 @@ def find_collection(
     search; otherwise return `IOFailure[Exception]` containing the reason for
     failure, which is a `ValueError` when there is no matching collection.
     """
+    not_found_error = ValueError(f"No collection found at {cmr_host}: {params}")
+
     return flow(
         impure_safe(maap.searchCollection)(cmr_host=cmr_host, limit=1, **params),
-        bind_result(safe(operator.itemgetter(0))),
-        lash(K(IOFailure(ValueError(f"No collection found at {cmr_host}: {params}")))),
+        bind_ioresult(
+            pipe(
+                safe(operator.itemgetter(0)),
+                lash(always(IOFailure(not_found_error))),
+            )
+        ),
     )
