@@ -259,14 +259,26 @@ explained below.
 
 1. Create a new branch based on an appropriate existing branch (typically based
    on `main`).
-1. In addition to your desired code and/or configuration changes, do the
-   following:
-   1. Update `version` in `gedi-subset/algorithm_config.yaml` according to the
-      versioning convention referenced in the [Changelog](./CHANGELOG.md).
-   1. Add appropriate entries to the [Changelog](./CHANGELOG.md), according to
-      the Changelog convention referenced in the file.  In particular, you
-      should add a new section using the same version as specified in
-      `gedi-subset/algorithm_config.yaml`, with appropriate subsections.
+1. Add your desired code and/or configuration changes.
+1. Update the value of `version` in `gedi-subset/algorithm_config.yaml`
+   according to the versioning convention referenced at the top of the
+   [Changelog](./CHANGELOG.md).
+1. Add appropriate entries to the [Changelog](./CHANGELOG.md), according to
+   the [Keep a Changelog] convention.  In particular:
+   - Add a new, second-level section of the following form:
+
+      ```plain
+      ## [VERSION] - YYYY-MM-DD
+      ```
+
+      where:
+      - `VERSION` is the value of `version` specified in
+        `gedi-subset/algorithm_config.yaml`
+      - `YYYY-MM-DD` is the date that you expect to create the release (see the
+        following steps), which may or may not be the current date, depending
+        upon when you expect your PR (next step) to be approved and merged.
+   - Add appropriate third-level sections under the new version section (for
+     additions, changes, and fixes).  Again, see [Keep a Changelog].
 1. Submit a PR to the GitHub repository.
 1. _Only when_ the PR is on a branch to be merged into the `main` branch _and_
    it has been approved and merged, create a new release in GitHub as follows:
@@ -279,7 +291,8 @@ explained below.
    1. In the **Release title** input, also enter the _same_ value as the new
       value of `version` in `gedi-subset/algorithm_config.yml`.
    1. In the description text box, copy and paste from the Changelog file only
-      the _new version section_ you added earlier to the Changelog.
+      the _new version section_ you added earlier to the Changelog, including
+      the new version heading.
    1. Click the **Publish release** button.
 
 ### Registering an Algorithm Release
@@ -304,6 +317,9 @@ able to register the new version of the algorithm, as follows, within the ADE:
    git push --tags ade
    ```
 
+   **NOTE:** On occassion, you might get a "server certificate verification
+   failed" error attempting to push to GitLab.  If so, simply prefix the
+   preceding commands with `GIT_SSL_NO_VERIFY=1`
 1. In the ADE's File Browser, navigate to
    `maap-documentation-examples/gedi-subset`.
 1. Right-click on `algorithm_config.yaml` and choose **Register as MAS
@@ -333,6 +349,8 @@ administrative boundaries.  PLoS ONE 15(4): e0231866.
   https://www.geoboundaries.org
 [geoBoundaries API]:
   https://www.geoboundaries.org/api.html
+[Keep a Changelog]:
+  https://keepachangelog.com/en/1.0.0/
 [MAAP Documentation Examples hosted on GitHub]:
   https://github.com/MAAP-Project/maap-documentation-examples.git
 [MAAP Documentation Examples hosted on GitLab]:

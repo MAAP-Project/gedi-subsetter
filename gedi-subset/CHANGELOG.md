@@ -7,6 +7,12 @@ variation of [Semantic Versioning], with the following difference: each version
 is prefixed with `gedi-subset-` (e.g., `gedi-subset-0.1.0`) to allow for
 distinct lines of versioning of independent work in sibling directories.
 
+## [gedi-subset-0.2.3] - 2022-08-03
+
+### Fixed
+
+- `build.sh` now installs the correct version of `maap-py` (`hotfixes` branch)
+
 ## [gedi-subset-0.2.2] - 2022-08-02
 
 ### Changed
