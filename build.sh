@@ -24,7 +24,7 @@ esac
 conda create -y -n gedi_subset --file "${basedir}/gedi-subset/conda-${platform}-64.lock"
 
 # Install maap-py, since it cannot be specified in the lock file
-conda run --no-capture-output -n gedi_subset pip install "git+https://github.com/MAAP-Project/maap-py.git@1bfa99d#egg=maappy"
+conda run --no-capture-output -n gedi_subset pip install -r gedi-subset/requirements-maappy.txt
 
 # Fail build if finicky mix of fiona and gdal isn't correct, so that we don't
 # have to wait to execute a DPS job to find out.

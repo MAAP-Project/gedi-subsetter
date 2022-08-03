@@ -1,0 +1,3 @@
+# We're keeping this source dependency in this separate file to keep things DRY,
+# since this is referenced from multiple files.
+git+https://github.com/MAAP-Project/maap-py.git@hotfixes#egg=maappy
