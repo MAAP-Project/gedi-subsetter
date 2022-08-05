@@ -244,7 +244,7 @@ To prepare for contributing, do the following in an ADE workspace:
    conda update conda -n base -c conda-forge -y
    conda create -n gedi_subset python=3.10 -c conda-forge -y
    conda activate gedi_subset
-   pip install -r gedi-subset/requirements-dev.txt
+   pip install -r gedi-subset/environment/requirements-dev.txt
    ```
 
 If you plan to do any development work outside of the ADE (such as on your local

@@ -14,4 +14,4 @@ dependencies:
   - shapely==1.8.2
   - pip
   - pip:
-      - -r gedi-subset/requirements-maappy.txt
+      - -r gedi-subset/environment/requirements-maappy.txt
