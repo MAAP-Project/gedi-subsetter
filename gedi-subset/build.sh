@@ -1,9 +1,31 @@
 #!/usr/bin/env bash
 
-conda create -y -n gedi_subset --file "${basedir}/gedi-subset/environment/conda-${platform}-64.lock"
+basedir=$(dirname "$(readlink -f "$0")")
+
+# Install dependencies from lock file for speed and reproducibility
+case $(uname) in
+Linux)
+    platform="linux"
+    ;;
+Darwin)
+    platform="osx"
+    ;;
+*)
+    echo >&2 "Unsupported platform: $(uname)"
+    exit 1
+    ;;
+esac
+
+conda create -y -n gedi_subset --file "${basedir}/environment/conda-${platform}-64.lock"
 
 # Install maap-py, since it cannot be specified in the lock file
-conda run --no-capture-output -n gedi_subset pip install -r "${basedir}/gedi-subset/environment/requirements-maappy.txt"
+conda env update -n gedi_subset --file "${basedir}/environment/environment-maappy.yml"
+
+# Install development environment dependencies if the --dev flag is set
+# Running build.sh in gedi-subset directory with --dev
+if [ "$1" == '--dev' ]; then
+    conda env update -n gedi_subset --file "${basedir}/environment/environment-dev.yml"
+fi
 
 # Fail build if finicky mix of fiona and gdal isn't correct, so that we don't
 # have to wait to execute a DPS job to find out.

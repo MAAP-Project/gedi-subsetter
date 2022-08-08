@@ -1,0 +1,12 @@
+name: gedi_subset
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - black
+  - boto3-stubs[s3]
+  - botocore-stubs
+  - isort
+  - mypy
+  - types-cachetools
+  - types-requests

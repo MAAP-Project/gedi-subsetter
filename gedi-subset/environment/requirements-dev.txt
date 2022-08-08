@@ -1,8 +1,0 @@
--r requirements.txt
-black
-boto3-stubs[s3]
-botocore-stubs
-isort
-mypy
-types-cachetools
-types-requests

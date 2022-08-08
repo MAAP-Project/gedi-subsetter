@@ -13,5 +13,3 @@ dependencies:
   - pyarrow==8.0.0
   - shapely==1.8.2
   - pip
-  - pip:
-      - -r environment/requirements-maappy.txt
