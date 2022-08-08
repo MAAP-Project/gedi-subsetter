@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
+set -xeuo pipefail
+
 basedir=$(dirname "$(readlink -f "$0")")
 
 # Make sure conda is updated to a version that supports the --no-capture-output option
-if [ $basedir == $PWD ]; then
-    set -xeuo pipefail
-    conda install -y -n base -c conda-forge "conda>=4.13.0"
-fi
+conda install -y -n base -c conda-forge "conda>=4.13.0"
 
 # Install dependencies from lock file for speed and reproducibility
 case $(uname) in
