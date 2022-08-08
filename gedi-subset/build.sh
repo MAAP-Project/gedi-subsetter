@@ -28,7 +28,7 @@ conda env update -n gedi_subset --file "${basedir}/environment/environment-maapp
 
 # Install development environment dependencies if the --dev flag is set
 # Running build.sh in gedi-subset directory with --dev
-if [ "$1" == "--dev" ]; then
+if [[ "${1:-}" == "--dev" ]]; then
     conda env update -n gedi_subset --file "${basedir}/environment/environment-dev.yml"
 fi
 
