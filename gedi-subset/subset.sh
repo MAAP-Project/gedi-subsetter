@@ -10,7 +10,7 @@ else
     runner=""
 fi
 
-subset_py="${runner}${basedir}/subset.py"
+subset_py="${runner}${basedir}/src/subset.py"
 
 if test -d input; then
     # We are executing within a DPS job, so the AOI file was automatically
