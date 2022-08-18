@@ -3,9 +3,12 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - backoff
   - black
   - boto3-stubs[s3]
   - botocore-stubs
+  - contextily
+  - ipykernel
   - isort
   - mypy
   - types-cachetools
