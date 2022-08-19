@@ -5,10 +5,10 @@ set -xeuo pipefail
 basedir=$(dirname "$(readlink -f "$0")")
 
 # Execute subdirectories' build scripts
-for subdir in $(ls -d */)
-do
-    file=${basedir}/${subdir}build.sh
-    if [ -f "$file" ]; then
-        bash $file
+for subdir in "${basedir}"/*/; do
+    build_script=${subdir}build.sh
+
+    if [ -f "${build_script}" ]; then
+        bash "${build_script}"
     fi
 done
