@@ -16,14 +16,15 @@ from typing import TYPE_CHECKING, Mapping
 import boto3
 from cachetools import FIFOCache, cached
 from cachetools.func import ttl_cache
-from fp import always, find
 from maap.maap import MAAP
 from maap.Result import Collection, Granule
 from returns.curry import partial
 from returns.io import IOFailure, IOResultE, impure_safe
 from returns.pipeline import flow, pipe
-from returns.pointfree import bind, bind_ioresult, bind_result, lash, map_
+from returns.pointfree import bind, bind_ioresult, lash, map_
 from returns.result import ResultE, safe
+
+from fp import always, find
 
 if TYPE_CHECKING:
     from maap.AWS import AWSCredentials

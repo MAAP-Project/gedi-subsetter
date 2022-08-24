@@ -10,8 +10,19 @@ from pathlib import Path
 from typing import Any, Iterable, Sequence, Tuple
 
 import geopandas as gpd
-import osx
 import typer
+from maap.maap import MAAP
+from maap.Result import Granule
+from returns.curry import partial
+from returns.functions import raise_exception, tap
+from returns.io import IOFailure, IOResult, IOResultE, IOSuccess, impure_safe
+from returns.iterables import Fold
+from returns.maybe import Maybe, Nothing, Some
+from returns.pipeline import flow, is_successful, pipe
+from returns.pointfree import bind, bind_ioresult, lash, map_
+from returns.unsafe import unsafe_perform_io
+
+import osx
 from fp import always, filter, map
 from gedi_utils import (
     chext,
@@ -22,17 +33,7 @@ from gedi_utils import (
     granule_intersects,
     subset_hdf5,
 )
-from maap.maap import MAAP
-from maap.Result import Granule
 from maapx import download_granule, find_collection
-from returns.curry import partial
-from returns.functions import raise_exception, tap
-from returns.io import IOFailure, IOResult, IOResultE, IOSuccess, impure_safe
-from returns.iterables import Fold
-from returns.maybe import Maybe, Nothing, Some
-from returns.pipeline import flow, is_successful, pipe
-from returns.pointfree import bind, bind_ioresult, lash, map_
-from returns.unsafe import unsafe_perform_io
 
 
 class CMRHost(str, Enum):

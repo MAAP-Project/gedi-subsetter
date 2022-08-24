@@ -177,7 +177,10 @@ def spatial_filter(beam, aoi):
 
 @curry
 def subset_h5(
-    path: Union[str, os.PathLike], aoi: gpd.GeoDataFrame, filter_cols: Sequence[str], expr: str
+    path: Union[str, os.PathLike],
+    aoi: gpd.GeoDataFrame,
+    filter_cols: Sequence[str],
+    expr: str,
 ) -> gpd.GeoDataFrame:
     """
     Extract the beam data only for the aoi and only columns of interest
@@ -226,15 +229,14 @@ def subset_h5(
                             col_val.append(value[:][indices].tolist())
 
                 # create a pandas dataframe
-                beam_df = pd.DataFrame(map(list, zip(*col_val)), columns=col_names).query(expr)
+                beam_df = pd.DataFrame(
+                    map(list, zip(*col_val)), columns=col_names
+                ).query(expr)
                 # Inserting BEAM names
-                beam_df.insert(
-                    0, "BEAM", np.repeat(v[5:], len(beam_df.index)).tolist()
-                )
+                beam_df.insert(0, "BEAM", np.repeat(v[5:], len(beam_df.index)).tolist())
                 # Appending to the subset_df dataframe
                 subset_df = pd.concat([subset_df, beam_df])
 
-    # all_gdf = gpd.GeoDataFrame(subset_df, geometry=gpd.points_from_xy(subset_df.lon_lowestmode, subset_df.lat_lowestmode))
     all_gdf = gpd.GeoDataFrame(
         subset_df.loc[:, ~subset_df.columns.isin(["lon_lowestmode", "lat_lowestmode"])],
         geometry=gpd.points_from_xy(subset_df.lon_lowestmode, subset_df.lat_lowestmode),
@@ -244,7 +246,9 @@ def subset_h5(
     # TODO: document how many points before and after filtering
     # print(f"All points {all_gdf.shape}")
     # subset_gdf = all_gdf[all_gdf['geometry'].within(aoi.geometry[0])]
-    subset_gdf = all_gdf  # Doing the spatial search first didn't help at all, so maybe the spatial query is the slow part.
+    # Doing the spatial search first didn't help at all, so maybe the spatial query is
+    # the slow part.
+    subset_gdf = all_gdf
     # print(f"Subset points {subset_gdf.shape}")
 
     return subset_gdf

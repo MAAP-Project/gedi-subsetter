@@ -236,15 +236,23 @@ To prepare for contributing, do the following in an ADE workspace:
    git remote add --tags -f ade https://repo.ops.maap-project.org/data-team/maap-documentation-examples.git
    ```
 
-1. Create the `gedi_subset` virtual environment by running the following
-   commands from within the repository directory (**NOTE:** _you will need to
-   repeat these steps whenever your restart your ADE workspace_):
+1. Create the `gedi_subset` virtual environment (**NOTE:** _you will need to
+   repeat this step whenever your restart your ADE workspace_):
 
    ```bash
-   conda update conda -n base -c conda-forge -y
-   conda create -n gedi_subset python=3.10 -c conda-forge -y
+   gedi-subset/build.sh --dev
+   ```
+
+1. Activate the `gedi_subset` virtual environment:
+
+   ```bash
    conda activate gedi_subset
-   pip install -r gedi-subset/environment/requirements-dev.txt
+   ```
+
+1. Install Git pre-commit hooks:
+
+   ```bash
+   pre-commit install --install-hooks
    ```
 
 If you plan to do any development work outside of the ADE (such as on your local
