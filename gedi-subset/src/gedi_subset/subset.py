@@ -22,9 +22,9 @@ from returns.pipeline import flow, is_successful, pipe
 from returns.pointfree import bind, bind_ioresult, lash, map_
 from returns.unsafe import unsafe_perform_io
 
-import osx
-from fp import always, filter, map
-from gedi_utils import (
+from gedi_subset import osx
+from gedi_subset.fp import always, filter, map
+from gedi_subset.gedi_utils import (
     chext,
     df_assign,
     gdf_read_parquet,
@@ -33,7 +33,7 @@ from gedi_utils import (
     granule_intersects,
     subset_hdf5,
 )
-from maapx import download_granule, find_collection
+from gedi_subset.maapx import download_granule, find_collection
 
 
 class CMRHost(str, Enum):

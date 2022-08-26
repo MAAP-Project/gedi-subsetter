@@ -2,5 +2,8 @@
     "deepscan.enable": true,
     "python.linting.mypyEnabled": true,
     "python.analysis.stubPath": "typings",
-    "python.formatting.provider": "black"
+    "python.formatting.provider": "black",
+    "python.analysis.extraPaths": [
+        "./gedi-subset/src"
+    ]
 }

@@ -32,6 +32,8 @@ if [[ "${1:-}" == "--dev" ]]; then
     conda env update -n gedi_subset --file "${basedir}/environment/environment-dev.yml"
 fi
 
+conda run --no-capture-output -n gedi_subset pip install -e "${basedir}"
+
 # Fail build if finicky mix of fiona and gdal isn't correct, so that we don't
 # have to wait to execute a DPS job to find out.
 conda run --no-capture-output -n gedi_subset python -c '
