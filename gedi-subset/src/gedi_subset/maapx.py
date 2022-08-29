@@ -11,20 +11,22 @@ Granule functions:
 
 import logging
 import operator
-from typing import TYPE_CHECKING, Mapping
+from typing import TYPE_CHECKING, Mapping, Union
 
 import boto3
 from cachetools import FIFOCache, cached
 from cachetools.func import ttl_cache
 from maap.maap import MAAP
 from maap.Result import Collection, Granule
+from returns.converters import result_to_maybe
 from returns.curry import partial
-from returns.io import IOFailure, IOResultE, impure_safe
-from returns.pipeline import flow, pipe
+from returns.io import IOFailure, IOResult, IOResultE, impure_safe
+from returns.maybe import Maybe
+from returns.pipeline import flow, is_successful, pipe
 from returns.pointfree import bind, bind_ioresult, lash, map_
-from returns.result import ResultE, safe
+from returns.result import safe
 
-from fp import always, find
+from gedi_subset import fp
 
 if TYPE_CHECKING:
     from maap.AWS import AWSCredentials
@@ -40,15 +42,13 @@ def _is_s3_credentials_online_resource(resource) -> bool:
     return url and url.endswith("/s3credentials") or "credentials" in description
 
 
-def _s3_credentials_endpoint(granule: Granule) -> ResultE[str]:
-    granule_ur = granule["Granule"]["GranuleUR"]
-    endpoint_error = ValueError(f"Granule {granule_ur} has no S3 credentials endpoint")
-
+def _s3_credentials_endpoint(granule: Granule) -> Maybe[str]:
     return flow(
         granule.get("Granule", {}).get("OnlineResources", {}).get("OnlineResource", []),
-        find(_is_s3_credentials_online_resource),
+        lambda resources: resources if isinstance(resources, list) else [resources],
+        fp.find(_is_s3_credentials_online_resource),
         bind(safe(operator.itemgetter("URL"))),
-        lash(always(IOFailure(endpoint_error))),
+        result_to_maybe,
     )
 
 
@@ -62,12 +62,12 @@ def _earthdata_s3_credentials(maap: MAAP, endpoint: str) -> IOResultE["AWSCreden
 
 
 @cached(cache=FIFOCache(maxsize=1), key=lambda creds: creds["sessionToken"])
-def _setup_default_boto3_session(creds: "AWSCredentials") -> boto3.session.Session:
+def _setup_default_boto3_session(creds: "AWSCredentials") -> None:
     """Sets up the default boto3 session using the specified credentials."""
 
     logger.debug("Setting up default boto3 session with new credentials")
 
-    return boto3.setup_default_session(
+    boto3.setup_default_session(
         aws_access_key_id=creds["accessKeyId"],
         aws_secret_access_key=creds["secretAccessKey"],
         aws_session_token=creds["sessionToken"],
@@ -89,18 +89,21 @@ def download_granule(maap: MAAP, todir: str, granule: Granule) -> IOResultE[str]
     granule_ur = granule["Granule"]["GranuleUR"]
     logger.debug(f"Downloading granule {granule_ur} to directory {todir}")
 
-    return flow(
-        _s3_credentials_endpoint(granule),
-        bind(partial(_earthdata_s3_credentials, maap)),
-        map_(_setup_default_boto3_session),
-        # We don't need to directly use the boto3 session object, so we discard it by
-        # mapping to the constant `todir`.  We simply want to download the granule file
-        # to `todir` after the S3 credentials are obtained and applied to the boto3
-        # default session.  If obtaining S3 credentials fails, we bypass the download
-        # attempt and return the failure.
-        map_(always(todir)),
-        bind(impure_safe(granule.getData)),
-    )
+    if granule.getDownloadUrl().startswith("s3"):
+        result: Union[Maybe, IOResultE] = flow(
+            _s3_credentials_endpoint(granule),
+            bind(partial(_earthdata_s3_credentials, maap)),
+            map_(_setup_default_boto3_session),
+        )
+
+        # If result is an IOResult, that means the granule has an S3 credentials
+        # endpoint, and an attempt was made to obtain S3 credentials.  If the
+        # attempt was unsuccessful, return the failure rather than proceeding to
+        # download the granule.
+        if isinstance(result, IOResult) and not is_successful(result):
+            return result
+
+    return impure_safe(granule.getData)(todir)
 
 
 def find_collection(
@@ -121,7 +124,7 @@ def find_collection(
         bind_ioresult(
             pipe(
                 safe(operator.itemgetter(0)),
-                lash(always(IOFailure(not_found_error))),
+                lash(fp.always(IOFailure(not_found_error))),
             )
         ),
     )

@@ -3,7 +3,7 @@
 set -xuo pipefail
 
 basedir=$(dirname "$(readlink -f "$0")")
-subset_py="conda run --no-capture-output -n gedi_subset ${basedir}/src/subset.py"
+subset_py="conda run --no-capture-output -n gedi_subset ${basedir}/src/gedi_subset/subset.py"
 
 if ! test -d "input"; then
     # There is no `input` sub-directory of the current working directory, so

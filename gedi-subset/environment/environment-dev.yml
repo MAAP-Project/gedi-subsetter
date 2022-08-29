@@ -5,12 +5,14 @@ channels:
 dependencies:
   - backoff
   - black
-  - boto3-stubs[s3]
   - botocore-stubs
   - contextily
   - ipykernel
   - isort
+  - moto
   - mypy
+  - mypy-boto3-s3
   - pre-commit
+  - pytest
   - types-cachetools
   - types-requests
