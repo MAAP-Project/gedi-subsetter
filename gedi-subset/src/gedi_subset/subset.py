@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Iterable, Sequence, Tuple
 
 import geopandas as gpd
+import h5py
 import typer
 from maap.maap import MAAP
 from maap.Result import Granule
@@ -26,7 +27,6 @@ from gedi_subset import osx
 from gedi_subset.fp import always, filter, map
 from gedi_subset.gedi_utils import (
     chext,
-    df_assign,
     gdf_read_parquet,
     gdf_to_file,
     gdf_to_parquet,
@@ -83,10 +83,10 @@ def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
     inpath = unsafe_perform_io(io_result.alt(raise_exception).unwrap())
 
     logger.debug(f"Subsetting {inpath}")
-    gdf: gpd.GeoDataFrame = flow(
-        subset_hdf5(inpath, props.aoi_gdf, props.columns, props.query),
-        df_assign("filename", inpath),
-    )
+
+    with h5py.File(inpath) as hdf5:
+        gdf = subset_hdf5(hdf5, props.aoi_gdf, props.columns, props.query)
+
     osx.remove(inpath)
 
     if gdf.empty:
@@ -183,8 +183,6 @@ def main(
                 "agbd_se",
                 "l2_quality_flag",
                 "l4_quality_flag",
-                "lat_lowestmode",
-                "lon_lowestmode",
                 "sensitivity",
                 "sensitivity_a2",
             ]

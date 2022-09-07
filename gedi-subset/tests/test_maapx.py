@@ -48,7 +48,9 @@ def test_download_granule_no_s3credentials(
         }
     )
 
-    filename = unsafe_perform_io(download_granule(maap, tmp_path, granule).unwrap())
+    filename = unsafe_perform_io(
+        download_granule(maap, str(tmp_path), granule).unwrap()
+    )
 
     with open(filename) as f:
         assert f.read() == "s3 contents"
@@ -83,7 +85,9 @@ def test_download_granule_s3credentials_success(
 
     with responses.RequestsMock() as mock:
         mock.get(url=EDC_CREDENTIALS_URL_PATTERN, status=200, body=json.dumps(creds))
-        filename = unsafe_perform_io(download_granule(maap, tmp_path, granule).unwrap())
+        filename = unsafe_perform_io(
+            download_granule(maap, str(tmp_path), granule).unwrap()
+        )
 
     with open(filename) as f:
         assert f.read() == "s3 contents"
@@ -114,7 +118,7 @@ def test_download_granule_s3credentials_failure(
     with pytest.raises(requests.exceptions.HTTPError, match="500"):
         with responses.RequestsMock() as mock:
             mock.get(url=EDC_CREDENTIALS_URL_PATTERN, status=500)
-            download_granule(maap, tmp_path, granule).alt(raise_exception)
+            download_granule(maap, str(tmp_path), granule).alt(raise_exception)
 
 
 def test_download_granule_https_success(
