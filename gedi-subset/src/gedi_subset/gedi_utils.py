@@ -3,7 +3,7 @@ import logging
 import os
 import os.path
 import warnings
-from typing import Any, Callable, List, Mapping, Sequence, TypeVar, Union
+from typing import Any, Callable, Iterable, Mapping, TypeVar, Union
 
 import h5py
 import numpy as np
@@ -23,13 +23,10 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import geopandas as gpd
 
-
 _A = TypeVar("_A")
 _B = TypeVar("_B")
 _C = TypeVar("_C")
 _D = TypeVar("_D")
-_DF = TypeVar("_DF", bound=pd.DataFrame)
-_T = TypeVar("_T")
 
 logger = logging.getLogger(f"gedi_subset.{__name__}")
 
@@ -59,15 +56,9 @@ def converge(
     return do_join
 
 
-# str -> Any -> _DF -> _DF
-@curry
-def df_assign(col_name: str, val: Any, df: _DF) -> _DF:
-    return df.assign(**{col_name: val})
-
-
 @curry
 def append_message(extra_message: str, e: Exception) -> Exception:
-    message, *other_args = e.args if e.args else ("",)  # pytype: disable=bad-unpacking
+    message, *other_args = e.args if e.args else ("",)
     new_message = f"{message}: {extra_message}" if message else extra_message
     e.args = (new_message, *other_args)
 
@@ -118,22 +109,6 @@ def get_geo_boundary(iso: str, level: int) -> gpd.GeoDataFrame:
     return gpd.read_file(file_path)
 
 
-def subset_gedi_granule(
-    path: Union[str, os.PathLike],
-    aoi: gpd.GeoDataFrame,
-    filter_cols=["lat_lowestmode", "lon_lowestmode"],
-) -> gpd.GeoDataFrame:
-    """
-    Subset a GEDI granule by a polygon in CRS 4326
-
-    path = path to a granule h5 file that's already been downloaded
-    aoi = a shapely polygon of the aoi
-
-    return GeoDataFrame of granule subsetted to specified `aoi`
-    """
-    return subset_h5(path, aoi, filter_cols)
-
-
 @curry
 def granule_intersects(aoi: BaseGeometry, granule: Granule):
     """Determines whether or not a granule intersects an Area of Interest
@@ -175,113 +150,222 @@ def spatial_filter(beam, aoi):
     return indices
 
 
-@curry
-def subset_h5(
-    path: Union[str, os.PathLike],
-    aoi: gpd.GeoDataFrame,
-    filter_cols: Sequence[str],
-    expr: str,
-) -> gpd.GeoDataFrame:
-    """
-    Extract the beam data only for the aoi and only columns of interest
-    """
-    subset_df = pd.DataFrame()
-
-    with h5py.File(path, "r") as hf_in:
-        # loop through BEAMXXXX groups
-        for v in list(hf_in.keys()):
-            if v.startswith("BEAM"):
-                col_names = []
-                col_val = []
-                beam = hf_in[v]
-
-                indices = spatial_filter(beam, aoi)
-
-                # TODO: when to spatial subset?
-                for key, value in beam.items():
-                    # looping through subgroups
-                    if isinstance(value, h5py.Group):
-                        for key2, value2 in value.items():
-                            if key2 not in filter_cols:
-                                continue
-                            if key2 != "shot_number":
-                                # xvar variables have 2D
-                                if key2.startswith("xvar"):
-                                    for r in range(4):
-                                        col_names.append(key2 + "_" + str(r + 1))
-                                        col_val.append(value2[:, r][indices].tolist())
-                                else:
-                                    col_names.append(key2)
-                                    col_val.append(value2[:][indices].tolist())
-
-                    # looping through base group
-                    else:
-                        if key not in filter_cols:
-                            continue
-                        # xvar variables have 2D
-                        if key.startswith("xvar"):
-                            for r in range(4):
-                                col_names.append(key + "_" + str(r + 1))
-                                col_val.append(value[:, r][indices].tolist())
-
-                        else:
-                            col_names.append(key)
-                            col_val.append(value[:][indices].tolist())
-
-                # create a pandas dataframe
-                beam_df = pd.DataFrame(
-                    map(list, zip(*col_val)), columns=col_names
-                ).query(expr)
-                # Inserting BEAM names
-                beam_df.insert(0, "BEAM", np.repeat(v[5:], len(beam_df.index)).tolist())
-                # Appending to the subset_df dataframe
-                subset_df = pd.concat([subset_df, beam_df])
-
-    all_gdf = gpd.GeoDataFrame(
-        subset_df.loc[:, ~subset_df.columns.isin(["lon_lowestmode", "lat_lowestmode"])],
-        geometry=gpd.points_from_xy(subset_df.lon_lowestmode, subset_df.lat_lowestmode),
-    )
-    all_gdf.crs = "EPSG:4326"
-    # TODO: Drop the lon and lat columns after geometry creation(or during)
-    # TODO: document how many points before and after filtering
-    # print(f"All points {all_gdf.shape}")
-    # subset_gdf = all_gdf[all_gdf['geometry'].within(aoi.geometry[0])]
-    # Doing the spatial search first didn't help at all, so maybe the spatial query is
-    # the slow part.
-    subset_gdf = all_gdf
-    # print(f"Subset points {subset_gdf.shape}")
-
-    return subset_gdf
-
-
 def subset_hdf5(
-    path: str,
+    hdf5: h5py.File,
     aoi: gpd.GeoDataFrame,
-    columns: Sequence[str],
-    expr: str,
+    columns: Iterable[str],
+    query: str,
 ) -> gpd.GeoDataFrame:
+    """Subset the data in an HDF5 file into a ``geopandas.GeoDataFrame``.
+
+    The data within the HDF5 file is "subsetted" by selecting only data for points that
+    fall within the specified area of interest (AOI) and also satisfy the specified
+    query criteria.  The resulting ``geopandas.GeoDataFrame`` is further reduced to
+    including only the specified columns, which must be names of datasets within the
+    top-level groups of the HDF5 file (and more specifically, only to groups named with
+    the prefix `"BEAM"`).
+
+    To illustrate, assume an HDF5 file (`hdf5`) structured like so (values are for
+    illustration purposes only):
+
+    ```
+    GEDI04_A_2019146134206_O02558_01_T05641_02_002_02_V002.h5
+    +-- ANCILLARY
+        +-- ...
+    +-- BEAM0000
+        +-- agbd: 1.271942, 1.3311168, 1.1160929
+        +-- sensitivity: 0.9, 0.97, 0.99
+        +-- l2_quality_flag: 0, 1, 1
+        +-- lat_lowestmode: -1.82556, -4.82514, -1.82471
+        +-- lon_lowestmode: 12.06648, 12.06678, 12.06707
+    +-- BEAM0001
+        +-- agbd: 1.1715966, 1.630395, 3.5265787
+        +-- sensitivity: 0.93, 0.96, 0.98
+        +-- l2_quality_flag: 0, 1, 1
+        +-- lat_lowestmode: -1.82557, -4.82515, -1.82472
+        +-- lon_lowestmode: 12.06649, 12.06679, 12.06708
+    +-- METADATA
+        +-- ...
+    ```
+
+    Further, assume an AOI (`aoi`) with the following lon-lat coordinates in
+    counter-clockwise order (a polygon): (8.45, 2.35), (14.35, 2.35), (14.35, -4.15),
+    (8.45, -4.15), (8.45, 2.35).
+
+    Subsetting the `hdf5` file to points within the `aoi`, matching the criteria
+    `sensitivity > 0.95 and l2_quality_flag == 1`, and selecting only the `columns`
+    (datasets) named `"agbd"` and `"sensitivity"`, would result in the following data:
+
+    ```
+    filename    BEAM  agbd      sensitivity              geometry
+    GEDI04_...     0  1.116093         0.99  (12.06707, -1.82471)
+    GEDI04_...     1  3.526579         0.98  (12.06708, -1.82472)
+    ```
+
+    Assumptions:
+
+    - The top-level groups in the HDF5 file are named with the prefix `"BEAM"`, and the
+      suffix is parseable as an integer.
+    - Every `"BEAM*"` group contains datasets named `lat_lowestmode` and
+      `lon_lowestmode`, representing the latitude and longitude, respectively, which are
+      used for the geometry of the resulting ``GeoDataFrame``.
+    - For every column name in `columns` and every column name appearing in the `query`
+      expression, every `"BEAM*"` group contains a dataset of the same name.
+
+    Further, for traceability, the `filename` and `BEAM` columns are inserted,
+    regardless of the specified `columns` value.
+
+    See the code example below for the code that corresponds to this illustration.
+
+    Parameters
+    ----------
+    hdf5 : h5py.File
+        HDF5 file to subset.
+    aoi : gpd.GeoDataFrame
+        Area of Interest.  The subset is limited to data points that fall within this
+        area of interest, as determined by the `lat_lowestmode` and `lon_lowestmode`
+        datasets of each `"BEAM*"` group within the HDF5 file.
+    columns : Iterable[str]
+        Column names to be included in the subset.  The specified column names must
+        match dataset names within the top-level `"BEAM*"` groups of the HDF5 file.
+        Although the `query` expression may include column names not given in this
+        iterable of names, the resulting ``GeoDataFrame`` will contain only the columns
+        specified by this parameter, along with `filename` (str) and `BEAM` (int)
+        columns (for traceability).
+    query : str
+        Query expression for subsetting the rows of the data.  After "flattening" all
+        of the `"BEAM*"` groups of the HDF5 file into rows across with columns formed by
+        the groups' datasets, only rows satisfying this query expression are returned.
+
+    Returns
+    -------
+    subset : gpd.GeoDataFrame
+        GeoDataFrame containing the subset of the data from the HDF5 file that fall
+        within the specified area of interest and satisfy the specified query.  Columns
+        are limited to the specified iterable of column names, along with `filename`
+        (str) and `BEAM` (int) columns.
+
+    Examples
+    --------
+    The following HDF5 file corresponds to the data illustrated above.  In this example,
+    we're simply generating it on-the-fly in memory, rather than reading from disk, as
+    would be the norm:
+
+    >>> import io
+    >>> bio = io.BytesIO()
+    >>> with h5py.File(bio, "w") as hdf5:  # doctest: +ELLIPSIS
+    ...     group = hdf5.create_group("BEAM0000")
+    ...     group.create_dataset("agbd", data=[1.271942, 1.3311168, 1.1160929])
+    ...     group.create_dataset("l2_quality_flag", data=[0, 1, 1], dtype="i1")
+    ...     group.create_dataset("lat_lowestmode", data=[-1.82556, -9.82514, -1.82471])
+    ...     group.create_dataset("lon_lowestmode", data=[12.06648, 12.06678, 12.06707])
+    ...     group.create_dataset("sensitivity", data=[0.9, 0.97, 0.99])
+    ...     group = hdf5.create_group("BEAM0001")
+    ...     group.create_dataset("agbd", data=[1.1715966, 1.630395, 3.5265787])
+    ...     group.create_dataset("l2_quality_flag", data=[0, 1, 1], dtype="i1")
+    ...     group.create_dataset("lat_lowestmode", data=[-1.82557, -9.82515, -1.82472])
+    ...     group.create_dataset("lon_lowestmode", data=[12.06649, 12.06679, 12.06708])
+    ...     group.create_dataset("sensitivity", data=[0.93, 0.96, 0.98])
+    <HDF5 dataset "agbd": ...>
+    <HDF5 dataset "l2_quality_flag": ...>
+    <HDF5 dataset "lat_lowestmode": ...>
+    <HDF5 dataset "lon_lowestmode": ...>
+    <HDF5 dataset "sensitivity": ...>
+    <HDF5 dataset "agbd": ...>
+    <HDF5 dataset "l2_quality_flag": ...>
+    <HDF5 dataset "lat_lowestmode": ...>
+    <HDF5 dataset "lon_lowestmode": ...>
+    <HDF5 dataset "sensitivity": ...>
+
+    To make it easier to see what subsetting the HDF5 file will do, let's take a look at
+    what the HDF5 data looks like "flattened" into a ``geopandas.GeoDataFrame``, where
+    the `"BEAM*"` groups are concatenated, and their datasets appear as columns:
+
+    >>> with h5py.File(bio) as hdf5:
+    ...     pd.concat(
+    ...         (gpd.GeoDataFrame({
+    ...             name: pd.Series(data, name=name)
+    ...             for name, data in group.items()
+    ...         })
+    ...         for group in hdf5.values()),
+    ...         ignore_index=True,
+    ...     )
+           agbd  l2_quality_flag  lat_lowestmode  lon_lowestmode  sensitivity
+    0  1.271942                0        -1.82556        12.06648         0.90
+    1  1.331117                1        -9.82514        12.06678         0.97
+    2  1.116093                1        -1.82471        12.06707         0.99
+    3  1.171597                0        -1.82557        12.06649         0.93
+    4  1.630395                1        -9.82515        12.06679         0.96
+    5  3.526579                1        -1.82472        12.06708         0.98
+
+    Next, we'll obtain an area of interest as a ``geopandas.GeoDataFrame``.  Here, we're
+    constructing it from a features list, but typically, it might be obtained via
+    ``geopandas.read_file``:
+
+    >>> aoi = gpd.GeoDataFrame.from_features([{"properties": {}, "geometry": {
+    ...    "type": "Polygon",
+    ...    "coordinates": [
+    ...        [
+    ...            [ 8.45,  2.35],
+    ...            [14.35,  2.35],
+    ...            [14.35, -4.15],
+    ...            [ 8.45, -4.15],
+    ...            [ 8.45,  2.35],
+    ...        ]
+    ...    ],
+    ... }}])
+
+    We can now subset the data in the HDF5 file to points that fall within the AOI,
+    selecting only the desired columns (i.e., named datasets within the HDF5 file), and
+    selecting only the rows that satisfy the specified query:
+
+    >>> with h5py.File(bio) as hdf5:  # doctest: +ELLIPSIS
+    ...     gdf = subset_hdf5(
+    ...         hdf5, aoi, ["sensitivity", "agbd"],
+    ...         "l2_quality_flag == 1 and sensitivity > 0.95"
+    ...     )
+    ...     # Since the source of our HDF5 file is an ``io.BytesIO``, we'll drop the
+    ...     # `filename` column (which refers to the memory location of the
+    ...     # ``io.BytesIO``, not a filename).
+    ...     gdf.drop(columns=["filename"])
+       BEAM      agbd  sensitivity                   geometry
+    0     0  1.116093         0.99  POINT (12.06707 -1.82471)
+    1     1  3.526579         0.98  POINT (12.06708 -1.82472)
+
+    Note that the resulting ``geopandas.GeoDataFrame`` contains only the specified
+    columns (`agbd` and `sensitivity`), and only the rows (only 1 from each "beam" in
+    this example) that have a geometry that falls within the AOI and also satisfy the
+    query (i.e., `l2_quality_flag == 1` and `sensitivity > 0.95`).
+
+    Note also that although the `l2_quality_flag` was specified in the query, it does
+    not appear in the result because it was not specified in the iterable of column
+    names.  This means that the query is not limited to refering to only names given in
+    the iterable of column names, but may refer to any of the dataset names within the
+    `"BEAM*"` groups.
+    """
+
     def subset_beam(beam: h5py.Group) -> gpd.GeoDataFrame:
-        def append_series(path: str, value: Union[h5py.Group, h5py.Dataset]) -> None:
-            if (name := path.split("/")[-1]) in columns:
-                series.append(pd.Series(value, name=name))
-
-        series: List[pd.Series] = []
-        beam.visititems(append_series)
-        df = pd.concat(series, axis=1).query(expr)
-        df.insert(0, "BEAM", beam.name[5:])
-
+        """Subset an individual `"BEAM*"` group as described above."""
+        df_columns = (pd.Series(data, name=name) for name, data in beam.items())
+        df = pd.concat(df_columns, axis=1)
+        # Keep only the rows matching the specified query
+        df.query(query, inplace=True)
+        # Grab the coordinates for the geometry, before dropping columns
         x, y = df.lon_lowestmode, df.lat_lowestmode
-        df.drop(["lon_lowestmode", "lat_lowestmode"], axis=1, inplace=True)
+        # Drop all columns NOT specified by the columns parameter
+        df.drop(columns=list(set(df.columns) - set(columns)), inplace=True)
+        # Insert "BEAM" number column by converting numerical suffix to an int
+        df.insert(0, "BEAM", int(beam.name[5:]))
         gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(x, y), crs="EPSG:4326")
 
+        # Select only the data that falls within the area of interest
         return gdf[gdf.geometry.within(aoi.geometry[0])]
 
-    with h5py.File(path) as hdf5:
-        beams = (value for key, value in hdf5.items() if key.startswith("BEAM"))
-        beam_dfs = (subset_beam(beam) for beam in beams)
-        beams_df = pd.concat(beam_dfs, ignore_index=True, copy=False)
+    beams = (group for name, group in hdf5.items() if name.startswith("BEAM"))
+    beams_gdf = pd.concat(map(subset_beam, beams), ignore_index=True, copy=False)
+    beams_gdf.insert(0, "filename", os.path.basename(hdf5.filename))
 
-    return beams_df
+    return beams_gdf
 
 
 def write_subset(infile, gdf):

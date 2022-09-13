@@ -9,6 +9,18 @@ distinct lines of versioning of independent work in sibling directories.
 
 ## [Unreleased]
 
+## [gedi-subset-0.2.5] - 2022-09-13
+
+### Fixed
+
+- Top-level `build.sh` script passes all command-line arguments to `build.sh`
+  scripts in sub-directories
+- Issue
+  [#26](https://github.com/MAAP-Project/maap-documentation-examples/issues/26):
+  `lat_lowestmode` and `lon_lowestmode` are implicitly included in list of
+  columns for subsetting (i.e., user is no longer required to explicitly supply
+  them in the list of columns to select)
+
 ## [gedi-subset-0.2.4] - 2022-08-03
 
 ### Fixed

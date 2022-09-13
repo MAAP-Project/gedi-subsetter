@@ -54,9 +54,9 @@ def always(a: _A) -> Callable[..., _A]:
     Return a callable that accepts exactly one argument of any type, but always
     returns the value `a`.
 
-    >>> K(42)(0)
+    >>> always(42)(0)
     42
-    >>> K(42)('foo')
+    >>> always(42)('foo')
     42
     """
     return lambda _: a

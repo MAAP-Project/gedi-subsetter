@@ -87,9 +87,10 @@ def download_granule(maap: MAAP, todir: str, granule: Granule) -> IOResultE[str]
     for failure.
     """
     granule_ur = granule["Granule"]["GranuleUR"]
+    download_url = granule.getDownloadUrl()
     logger.debug(f"Downloading granule {granule_ur} to directory {todir}")
 
-    if granule.getDownloadUrl().startswith("s3"):
+    if download_url and download_url.startswith("s3"):
         result: Union[Maybe, IOResultE] = flow(
             _s3_credentials_endpoint(granule),
             bind(partial(_earthdata_s3_credentials, maap)),
