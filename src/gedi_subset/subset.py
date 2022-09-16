@@ -1,5 +1,6 @@
 #!/usr/bin/env -S python -W ignore::FutureWarning -W ignore::UserWarning
 
+import json
 import logging
 import multiprocessing
 import os
@@ -7,7 +8,7 @@ import os.path
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Iterable, Sequence, Tuple
+from typing import Any, Iterable, Mapping, Sequence, Tuple
 
 import geopandas as gpd
 import h5py
@@ -40,6 +41,9 @@ class CMRHost(str, Enum):
     maap = "cmr.maap-project.org"
     nasa = "cmr.earthdata.nasa.gov"
 
+
+with open(os.path.join(os.path.dirname(__file__), "doi_cfg.json")) as config_file:
+    config = json.load(config_file)
 
 LOGGING_FORMAT = "%(asctime)s [%(processName)s:%(name)s] [%(levelname)s] %(message)s"
 
@@ -157,6 +161,32 @@ def subset_granules(
         )
 
 
+def config_defaults(
+    config: Mapping[str, Any], doi: str, columns: str, query: str
+) -> Tuple[str, str, str]:
+    doi_cfg = config.get(doi, None)
+
+    if doi_cfg:
+        doi = doi_cfg["doi"]
+        if not columns:
+            columns = ",".join(doi_cfg["columns"])
+
+        if not query:
+            query = "".join(doi_cfg["query"])
+    else:
+        if not all([columns, query]):
+            raise ValueError(
+                f"""No default values found for: '{doi}'
+                --columns and --query are required"""
+            )
+
+    logging.debug(f"doi: {doi}")
+    logging.debug(f"columns: {columns}")
+    logging.debug(f"query: {query}")
+
+    return doi, columns, query
+
+
 def main(
     aoi: Path = typer.Option(
         ...,
@@ -169,31 +199,24 @@ def main(
         resolve_path=True,
     ),
     doi=typer.Option(
-        "10.3334/ORNLDAAC/2056",  # GEDI L4A DOI, v2.1
-        help="Digital Object Identifier of collection to subset (https://www.doi.org/)",
+        ...,
+        help=(
+            "Digital Object Identifier (DOI) of collection to subset"
+            " (https://www.doi.org/)"
+            " Can be a specific DOI"
+            f" or one of these logical names: {', '.join(config.keys())}"
+        ),
     ),
     cmr_host: CMRHost = typer.Option(
         CMRHost.maap,
         help="CMR hostname",
     ),
     columns: str = typer.Option(
-        ",".join(
-            [
-                "agbd",
-                "agbd_se",
-                "l2_quality_flag",
-                "l4_quality_flag",
-                "sensitivity",
-                "sensitivity_a2",
-            ]
-        ),
+        None,
         help="Comma-separated list of columns to select",
     ),
     query: str = typer.Option(
-        "l2_quality_flag == 1"
-        " and l4_quality_flag == 1"
-        " and sensitivity > 0.95"
-        " and sensitivity_a2 > 0.95",
+        None,
         help="Boolean query expression to select rows",
     ),
     limit: int = typer.Option(
@@ -216,6 +239,8 @@ def main(
 ) -> None:
     logging_level = logging.DEBUG if verbose else logging.INFO
     set_logging_level(logging_level)
+
+    doi, columns, query = config_defaults(config, doi, columns, query)
 
     os.makedirs(output_dir, exist_ok=True)
     dest = output_dir / "gedi_subset.gpkg"
