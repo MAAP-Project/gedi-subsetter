@@ -1,6 +1,6 @@
 import os
 import warnings
-from typing import Iterable
+from typing import Any, Iterable, Mapping
 
 import boto3
 import h5py
@@ -46,6 +46,39 @@ def s3(aws_credentials) -> Iterable[S3Client]:
 @pytest.fixture(scope="function")
 def maap() -> MAAP:
     return MockMAAP()
+
+
+@pytest.fixture(scope="session")
+def config() -> Mapping[str, Any]:
+    return {
+        "L4A": {
+            "doi": "10.3334/ORNLDAAC/2056",
+            "columns": [
+                "agbd",
+                "agbd_se",
+                "l2_quality_flag",
+                "l4_quality_flag",
+                "sensitivity",
+                "sensitivity_a2",
+            ],
+            "query": [
+                "l2_quality_flag == 1",
+                " and l4_quality_flag == 1",
+                " and sensitivity > 0.95",
+                " and sensitivity_a2 > 0.95",
+            ],
+        },
+        "L2A": {
+            "doi": "10.5067/GEDI/GEDI02_A.002",
+            "columns": ["rh", "sensitivity", "solar_elevation", "quality_flag"],
+            "query": [
+                "rh > 100",
+                " and sensitivity > 0.9",
+                " and solar_elevation < 0",
+                " and quality_flag == 1",
+            ],
+        },
+    }
 
 
 @pytest.fixture(scope="session")
