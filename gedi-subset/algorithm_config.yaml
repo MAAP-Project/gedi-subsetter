@@ -1,6 +1,6 @@
 description: Subset GEDI L4A granules within an area of interest (AOI)
 algo_name: gedi-subset
-version: gedi-subset-0.2.5
+version: gedi-subset-0.2.6
 environment: ubuntu
 repository_url: https://repo.ops.maap-project.org/data-team/maap-documentation-examples.git
 docker_url: mas.maap-project.org:5000/root/ade-base-images/r:latest

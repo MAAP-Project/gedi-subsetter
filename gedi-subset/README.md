@@ -33,8 +33,6 @@ To run a GEDI subsetting DPS job, you must supply the following inputs:
   (**Default:**
   `agbd, agbd_se, l2_quality_flag, l4_quality_flag, sensitivity, sensitivity_a2`)
 - `query`: Query expression for subsetting the rows in the output file.
-  **IMPORTANT:** The `columns` input must contain at least all of the columns
-  that appear in this query expression, otherwise an error will occur.
   (**Default:** `l2_quality_flag == 1 and l4_quality_flag == 1 and sensitivity >
   0.95 and sensitivity_a2 > 0.95"`)
 - `limit`: Maximum number of GEDI granule data files to download (among those

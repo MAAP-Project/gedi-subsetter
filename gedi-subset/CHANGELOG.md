@@ -7,9 +7,18 @@ variation of [Semantic Versioning], with the following difference: each version
 is prefixed with `gedi-subset-` (e.g., `gedi-subset-0.1.0`) to allow for
 distinct lines of versioning of independent work in sibling directories.
 
+## [gedi-subset-0.2.6] - 2022-09-15
+
+### Fixed
+
+- Issue [#31](https://github.com/MAAP-Project/maap-documentation-examples/issues/31)
+  Running the gedi_subset algorithm (version 0.2.5) raises the following error
+  after downloading a file and attempting to subset it: OSError: Can't read data
+  (no appropriate function for conversion path).
+
 ## [Unreleased]
 
-## [gedi-subset-0.2.5] - 2022-09-13
+## [gedi-subset-0.2.5] - 2022-09-13 [YANKED]
 
 ### Fixed
 

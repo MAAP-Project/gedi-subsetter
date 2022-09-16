@@ -3,6 +3,7 @@ import logging
 import os
 import os.path
 import warnings
+from itertools import chain
 from typing import Any, Callable, Iterable, Mapping, TypeVar, Union
 
 import h5py
@@ -162,8 +163,7 @@ def subset_hdf5(
     fall within the specified area of interest (AOI) and also satisfy the specified
     query criteria.  The resulting ``geopandas.GeoDataFrame`` is further reduced to
     including only the specified columns, which must be names of datasets within the
-    top-level groups of the HDF5 file (and more specifically, only to groups named with
-    the prefix `"BEAM"`).
+    HDF5 file (and more specifically, only to groups named with the prefix `"BEAM"`).
 
     To illustrate, assume an HDF5 file (`hdf5`) structured like so (values are for
     illustration purposes only):
@@ -204,7 +204,7 @@ def subset_hdf5(
 
     Assumptions:
 
-    - The top-level groups in the HDF5 file are named with the prefix `"BEAM"`, and the
+    - The HDF5 file contains groups that are named with the prefix `"BEAM"`, and the
       suffix is parseable as an integer.
     - Every `"BEAM*"` group contains datasets named `lat_lowestmode` and
       `lon_lowestmode`, representing the latitude and longitude, respectively, which are
@@ -227,7 +227,7 @@ def subset_hdf5(
         datasets of each `"BEAM*"` group within the HDF5 file.
     columns : Iterable[str]
         Column names to be included in the subset.  The specified column names must
-        match dataset names within the top-level `"BEAM*"` groups of the HDF5 file.
+        match dataset names within the `"BEAM*"` groups of the HDF5 file.
         Although the `query` expression may include column names not given in this
         iterable of names, the resulting ``GeoDataFrame`` will contain only the columns
         specified by this parameter, along with `filename` (str) and `BEAM` (int)
@@ -344,9 +344,22 @@ def subset_hdf5(
     `"BEAM*"` groups.
     """
 
+    def datasets(group: h5py.Group) -> Iterable[h5py.Dataset]:
+        """Return an iterable of all 1-dimensional ``h5py.Dataset``s from all levels
+        within an ``h5py.Group``.
+        """
+        return chain.from_iterable(
+            datasets(value)
+            if isinstance(value, h5py.Group)
+            else [(name, value)]
+            if value.ndim == 1
+            else []
+            for name, value in group.items()
+        )
+
     def subset_beam(beam: h5py.Group) -> gpd.GeoDataFrame:
         """Subset an individual `"BEAM*"` group as described above."""
-        df_columns = (pd.Series(data, name=name) for name, data in beam.items())
+        df_columns = (pd.Series(data, name=name) for name, data in datasets(beam))
         df = pd.concat(df_columns, axis=1)
         # Keep only the rows matching the specified query
         df.query(query, inplace=True)

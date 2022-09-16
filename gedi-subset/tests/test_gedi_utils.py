@@ -24,6 +24,7 @@ def fixture_path(filename: str) -> str:
         ({"sensitivity", "agbd"}, "agbd > 1 and l2_quality_flag == 1", 2),
         ({"sensitivity", "agbd", "agbd_se"}, "agbd_se > 3", 3),
         ({"agbd", "lat_lowestmode", "lon_lowestmode"}, "sensitivity >= 0.9", 4),
+        ({"landsat_treecover"}, "landsat_treecover > 60.0", 4),
     ],
 )
 def test_subset_hdf5(
