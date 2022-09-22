@@ -7,7 +7,23 @@ variation of [Semantic Versioning], with the following difference: each version
 is prefixed with `gedi-subset-` (e.g., `gedi-subset-0.1.0`) to allow for
 distinct lines of versioning of independent work in sibling directories.
 
-## [gedi-subset-0.2.6] - 2022-09-15
+## [Unreleased]
+
+## [gedi-subset-0.2.7] - 2022-09-27
+
+Hotfix replacement for `gedi-subset-0.2.6`, which was yanked because it caused
+jobs with larger `.h5` files to run out of memory, particularly for subsetting
+GEDI L2A data.
+
+## Fixed
+
+- Issue [#34](https://github.com/MAAP-Project/maap-documentation-examples/issues/34)
+  Fixes out of memory bug introduced by previous bug fix.
+
+## [gedi-subset-0.2.6] - 2022-09-15 [YANKED]
+
+Hotfix replacement for `gedi-subset-0.2.5`, which was yanked because it caused
+every job execution to fail.
 
 ### Fixed
 
@@ -15,8 +31,6 @@ distinct lines of versioning of independent work in sibling directories.
   Running the gedi_subset algorithm (version 0.2.5) raises the following error
   after downloading a file and attempting to subset it: OSError: Can't read data
   (no appropriate function for conversion path).
-
-## [Unreleased]
 
 ## [gedi-subset-0.2.5] - 2022-09-13 [YANKED]
 
@@ -32,9 +46,13 @@ distinct lines of versioning of independent work in sibling directories.
 
 ## [gedi-subset-0.2.4] - 2022-08-03
 
+Hotfix replacement for `gedi-subset-0.2.3`, which was yanked, as it caused
+algorithm registration to fail.
+
 ### Fixed
 
-- `build.sh` now references the requirements-maappy in the correct relative path.
+- `build.sh` now references the requirements-maappy in the correct relative path
+  to allow algorithm registration to succeed.
 
 ## [gedi-subset-0.2.3] - 2022-08-03 [YANKED]
 
