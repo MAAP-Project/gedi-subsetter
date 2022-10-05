@@ -3,7 +3,7 @@ algo_name: gedi-subset
 version: gedi-subset-0.2.7
 environment: ubuntu
 repository_url: https://repo.ops.maap-project.org/data-team/maap-documentation-examples.git
-docker_url: mas.maap-project.org:5000/root/ade-base-images/r:latest
+docker_url: mas.dit.maap-project.org/root/maap-workspaces/base_images/r:dit
 queue: maap-dps-worker-8gb
 build_command: maap-documentation-examples/build.sh
 run_command: maap-documentation-examples/gedi-subset/subset.sh
