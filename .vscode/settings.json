@@ -5,5 +5,7 @@
     "python.formatting.provider": "black",
     "python.analysis.extraPaths": [
         "./gedi-subset/src"
-    ]
+    ],
+    "mypy.runUsingActiveInterpreter": true,
+    "mypy.configFile": "gedi-subset/pyproject.toml"
 }

@@ -2,23 +2,20 @@ import json
 import logging
 import os
 import os.path
-import posixpath
 import warnings
-from collections import defaultdict
-from itertools import chain
-from typing import Any, FrozenSet, Iterable, Mapping, Optional, Sequence, Union
+from typing import Any, Mapping, Optional, Sequence, Union
 
 import h5py
 import numpy as np
 import pandas as pd
 import requests
 from maap.Result import Granule
-from pandas.core.computation.expr import Expr
-from pandas.core.computation.scope import ensure_scope
 from returns.curry import curry
 from returns.io import IOResultE, impure_safe
 from shapely.geometry import Polygon
 from shapely.geometry.base import BaseGeometry
+
+from gedi_subset.h5frame import H5DataFrame
 
 # Suppress UserWarning: The Shapely GEOS version (3.10.2-CAPI-1.16.0) is incompatible
 # with the GEOS version PyGEOS was compiled with (3.8.1-CAPI-1.13.3). Conversions
@@ -212,6 +209,7 @@ def subset_hdf5(
         Query expression for subsetting the rows of the data.  After "flattening" all
         of the `"BEAM*"` groups of the HDF5 file into rows across with columns formed by
         the groups' datasets, only rows satisfying this query expression are returned.
+        If not specified, _all_ rows are returned.
 
     Returns
     -------
@@ -320,52 +318,21 @@ def subset_hdf5(
     `"BEAM*"` groups.
     """
 
-    def expr_names(expr: Optional[str]) -> FrozenSet[str]:
-        """Return frozen set of variable names parsed from a query expression."""
-        if not expr:
-            return frozenset()
-        resolver = defaultdict(int, __foo__=0)
-        env = ensure_scope(0, global_dict={}, local_dict={}, resolvers=(resolver,))
-
-        return frozenset(
-            name for name in Expr(expr, env=env).names if isinstance(name, str)
-        )
-
-    def flatten(group: h5py.Group) -> Iterable[h5py.Dataset]:
-        """Return iterable of every ``h5py.Dataset`` within an ``h5py.Group``, at all
-        levels of the group's hierarchy.
-        """
-        return chain.from_iterable(
-            [value] if isinstance(value, h5py.Dataset) else flatten(value)
-            for value in group.values()
-        )
-
     def subset_beam(beam: h5py.Group) -> gpd.GeoDataFrame:
         """Subset an individual `"BEAM*"` group as described above."""
-        df_columns = (
-            pd.Series(dataset, name=name)
-            for dataset in flatten(beam)
-            if (name := posixpath.basename(dataset.name)) in dataset_names
-        )
-        df = pd.concat(df_columns, axis=1)
+        df: pd.DataFrame = H5DataFrame(beam)
         # Keep only the rows matching the specified query
         if query:
             df.query(query, inplace=True)
         # Grab the coordinates for the geometry, before dropping columns
-        x, y = df.lon_lowestmode, df.lat_lowestmode
+        geometry = gpd.points_from_xy(df.lon_lowestmode, df.lat_lowestmode)
         # Drop all columns NOT specified by the columns parameter
-        df.drop(columns=list(set(df.columns) - set(columns)), inplace=True)
+        df = df[list(columns)]
         df.insert(0, "BEAM", beam.name[5:])
-        gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(x, y), crs="EPSG:4326")
+        gdf = gpd.GeoDataFrame(df, geometry=geometry, crs="EPSG:4326")
 
         # Clip subset to the area of interest
         return gpd.clip(gdf, aoi.set_crs(epsg=4326))
-
-    # Sorting isn't necessary for correctness, but is necessary for consistent ordering
-    # for expected output in the doctests in this function's docstring.
-    dataset_names = sorted(
-        set(columns) | expr_names(query) | {"lon_lowestmode", "lat_lowestmode"}
-    )
 
     beams = (group for name, group in hdf5.items() if name.startswith("BEAM"))
     beams_gdf = pd.concat(map(subset_beam, beams), ignore_index=True, copy=False)

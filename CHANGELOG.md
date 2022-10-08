@@ -7,6 +7,22 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- [#5](https://github.com/MAAP-Project/gedi-subsetter/issues/5): Nested
+  variables must now be specified by path relative to each BEAM group.  This not
+  only avoids ambiguity for variables of the same name (but different paths),
+  but also makes a variable's location explicit.
+
+### Added
+
+- [#2](https://github.com/MAAP-Project/gedi-subsetter/issues/2): User must
+  specify `doi` as an input, now allowing subsetting of L2A as well as L4A data.
+- [#8](https://github.com/MAAP-Project/gedi-subsetter/issues/8): Specifying a
+  query is now optional, to allow selecting all rows for specified columns.
+- [#7](https://github.com/MAAP-Project/gedi-subsetter/issues/7): Columns from 2D
+  variables can be selected.
+
 ## [0.2.7] - 2022-10-18
 
 ### Added
