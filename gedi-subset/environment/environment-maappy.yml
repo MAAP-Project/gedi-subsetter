@@ -1,8 +1,0 @@
-name: gedi_subset
-channels:
-  - conda-forge
-  - defaults
-dependencies:
-  - pip
-  - pip:
-    - git+https://github.com/MAAP-Project/maap-py.git@hotfixes#egg=maappy
