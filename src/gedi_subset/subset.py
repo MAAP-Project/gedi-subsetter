@@ -1,6 +1,5 @@
 #!/usr/bin/env -S python -W ignore::FutureWarning -W ignore::UserWarning
 
-import json
 import logging
 import multiprocessing
 import os
@@ -8,7 +7,7 @@ import os.path
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence, Tuple
+from typing import Any, Iterable, Sequence, Tuple
 
 import geopandas as gpd
 import h5py
@@ -42,8 +41,7 @@ class CMRHost(str, Enum):
     nasa = "cmr.earthdata.nasa.gov"
 
 
-with open(os.path.join(os.path.dirname(__file__), "doi_cfg.json")) as config_file:
-    config = json.load(config_file)
+logicals = {"L4A": "10.3334/ORNLDAAC/2056", "L2A": "10.5067/GEDI/GEDI02_A.002"}
 
 LOGGING_FORMAT = "%(asctime)s [%(processName)s:%(name)s] [%(levelname)s] %(message)s"
 
@@ -161,32 +159,6 @@ def subset_granules(
         )
 
 
-def config_defaults(
-    config: Mapping[str, Any], doi: str, columns: str, query: str
-) -> Tuple[str, str, str]:
-    doi_cfg = config.get(doi, None)
-
-    if doi_cfg:
-        doi = doi_cfg["doi"]
-        if not columns:
-            columns = ",".join(doi_cfg["columns"])
-
-        if not query:
-            query = "".join(doi_cfg["query"])
-    else:
-        if not all([columns, query]):
-            raise ValueError(
-                f"""No default values found for: '{doi}'
-                --columns and --query are required"""
-            )
-
-    logging.debug(f"doi: {doi}")
-    logging.debug(f"columns: {columns}")
-    logging.debug(f"query: {query}")
-
-    return doi, columns, query
-
-
 def main(
     aoi: Path = typer.Option(
         ...,
@@ -204,7 +176,7 @@ def main(
             "Digital Object Identifier (DOI) of collection to subset"
             " (https://www.doi.org/)"
             " Can be a specific DOI"
-            f" or one of these logical names: {', '.join(config.keys())}"
+            f" or one of these logical names: {', '.join(logicals.keys())}"
         ),
     ),
     cmr_host: CMRHost = typer.Option(
@@ -240,7 +212,7 @@ def main(
     logging_level = logging.DEBUG if verbose else logging.INFO
     set_logging_level(logging_level)
 
-    doi, columns, query = config_defaults(config, doi, columns, query)
+    doi = logicals.get(doi, doi)
 
     os.makedirs(output_dir, exist_ok=True)
     dest = output_dir / "gedi_subset.gpkg"
