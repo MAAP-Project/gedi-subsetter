@@ -11,6 +11,8 @@ disk_space: 20GB
 inputs:
   - name: aoi
     download: True
+  - name: doi
+    download: False
   - name: columns
     download: False
   - name: query
