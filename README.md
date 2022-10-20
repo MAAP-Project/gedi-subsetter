@@ -29,7 +29,7 @@ At a high level, the GEDI subsetting algorithm does the following:
 To run a GEDI subsetting DPS job, you must supply the following inputs:
 
 - `aoi` (**required**): URL to a GeoJSON file representing your area of interest
-- `doi` (**required**): digital object identify of collection
+- `doi` (**required**): Digital object identify of collection
 - `columns` (**required**): Comma-separated list of column names to include in output file.
 - `query` (**required**): Query expression for subsetting the rows in the output file.
 - `limit`: Maximum number of GEDI granule data files to download (among those

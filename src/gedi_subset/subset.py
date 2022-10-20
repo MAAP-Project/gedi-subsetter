@@ -41,7 +41,7 @@ class CMRHost(str, Enum):
     nasa = "cmr.earthdata.nasa.gov"
 
 
-logical_doi = {"L4A": "10.3334/ORNLDAAC/2056", "L2A": "10.5067/GEDI/GEDI02_A.002"}
+logical_dois = {"L4A": "10.3334/ORNLDAAC/2056", "L2A": "10.5067/GEDI/GEDI02_A.002"}
 
 LOGGING_FORMAT = "%(asctime)s [%(processName)s:%(name)s] [%(levelname)s] %(message)s"
 
@@ -172,12 +172,12 @@ def main(
     ),
     doi=typer.Option(
         ...,
-        callback=lambda value: logical_doi.get(value.upper(), value),
+        callback=lambda value: logical_dois.get(value.upper(), value),
         help=(
             "Digital Object Identifier (DOI) of collection to subset"
             " (https://www.doi.org/)"
             " Can be a specific DOI or one of these logical,"
-            f" case-insensitive names: {', '.join(logical_doi)}"
+            f" case-insensitive names: {', '.join(logical_dois)}"
         ),
     ),
     cmr_host: CMRHost = typer.Option(
