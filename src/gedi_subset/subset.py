@@ -41,6 +41,8 @@ class CMRHost(str, Enum):
     nasa = "cmr.earthdata.nasa.gov"
 
 
+logical_dois = {"L4A": "10.3334/ORNLDAAC/2056", "L2A": "10.5067/GEDI/GEDI02_A.002"}
+
 LOGGING_FORMAT = "%(asctime)s [%(processName)s:%(name)s] [%(levelname)s] %(message)s"
 
 logging.basicConfig(level=logging.INFO, format=LOGGING_FORMAT)
@@ -169,31 +171,25 @@ def main(
         resolve_path=True,
     ),
     doi=typer.Option(
-        "10.3334/ORNLDAAC/2056",  # GEDI L4A DOI, v2.1
-        help="Digital Object Identifier of collection to subset (https://www.doi.org/)",
+        ...,
+        callback=lambda value: logical_dois.get(value.upper(), value),
+        help=(
+            "Digital Object Identifier (DOI) of collection to subset"
+            " (https://www.doi.org/)"
+            " Can be a specific DOI or one of these logical,"
+            f" case-insensitive names: {', '.join(logical_dois)}"
+        ),
     ),
     cmr_host: CMRHost = typer.Option(
         CMRHost.maap,
         help="CMR hostname",
     ),
     columns: str = typer.Option(
-        ",".join(
-            [
-                "agbd",
-                "agbd_se",
-                "l2_quality_flag",
-                "l4_quality_flag",
-                "sensitivity",
-                "sensitivity_a2",
-            ]
-        ),
+        ...,
         help="Comma-separated list of columns to select",
     ),
     query: str = typer.Option(
-        "l2_quality_flag == 1"
-        " and l4_quality_flag == 1"
-        " and sensitivity > 0.95"
-        " and sensitivity_a2 > 0.95",
+        ...,
         help="Boolean query expression to select rows",
     ),
     limit: int = typer.Option(

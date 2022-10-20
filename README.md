@@ -29,18 +29,24 @@ At a high level, the GEDI subsetting algorithm does the following:
 To run a GEDI subsetting DPS job, you must supply the following inputs:
 
 - `aoi` (**required**): URL to a GeoJSON file representing your area of interest
-- `columns`: Comma-separated list of column names to include in output file.
-  (**Default:**
-  `agbd, agbd_se, l2_quality_flag, l4_quality_flag, sensitivity, sensitivity_a2`)
-- `query`: Query expression for subsetting the rows in the output file.
-  (**Default:** `l2_quality_flag == 1 and l4_quality_flag == 1 and sensitivity >
-  0.95 and sensitivity_a2 > 0.95"`)
+- `doi` (**required**): Digital object identify of collection
+- `columns` (**required**): Comma-separated list of column names to include in output file.
+- `query` (**required**): Query expression for subsetting the rows in the output file.
 - `limit`: Maximum number of GEDI granule data files to download (among those
   that intersect the specified AOI).  (**Default:** 10,000)
+
 
 |**IMPORTANT**
 |:-------------
 |_When supplying input values (either via the ADE UI or programmatically, as shown in the next section), to use the default value (where indicated) for an input, enter a dash (`-`) as the input value, otherwise you will receive an error if you leave any input blank (or unspecified)._
+
+
+### Suggested Inputs
+L4A:
+- columns: `agbd, agbd_se, l2_quality_flag, l4_quality_flag, sensitivity, sensitivity_a2`
+- query: `l2_quality_flag == 1 and l4_quality_flag == 1 and sensitivity >
+  0.95 and sensitivity_a2 > 0.95"`
+
 
 If your AOI is a publicly available geoBoundary, see
 [Getting the GeoJSON URL for a geoBoundary](#getting-the-geojson-url-for-a-geoboundary)
@@ -95,6 +101,7 @@ result = maap.submitJob(
     version="<VERSION>",
     queue="maap-dps-worker-32gb",
     username="<USERNAME>",  # Your Earthdata Login username
+    doi="<DOI>",
     aoi=aoi,
     columns="<COLUMNS>", # See previous section
     query="<QUERY>", # See previous section
