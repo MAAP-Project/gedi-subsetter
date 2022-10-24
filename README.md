@@ -38,10 +38,11 @@ To run a GEDI subsetting DPS job, you must supply the following inputs:
 
 |**IMPORTANT**
 |:-------------
-|_When supplying input values (either via the ADE UI or programmatically, as shown in the next section), to use the default value for the limit input, enter a dash (`-`) as the input value, otherwise you will receive an error if you leave any input blank (or unspecified)._
-|_Although the `query` expression may include dataset values not given in the sequence of column names, the resulting ``GeoDataFrame`` will only contain the columns specified by the `columns` input parameter, along with `filename` (str) and `BEAM` (str) columns (for traceability)._
+|_When supplying input values (either via the ADE UI or programmatically, as shown in the next section), all inputs must be supplied with a specified value or, when available, a dash (`-`), otherwise you will receive an error._
 |_The `doi` input can either be a specific DOI (https://www.doi.org/) or one of these logical case-insensitive values ["L2A", "L4A"]._
-|_The `query` input is **not** a required input parameter for successful subsetting. If not supplied, all rows will be selected._
+|_The `limit` input default is 10_000 as mentioned above. Enter a dash (`-`) as the input to default this value._
+|_The `query` input is **not** a required input parameter for successful subsetting. If not supplied, all rows will be selected. Enter a dash (`-`) as the input to pass no query value._
+|_Although the `query` expression may include dataset values not given in the sequence of column names, the resulting ``GeoDataFrame`` will only contain the columns specified by the `columns` input parameter, along with `filename` (str) and `BEAM` (str) columns (for traceability)._
 
 
 ### Suggested Inputs
@@ -51,6 +52,7 @@ L4A:
   0.95 and sensitivity_a2 > 0.95"`
 
 
+### Publicly Available GeoBoundaries
 If your AOI is a publicly available geoBoundary, see
 [Getting the GeoJSON URL for a geoBoundary](#getting-the-geojson-url-for-a-geoboundary)
 for details on obtaining it's URL.  In this case, that is the URL you must
