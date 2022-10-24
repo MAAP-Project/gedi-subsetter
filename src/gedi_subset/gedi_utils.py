@@ -6,7 +6,7 @@ import posixpath
 import warnings
 from collections import defaultdict
 from itertools import chain
-from typing import Any, FrozenSet, Iterable, Mapping, Sequence, Union
+from typing import Any, FrozenSet, Iterable, Mapping, Optional, Sequence, Union
 
 import h5py
 import numpy as np
@@ -131,7 +131,7 @@ def subset_hdf5(
     hdf5: h5py.Group,
     aoi: gpd.GeoDataFrame,
     columns: Sequence[str],
-    query: str,
+    query: Optional[str],
 ) -> gpd.GeoDataFrame:
     """Subset the data in an HDF5 Group into a ``geopandas.GeoDataFrame``.
 
@@ -208,7 +208,7 @@ def subset_hdf5(
         the resulting ``GeoDataFrame`` will contain only the columns specified by this
         parameter, along with `filename` (str) and `BEAM` (str) columns (for
         traceability).
-    query : str
+    query : Optional[str]
         Query expression for subsetting the rows of the data.  After "flattening" all
         of the `"BEAM*"` groups of the HDF5 file into rows across with columns formed by
         the groups' datasets, only rows satisfying this query expression are returned.
@@ -320,8 +320,10 @@ def subset_hdf5(
     `"BEAM*"` groups.
     """
 
-    def expr_names(expr: str) -> FrozenSet[str]:
+    def expr_names(expr: Optional[str]) -> FrozenSet[str]:
         """Return frozen set of variable names parsed from a query expression."""
+        if not expr:
+            return frozenset()
         resolver = defaultdict(int, __foo__=0)
         env = ensure_scope(0, global_dict={}, local_dict={}, resolvers=(resolver,))
 
@@ -347,7 +349,8 @@ def subset_hdf5(
         )
         df = pd.concat(df_columns, axis=1)
         # Keep only the rows matching the specified query
-        df.query(query, inplace=True)
+        if query:
+            df.query(query, inplace=True)
         # Grab the coordinates for the geometry, before dropping columns
         x, y = df.lon_lowestmode, df.lat_lowestmode
         # Drop all columns NOT specified by the columns parameter

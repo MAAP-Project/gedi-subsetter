@@ -1,6 +1,6 @@
 import os.path
 import warnings
-from typing import Set
+from typing import Optional, Set
 
 import h5py
 import pytest
@@ -25,13 +25,16 @@ def fixture_path(filename: str) -> str:
         ({"sensitivity", "agbd", "agbd_se"}, "agbd_se > 3", 3),
         ({"agbd", "lat_lowestmode", "lon_lowestmode"}, "sensitivity >= 0.9", 4),
         ({"landsat_treecover"}, "landsat_treecover > 60.0", 4),
+        ({"sensitivity", "agbd", "agbd_se"}, "sensitivity > 0.96", 2),
+        ({"sensitivity", "agbd", "agbd_se"}, None, 4),
+        ({"sensitivity"}, None, 4),
     ],
 )
 def test_subset_hdf5(
     h5_path: str,
     aoi_gdf: gpd.GeoDataFrame,
     columns: Set[str],
-    query: str,
+    query: Optional[str],
     n_expected_rows: int,
 ) -> None:
     with h5py.File(h5_path) as hdf5:

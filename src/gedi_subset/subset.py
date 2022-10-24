@@ -7,7 +7,7 @@ import os.path
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Iterable, Sequence, Tuple
+from typing import Any, Iterable, Optional, Sequence, Tuple
 
 import geopandas as gpd
 import h5py
@@ -63,7 +63,7 @@ class SubsetGranuleProps:
     maap: MAAP
     aoi_gdf: gpd.GeoDataFrame
     columns: Sequence[str]
-    query: str
+    query: Optional[str]
     output_dir: Path
 
 
@@ -115,7 +115,7 @@ def subset_granules(
     maap: MAAP,
     aoi_gdf: gpd.GeoDataFrame,
     columns: Sequence[str],
-    query: str,
+    query: Optional[str],
     output_dir: Path,
     dest: Path,
     init_args: Tuple[Any, ...],
@@ -189,7 +189,7 @@ def main(
         help="Comma-separated list of columns to select",
     ),
     query: str = typer.Option(
-        ...,
+        None,
         help="Boolean query expression to select rows",
     ),
     limit: int = typer.Option(
