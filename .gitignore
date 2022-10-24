@@ -1,5 +1,6 @@
 .envrc
 maap.cfg
+memray-*
 fil-result/
 input/
 output/

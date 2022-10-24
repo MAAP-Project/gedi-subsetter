@@ -12,4 +12,3 @@ dependencies:
   - h5py==3.6.0
   - pyarrow==8.0.0
   - shapely==1.8.2
-  - pip

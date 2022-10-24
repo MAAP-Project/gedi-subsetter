@@ -42,6 +42,7 @@ class CMRHost(str, Enum):
 
 
 logical_dois = {"L4A": "10.3334/ORNLDAAC/2056", "L2A": "10.5067/GEDI/GEDI02_A.002"}
+DEFAULT_LIMIT = 10_000
 
 LOGGING_FORMAT = "%(asctime)s [%(processName)s:%(name)s] [%(levelname)s] %(message)s"
 
@@ -193,7 +194,8 @@ def main(
         help="Boolean query expression to select rows",
     ),
     limit: int = typer.Option(
-        10_000,
+        DEFAULT_LIMIT,
+        callback=lambda value: DEFAULT_LIMIT if value < 1 else value,
         help="Maximum number of granules to subset",
     ),
     output_dir: Path = typer.Option(

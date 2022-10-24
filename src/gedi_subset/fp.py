@@ -7,13 +7,28 @@ Since the functions in this module are curried, there's no need to use
 `functools.partial` for partially binding arguments.
 """
 import builtins
-from typing import Callable, Iterable, TypeVar, cast
+from typing import Callable, Iterable, ParamSpec, TypeVar, cast
 
 from returns.curry import partial
 from returns.maybe import Maybe, Nothing, Some
 
 _A = TypeVar("_A")
 _B = TypeVar("_B")
+_P = ParamSpec("_P")
+
+
+def always(a: _A) -> Callable[..., _A]:
+    """Return the kestrel combinator ("constant" function).
+
+    Return a callable that accepts exactly one argument of any type, but always
+    returns the value `a`.
+
+    >>> always(42)(0)
+    42
+    >>> always(42)('foo')
+    42
+    """
+    return lambda _: a
 
 
 def filter(predicate: Callable[[_A], bool]) -> Callable[[Iterable[_A]], Iterable[_A]]:
@@ -48,18 +63,20 @@ def find(predicate: Callable[[_A], bool]) -> Callable[[Iterable[_A]], Maybe[_A]]
     return go
 
 
-def always(a: _A) -> Callable[..., _A]:
-    """Return the kestrel combinator ("constant" function).
+def for_each(f: Callable[[_A], _B]) -> Callable[[Iterable[_A]], None]:
+    """Return a callable that accepts an iterable and applies a function to each
+    element of the iterable.
 
-    Return a callable that accepts exactly one argument of any type, but always
-    returns the value `a`.
-
-    >>> always(42)(0)
-    42
-    >>> always(42)('foo')
-    42
+    >>> for_each(print)(["a", "b"])
+    a
+    b
     """
-    return lambda _: a
+
+    def go(xs: Iterable[_A]) -> None:
+        for x in xs:
+            f(x)
+
+    return go
 
 
 def map(f: Callable[[_A], _B]) -> Callable[[Iterable[_A]], Iterable[_B]]:
