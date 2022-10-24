@@ -31,14 +31,17 @@ To run a GEDI subsetting DPS job, you must supply the following inputs:
 - `aoi` (**required**): URL to a GeoJSON file representing your area of interest
 - `doi` (**required**): Digital object identify of collection
 - `columns` (**required**): Comma-separated list of column names to include in output file.
-- `query` (**required**): Query expression for subsetting the rows in the output file.
+- `query`: Query expression for subsetting the rows in the output file.
 - `limit`: Maximum number of GEDI granule data files to download (among those
   that intersect the specified AOI).  (**Default:** 10,000)
 
 
 |**IMPORTANT**
 |:-------------
-|_When supplying input values (either via the ADE UI or programmatically, as shown in the next section), to use the default value (where indicated) for an input, enter a dash (`-`) as the input value, otherwise you will receive an error if you leave any input blank (or unspecified)._
+|_When supplying input values (either via the ADE UI or programmatically, as shown in the next section), to use the default value for the limit input, enter a dash (`-`) as the input value, otherwise you will receive an error if you leave any input blank (or unspecified)._
+|_Although the `query` expression may include dataset values not given in the sequence of column names, the resulting ``GeoDataFrame`` will only contain the columns specified by the `columns` input parameter, along with `filename` (str) and `BEAM` (str) columns (for traceability)._
+|_The `doi` input can either be a specific DOI (https://www.doi.org/) or one of these logical case-insensitive values ["L2A", "L4A"]._
+|_The `query` input is **not** a required input parameter for successful subsetting. If not supplied, all rows will be selected._
 
 
 ### Suggested Inputs
