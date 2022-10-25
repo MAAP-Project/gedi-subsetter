@@ -13,6 +13,9 @@ The format is based on [Keep a Changelog], and this project adheres to
   variables must now be specified by path relative to each BEAM group.  This not
   only avoids ambiguity for variables of the same name (but different paths),
   but also makes a variable's location explicit.
+- [#17](https://github.com/MAAP-Project/gedi-subsetter/issues/17): Granule files
+  that cannot be successfully read are skipped, rather than causing job failure.
+  Offending files are retained to facilitate analysis.
 
 ### Added
 

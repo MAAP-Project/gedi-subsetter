@@ -77,8 +77,10 @@ def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
     file where it overlaps with the specified AOI (`props.aoi_gdf`), remove the
     downloaded granule file, and return the path to the output file.
 
-    Return `Nothing` if the subset is empty (in which case no GeoParquet file
-    was written), otherwise `Some[str]` indicating the output path of the
+    Return `Nothing` if the subset is empty or if an error occurred attempting
+    to read the granule file (in which case, the offending file is retained in
+    order to facilitate analysis).  In either case, no GeoParquet file is
+    written; otherwise return `Some[str]` indicating the output path of the
     GeoParquet file.
     """
 
@@ -87,8 +89,13 @@ def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
 
     logger.debug(f"Subsetting {inpath}")
 
-    with h5py.File(inpath) as hdf5:
-        gdf = subset_hdf5(hdf5, props.aoi_gdf, props.columns, props.query)
+    try:
+        with h5py.File(inpath) as hdf5:
+            gdf = subset_hdf5(hdf5, props.aoi_gdf, props.columns, props.query)
+    except Exception as e:
+        granule_ur = props.granule["Granule"]["GranuleUR"]
+        logger.warning(f"Skipping granule {granule_ur} [failed to read {inpath}: {e}]")
+        return Nothing
 
     osx.remove(inpath)
 
