@@ -1,4 +1,4 @@
-description: Subset GEDI L4A granules within an area of interest (AOI)
+description: Subset GEDI L2A or L4A granules within an area of interest (AOI)
 algo_name: gedi-subset
 version: develop
 environment: ubuntu
