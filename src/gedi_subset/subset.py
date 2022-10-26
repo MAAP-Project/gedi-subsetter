@@ -63,6 +63,7 @@ class SubsetGranuleProps:
     granule: Granule
     maap: MAAP
     aoi_gdf: gpd.GeoDataFrame
+    coords_type: str
     columns: Sequence[str]
     query: Optional[str]
     output_dir: Path
@@ -90,12 +91,18 @@ def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
     logger.debug(f"Subsetting {inpath}")
 
     try:
-        with h5py.File(inpath) as hdf5:
-            gdf = subset_hdf5(hdf5, props.aoi_gdf, props.columns, props.query)
+        hdf5 = h5py.File(inpath)
     except Exception as e:
         granule_ur = props.granule["Granule"]["GranuleUR"]
         logger.warning(f"Skipping granule {granule_ur} [failed to read {inpath}: {e}]")
         return Nothing
+
+    try:
+        gdf = subset_hdf5(
+            hdf5, props.aoi_gdf, props.coords_type, props.columns, props.query
+        )
+    finally:
+        hdf5.close()
 
     osx.remove(inpath)
 
@@ -122,6 +129,7 @@ def set_logging_level(logging_level: int) -> None:
 def subset_granules(
     maap: MAAP,
     aoi_gdf: gpd.GeoDataFrame,
+    coords_type: str,
     columns: Sequence[str],
     query: Optional[str],
     output_dir: Path,
@@ -151,7 +159,9 @@ def subset_granules(
     chunksize = 10
     processes = os.cpu_count()
     payloads = (
-        SubsetGranuleProps(granule, maap, aoi_gdf, columns, query, output_dir)
+        SubsetGranuleProps(
+            granule, maap, aoi_gdf, coords_type, columns, query, output_dir
+        )
         for granule in granules
     )
 
@@ -191,6 +201,13 @@ def main(
     cmr_host: CMRHost = typer.Option(
         CMRHost.maap,
         help="CMR hostname",
+    ),
+    coords_type: str = typer.Option(
+        ...,
+        help=(
+            "Coordinate type in reference to longitude/latitude"
+            " such as values `lowestmode` and `highestreturn`."
+        )
     ),
     columns: str = typer.Option(
         ...,
@@ -246,6 +263,7 @@ def main(
         for subsets in subset_granules(
             maap,
             aoi_gdf,
+            coords_type,
             [c.strip() for c in columns.split(",")],
             query,
             output_dir,

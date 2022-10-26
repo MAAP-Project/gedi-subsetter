@@ -13,6 +13,8 @@ inputs:
     download: True
   - name: doi
     download: False
+  - name: coords-type
+    download: False
   - name: columns
     download: False
   - name: query

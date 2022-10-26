@@ -127,6 +127,7 @@ def spatial_filter(beam, aoi):
 def subset_hdf5(
     hdf5: h5py.Group,
     aoi: gpd.GeoDataFrame,
+    coords_type: str,
     columns: Sequence[str],
     query: Optional[str],
 ) -> gpd.GeoDataFrame:
@@ -325,7 +326,7 @@ def subset_hdf5(
         if query:
             df.query(query, inplace=True)
         # Grab the coordinates for the geometry, before dropping columns
-        geometry = gpd.points_from_xy(df.lon_lowestmode, df.lat_lowestmode)
+        geometry = gpd.points_from_xy(df[f"lon_{coords_type}"], df[f"lat_{coords_type}"])
         # Drop all columns NOT specified by the columns parameter
         df = df[list(columns)]
         df.insert(0, "BEAM", beam.name[5:])

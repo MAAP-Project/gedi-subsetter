@@ -24,9 +24,10 @@ else
 
     options=()
     [[ "${1:--}" != "-" ]] && options=("${options[@]}" --doi "${1:--}")
-    [[ "${2:--}" != "-" ]] && options=("${options[@]}" --columns "${2:--}")
-    [[ "${3:--}" != "-" ]] && options=("${options[@]}" --query "${3:--}")
-    [[ "${4:--}" != "-" ]] && options=("${options[@]}" --limit "${4:--}")
+    [[ "${2:--}" != "-" ]] && options=("${options[@]}" --coords-type "${2:--}")
+    [[ "${3:--}" != "-" ]] && options=("${options[@]}" --columns "${3:--}")
+    [[ "${4:--}" != "-" ]] && options=("${options[@]}" --query "${4:--}")
+    [[ "${5:--}" != "-" ]] && options=("${options[@]}" --limit "${5:--}")
 
     ${subset_py} --verbose --aoi "${aoi}" "${options[@]}"
 fi
