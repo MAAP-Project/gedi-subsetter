@@ -24,10 +24,11 @@ else
 
     options=()
     [[ "${1:--}" != "-" ]] && options=("${options[@]}" --doi "${1:--}")
-    [[ "${2:--}" != "-" ]] && options=("${options[@]}" --coords-type "${2:--}")
-    [[ "${3:--}" != "-" ]] && options=("${options[@]}" --columns "${3:--}")
-    [[ "${4:--}" != "-" ]] && options=("${options[@]}" --query "${4:--}")
-    [[ "${5:--}" != "-" ]] && options=("${options[@]}" --limit "${5:--}")
+    [[ "${2:--}" != "-" ]] && options=("${options[@]}" --lat "${2:--}")
+    [[ "${3:--}" != "-" ]] && options=("${options[@]}" --lon "${3:--}")
+    [[ "${4:--}" != "-" ]] && options=("${options[@]}" --columns "${4:--}")
+    [[ "${5:--}" != "-" ]] && options=("${options[@]}" --query "${5:--}")
+    [[ "${6:--}" != "-" ]] && options=("${options[@]}" --limit "${6:--}")
 
     ${subset_py} --verbose --aoi "${aoi}" "${options[@]}"
 fi

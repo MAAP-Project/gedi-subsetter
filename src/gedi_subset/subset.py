@@ -63,7 +63,8 @@ class SubsetGranuleProps:
     granule: Granule
     maap: MAAP
     aoi_gdf: gpd.GeoDataFrame
-    coords_type: str
+    lat: str
+    lon: str
     columns: Sequence[str]
     query: Optional[str]
     output_dir: Path
@@ -99,7 +100,7 @@ def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
 
     try:
         gdf = subset_hdf5(
-            hdf5, props.aoi_gdf, props.coords_type, props.columns, props.query
+            hdf5, props.aoi_gdf, props.lat, props.lon, props.columns, props.query
         )
     finally:
         hdf5.close()
@@ -129,7 +130,8 @@ def set_logging_level(logging_level: int) -> None:
 def subset_granules(
     maap: MAAP,
     aoi_gdf: gpd.GeoDataFrame,
-    coords_type: str,
+    lat: str,
+    lon: str,
     columns: Sequence[str],
     query: Optional[str],
     output_dir: Path,
@@ -159,9 +161,7 @@ def subset_granules(
     chunksize = 10
     processes = os.cpu_count()
     payloads = (
-        SubsetGranuleProps(
-            granule, maap, aoi_gdf, coords_type, columns, query, output_dir
-        )
+        SubsetGranuleProps(granule, maap, aoi_gdf, lat, lon, columns, query, output_dir)
         for granule in granules
     )
 
@@ -202,12 +202,11 @@ def main(
         CMRHost.maap,
         help="CMR hostname",
     ),
-    coords_type: str = typer.Option(
-        ...,
-        help=(
-            "Coordinate type in reference to longitude/latitude"
-            " such as values `lowestmode` and `highestreturn`."
-        )
+    lat: str = typer.Option(
+        ..., help=("Latitude dataset used in the geometry of the dataframe")
+    ),
+    lon: str = typer.Option(
+        ..., help=("Longitude dataset used in the geometry of the dataframe")
     ),
     columns: str = typer.Option(
         ...,
@@ -263,7 +262,8 @@ def main(
         for subsets in subset_granules(
             maap,
             aoi_gdf,
-            coords_type,
+            lat,
+            lon,
             [c.strip() for c in columns.split(",")],
             query,
             output_dir,
