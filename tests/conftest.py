@@ -89,6 +89,13 @@ def h5_path(tmp_path_factory: pytest.TempPathFactory) -> str:
         beam.create_dataset("x_var", data=[[10.0, 15.0], [20.0, 10.0], [15.0, 20.0]])
         land_cover = beam.create_group("land_cover_data")
         land_cover.create_dataset("landsat_treecover", data=[77.0, 98.0, 95.0])
+        geolocation = beam.create_group("geolocation")
+        geolocation.create_dataset(
+            "latitude_instrument", data=[-2.82556, -10.82514, -2.82471]
+        )
+        geolocation.create_dataset(
+            "longitude_instrument", data=[13.06648, 13.06678, 13.06707]
+        )
 
         beam = h5_file.create_group("BEAM0001")
         beam.create_dataset("agbd", data=[1.1715966, 1.630395, 3.5265787], dtype="f4")
@@ -103,5 +110,12 @@ def h5_path(tmp_path_factory: pytest.TempPathFactory) -> str:
         beam.create_dataset("x_var", data=[[15.0, 20.0], [25.0, 15.0], [20.0, 25.0]])
         land_cover = beam.create_group("land_cover_data")
         land_cover.create_dataset("landsat_treecover", data=[68.0, 85.0, 83.0])
+        geolocation = beam.create_group("geolocation")
+        geolocation.create_dataset(
+            "latitude_instrument", data=[-2.82556, -10.82514, -2.82471]
+        )
+        geolocation.create_dataset(
+            "longitude_instrument", data=[13.06648, 13.06678, 13.06707]
+        )
 
     return str(path)
