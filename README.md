@@ -40,6 +40,9 @@ must be supplied for every input):
   a logical name representing such a DOI (see
   [Specifying a DOI](#specifying-a-doi))
 
+- `coord-type`: Coordiante type in reference to the longitude/latitude datasets.
+   Types such as `lowestmode` and `highestreturn` correlating to (`lat_lowestmode`, `lon_lowestmode`) and (`lat_highestreturn`,`lon_highestreturn`) respectively.
+
 - `columns`: Comma-separated list of column names to include in the output file.
   These names correspond to the variables (layers) within the data files, and
   vary from collection to collection.  Consult the documentation for a list of
@@ -154,12 +157,14 @@ Here are some sample input values per DOI:
 #### L2A
 
 - **doi:** `L2A`, `l2a`, or a specific DOI name
+- **coords-type**: `lowestmode` or `highestreturn`
 - **columns:** `rh50, rh98`
 - **query:** `quality_flag == 1 & sensitivity > 0.95`
 
 #### L4A
 
 - **doi:** `L4A`, `l4a`, or a specific DOI name
+- **coords-type**: `lowestmode`
 - **columns:** `agbd, agbd_se, sensitivity, sensitivity_a2`
 - **query:** ``l2_quality_flag == 1 & l4_quality_flag == 1 & sensitivity > 0.95 & `geolocation/sensitivity_a2` > 0.95``
 
@@ -191,6 +196,7 @@ result = maap.submitJob(
     username="<USERNAME>",  # Your Earthdata Login username
     doi="<DOI>",
     aoi=aoi,
+    coords_type="<COORDS_TYPE>",
     columns="<COLUMNS>", # See previous section
     query="<QUERY>", # See previous section
     limit=limit,
