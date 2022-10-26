@@ -12,7 +12,7 @@ from gedi_subset.subset import SubsetGranuleProps, subset_granule
 def test_subset_granule(
     maap: MAAP,
     h5_path: str,
-    aoi_gdf: gpd.GeoDataFrame,
+    aoi_gdf: gpd.GeoDataFrame
 ):
     output_dir = os.path.dirname(h5_path)
     filename = os.path.basename(h5_path)
@@ -44,6 +44,7 @@ def test_subset_granule(
             granule,
             maap,
             aoi_gdf,
+            "lowestmode",
             ["agbd"],
             "l2_quality_flag == 1",
             output_dir,
