@@ -7,24 +7,25 @@ import os.path
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Iterable, Optional, Sequence, Tuple
+from typing import Any, Iterable, Mapping, Optional, Sequence, Tuple
 
 import geopandas as gpd
 import h5py
 import typer
 from maap.maap import MAAP
-from maap.Result import Granule
+from maap.Result import Collection, Granule
 from returns.curry import partial
 from returns.functions import raise_exception, tap
 from returns.io import IOFailure, IOResult, IOResultE, IOSuccess, impure_safe
 from returns.iterables import Fold
 from returns.maybe import Maybe, Nothing, Some
 from returns.pipeline import flow, is_successful, pipe
-from returns.pointfree import bind, bind_ioresult, lash, map_
+from returns.pointfree import bind, bind_ioresult, bind_result, lash, map_
+from returns.result import Failure, Success
 from returns.unsafe import unsafe_perform_io
 
+import gedi_subset.fp as fp
 from gedi_subset import osx
-from gedi_subset.fp import always, filter, map
 from gedi_subset.gedi_utils import (
     chext,
     gdf_read_parquet,
@@ -40,8 +41,17 @@ class CMRHost(str, Enum):
     maap = "cmr.maap-project.org"
     nasa = "cmr.earthdata.nasa.gov"
 
+    def __str__(self) -> str:
+        return self.value
 
-logical_dois = {"L4A": "10.3334/ORNLDAAC/2056", "L2A": "10.5067/GEDI/GEDI02_A.002"}
+
+logical_dois = {
+    "L1B": "10.5067/GEDI/GEDI01_B.002",
+    "L2A": "10.5067/GEDI/GEDI02_A.002",
+    "L2B": "10.5067/GEDI/GEDI02_B.002",
+    "L4A": "10.3334/ORNLDAAC/2056",
+}
+
 DEFAULT_LIMIT = 10_000
 
 LOGGING_FORMAT = "%(asctime)s [%(processName)s:%(name)s] [%(levelname)s] %(message)s"
@@ -68,6 +78,45 @@ class SubsetGranuleProps:
     columns: Sequence[str]
     query: Optional[str]
     output_dir: Path
+
+
+def is_gedi_collection(c: Collection) -> bool:
+    """Return True if the specified collection is a GEDI collection containing granule
+    data files in HDF5 format; False otherwise."""
+
+    c = c.get("Collection", {})
+    attrs = c.get("AdditionalAttributes", {}).get("AdditionalAttribute", [])
+    data_format_attrs = (attr for attr in attrs if attr.get("Name") == "Data Format")
+    data_format = next(data_format_attrs, {"Value": c.get("DataFormat")}).get("Value")
+
+    return c.get("ShortName", "").startswith("GEDI") and data_format == "HDF5"
+
+
+def find_gedi_collection(
+    maap: MAAP,
+    cmr_host: str,
+    params: Mapping[str, str],
+) -> IOResultE[Collection]:
+    """Find a GEDI collection matching the given parameters.
+
+    Return `IOSuccess[Collection]` containing the collection upon successful
+    search; otherwise return `IOFailure[Exception]` containing the reason for
+    failure, which is a `ValueError` when there is no matching collection or
+    the collection is _not_ a GEDI collection.
+    """
+    return flow(
+        find_collection(maap, cmr_host, params),
+        bind_result(
+            lambda c: Success(c)
+            if is_gedi_collection(c)
+            else Failure(
+                ValueError(
+                    f"Collection {c['Collection']['ShortName']} is not a GEDI"
+                    " collection, or does not contain HDF5 data files."
+                )
+            )
+        ),
+    )
 
 
 @impure_safe
@@ -153,8 +202,8 @@ def subset_granules(
         return flow(
             gdf_read_parquet(src),
             bind_ioresult(partial(gdf_to_file, dest, to_file_props)),
-            tap(pipe(always(src), osx.remove)),
-            map_(always(src)),
+            tap(pipe(fp.always(src), osx.remove)),
+            map_(fp.always(src)),
         )
 
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool.imap
@@ -170,9 +219,9 @@ def subset_granules(
     with multiprocessing.Pool(processes, init_process, init_args) as pool:
         return flow(
             pool.imap_unordered(subset_granule, payloads, chunksize),
-            map(lash(raise_exception)),  # Fail fast (if subsetting errored out)
-            filter(subset_saved),  # Skip granules that produced empty subsets
-            map(bind(bind(append_subset))),  # Append non-empty subset
+            fp.map(lash(raise_exception)),  # Fail fast (if subsetting errored out)
+            fp.filter(subset_saved),  # Skip granules that produced empty subsets
+            fp.map(bind(bind(append_subset))),  # Append non-empty subset
             partial(Fold.collect, acc=IOSuccess(())),
         )
 
@@ -193,9 +242,8 @@ def main(
         callback=lambda value: logical_dois.get(value.upper(), value),
         help=(
             "Digital Object Identifier (DOI) of collection to subset"
-            " (https://www.doi.org/)"
-            " Can be a specific DOI or one of these logical,"
-            f" case-insensitive names: {', '.join(logical_dois)}"
+            " (https://www.doi.org/), or one of these logical, case-insensitive"
+            f" names: {', '.join(logical_dois)}"
         ),
     ),
     cmr_host: CMRHost = typer.Option(
@@ -252,11 +300,14 @@ def main(
     IOResult.do(
         subsets
         for aoi_gdf in impure_safe(gpd.read_file)(aoi)
-        for collection in find_collection(maap, cmr_host, {"doi": doi})
+        # Use wildcards around DOI value because some collections have incorrect
+        # DOI values. For example, the L2B collection has the full DOI URL as
+        # the DOI value (i.e., https://doi.org/<DOI> rather than just <DOI>).
+        for collection in find_gedi_collection(maap, cmr_host, {"doi": f"*{doi}*"})
         for granules in impure_safe(maap.searchGranule)(
             cmr_host=cmr_host,
             collection_concept_id=collection["concept-id"],
-            bounding_box=",".join(map(str)(aoi_gdf.total_bounds)),
+            bounding_box=",".join(fp.map(str)(aoi_gdf.total_bounds)),
             limit=limit,
         )
         for subsets in subset_granules(
@@ -269,7 +320,7 @@ def main(
             output_dir,
             dest,
             (logging_level,),
-            filter(partial(granule_intersects, aoi_gdf.geometry[0]))(granules),
+            fp.filter(partial(granule_intersects, aoi_gdf.geometry[0]))(granules),
         )
     ).bind_ioresult(
         lambda subsets: IOSuccess(subsets)
