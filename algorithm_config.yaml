@@ -13,6 +13,10 @@ inputs:
     download: True
   - name: doi
     download: False
+  - name: lat
+    download: False
+  - name: lon
+    download: False
   - name: columns
     download: False
   - name: query

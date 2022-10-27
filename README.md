@@ -40,6 +40,10 @@ must be supplied for every input):
   a logical name representing such a DOI (see
   [Specifying a DOI](#specifying-a-doi))
 
+- `lat`: Name of the dataset used for latitude.
+
+- `lon`: Name of the dataset used for longitude.
+
 - `columns`: Comma-separated list of column names to include in the output file.
   These names correspond to the variables (layers) within the data files, and
   vary from collection to collection.  Consult the documentation for a list of
@@ -154,12 +158,16 @@ Here are some sample input values per DOI:
 #### L2A
 
 - **doi:** `L2A`, `l2a`, or a specific DOI name
+- **lat**: `lat_lowestmode` or `lat_highestreturn`
+- **lon**: `lon_lowestmode` or `lon_highestreturn`
 - **columns:** `rh50, rh98`
 - **query:** `quality_flag == 1 & sensitivity > 0.95`
 
 #### L4A
 
 - **doi:** `L4A`, `l4a`, or a specific DOI name
+- **lat**: `lat_lowestmode`
+- **lon**: `lon_lowestmode`
 - **columns:** `agbd, agbd_se, sensitivity, sensitivity_a2`
 - **query:** ``l2_quality_flag == 1 & l4_quality_flag == 1 & sensitivity > 0.95 & `geolocation/sensitivity_a2` > 0.95``
 
@@ -180,8 +188,17 @@ MAAP API from a Notebook (or a Python script), as follows:
 from maap.maap import MAAP
 
 maap = MAAP(maap_host='api.ops.maap-project.org')
-aoi = "<AOI GeoJSON URL>"  # See previous section
-limit = 2000  # Maximum number of granule files to download
+
+# See "Algorithm Inputs" section as well as "Specifying a DOI"
+inputs = dict(
+   aoi="<AOI GeoJSON URL>"
+   doi="<DOI>",
+   lat="<LATITUDE>",
+   lon="<LONGITUDE>",
+   columns="<COLUMNS>",
+   query="<QUERY>",
+   limit = 10_000
+)
 
 result = maap.submitJob(
     identifier="<DESCRIPTION>",
@@ -189,11 +206,7 @@ result = maap.submitJob(
     version="<VERSION>",
     queue="maap-dps-worker-32gb",
     username="<USERNAME>",  # Your Earthdata Login username
-    doi="<DOI>",
-    aoi=aoi,
-    columns="<COLUMNS>", # See previous section
-    query="<QUERY>", # See previous section
-    limit=limit,
+    **inputs
 )
 
 job_id = result["job_id"]
