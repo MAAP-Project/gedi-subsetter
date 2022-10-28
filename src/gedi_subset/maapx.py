@@ -20,11 +20,11 @@ from maap.maap import MAAP
 from maap.Result import Collection, Granule
 from returns.converters import result_to_maybe
 from returns.curry import partial
-from returns.io import IOFailure, IOResult, IOResultE, impure_safe
+from returns.io import IOResult, IOResultE, impure_safe
 from returns.maybe import Maybe
 from returns.pipeline import flow, is_successful, pipe
-from returns.pointfree import bind, bind_ioresult, lash, map_
-from returns.result import safe
+from returns.pointfree import bind, bind_result, lash, map_
+from returns.result import Failure, safe
 
 from gedi_subset import fp
 
@@ -122,10 +122,10 @@ def find_collection(
 
     return flow(
         impure_safe(maap.searchCollection)(cmr_host=cmr_host, limit=1, **params),
-        bind_ioresult(
+        bind_result(
             pipe(
                 safe(operator.itemgetter(0)),
-                lash(fp.always(IOFailure(not_found_error))),
+                lash(fp.always(Failure(not_found_error))),
             )
         ),
     )

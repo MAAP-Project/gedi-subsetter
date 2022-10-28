@@ -4,7 +4,9 @@
 - [Algorithm Inputs](#algorithm-inputs)
   - [Specifying an AOI](#specifying-an-aoi)
   - [Specifying a DOI](#specifying-a-doi)
+    - [L1B](#l1b)
     - [L2A](#l2a)
+    - [L2B](#l2b)
     - [L4A](#l4a)
 - [Running a GEDI Subsetting DPS Job](#running-a-gedi-subsetting-dps-job)
   - [Submitting a DPS Job](#submitting-a-dps-job)
@@ -21,10 +23,13 @@
 
 At a high level, the GEDI subsetting algorithm does the following:
 
-- Queries the MAAP CMR for GEDI L2A or L4A granules intersecting a specified AOI
-  (GeoJSON)
-- Downloads the data file (h5) for each intersecting granule (up to specified limit)
-- Subsets each data file
+- Queries the MAAP CMR for granules from a specified GEDI collection that
+  intersect a specified Area of Interest (AOI) (as a GeoJSON file).  This is
+  limited to GEDI collections granule data files are in HDF5 format, which are
+  L1B, L2A, L2B, and L4A.
+- For each granule within the specified AOI, downloads its HDF5 (`.h5`) file.
+- Subsets each data file by selecting specified datasets within the file and
+  limiting data to values that match a specified query condition.
 - Combines all subset files into a single output file named `gedi_subset.gpkg`,
   in GeoPackage format, readable with `geopandas` as a `GeoDataFrame`.
 
@@ -141,8 +146,10 @@ supply one of the following "logical" names as the value of the `doi` input
 
 |Logical name|Corresponding DOI
 |:-----------|:----------------
-|L2A or l2a  |[10.5067/GEDI/GEDI02_A.002](https://doi.org/10.5067/GEDI/GEDI02_A.002)
-|L4A or l4a  |[10.3334/ORNLDAAC/2056](https://doi.org/10.3334/ORNLDAAC/2056)
+|L1B         |[10.5067/GEDI/GEDI01_B.002](https://doi.org/10.5067/GEDI/GEDI01_B.002)
+|L2A         |[10.5067/GEDI/GEDI02_A.002](https://doi.org/10.5067/GEDI/GEDI02_A.002)
+|L2B         |[10.5067/GEDI/GEDI02_B.002](https://doi.org/10.5067/GEDI/GEDI02_B.002)
+|L4A         |[10.3334/ORNLDAAC/2056](https://doi.org/10.3334/ORNLDAAC/2056)
 
 If, however, a new version of a collection is published, the new version will
 have a different DOI assigned, and the old version of the collection will likely
@@ -153,7 +160,24 @@ Therefore, to avoid being blocked by this, you may specify a DOI name as the
 value for the `doi` input field until this algorithm is updated to associate the
 new DOI with the logical name.
 
+When supplying a DOI name (rather than a logical name), the job will fail for
+any of the following reasons:
+
+- There is no collection in the MAAP CMR corresponding to the DOI
+- There is such a collection in the MAAP CMR, but it is not a GEDI collection
+- The collection is a GEDI collection, but its data format is not HDF5
+
 Here are some sample input values per DOI:
+
+#### L1B
+
+- **doi:** `L1B`, `l1b`, or a specific DOI name
+- **lat**: `geolocation/latitude_bin0`, `geolocation/latitude_instrument`, or
+  `geolocation/latitude_lastbin`
+- **lon**: `geolocation/longitude_bin0`, `geolocation/longitude_instrument`, or
+  `geolocation/longitude_lastbin`
+- **columns:** TBD
+- **query:** TBD
 
 #### L2A
 
@@ -162,6 +186,14 @@ Here are some sample input values per DOI:
 - **lon**: `lon_lowestmode` or `lon_highestreturn`
 - **columns:** `rh50, rh98`
 - **query:** `quality_flag == 1 & sensitivity > 0.95`
+
+#### L2B
+
+- **doi:** `L2B`, `l2b`, or a specific DOI name
+- **lat**: `geolocation/lat_lowestmode` or `geolocation/lat_highestreturn`
+- **lon**: `geolocation/lon_lowestmode` or `geolocation/lon_highestreturn`
+- **columns:** `rh100`
+- **query:** `l2a_quality_flag == 1 & l2b_quality_flag == 1 & sensitivity > 0.95`
 
 #### L4A
 
