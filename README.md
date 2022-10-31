@@ -2,6 +2,12 @@
 
 - [Algorithm Outline](#algorithm-outline)
 - [Algorithm Inputs](#algorithm-inputs)
+  - [Specifying an AOI](#specifying-an-aoi)
+  - [Specifying a DOI](#specifying-a-doi)
+    - [L1B](#l1b)
+    - [L2A](#l2a)
+    - [L2B](#l2b)
+    - [L4A](#l4a)
 - [Running a GEDI Subsetting DPS Job](#running-a-gedi-subsetting-dps-job)
   - [Submitting a DPS Job](#submitting-a-dps-job)
   - [Checking the DPS Job Status](#checking-the-dps-job-status)
@@ -17,30 +23,93 @@
 
 At a high level, the GEDI subsetting algorithm does the following:
 
-- Queries the MAAP CMR for GEDI L4A granules intersecting a specified AOI
-  (GeoJSON)
-- Downloads the data file (h5) for each intersecting granule (up to specified limit)
-- Subsets each data file
+- Queries the MAAP CMR for granules from a specified GEDI collection that
+  intersect a specified Area of Interest (AOI) (as a GeoJSON file).  This is
+  limited to GEDI collections granule data files are in HDF5 format, which are
+  L1B, L2A, L2B, and L4A.
+- For each granule within the specified AOI, downloads its HDF5 (`.h5`) file.
+- Subsets each data file by selecting specified datasets within the file and
+  limiting data to values that match a specified query condition.
 - Combines all subset files into a single output file named `gedi_subset.gpkg`,
   in GeoPackage format, readable with `geopandas` as a `GeoDataFrame`.
 
 ## Algorithm Inputs
 
-To run a GEDI subsetting DPS job, you must supply the following inputs:
+To run a GEDI subsetting DPS job, you must supply the following inputs (a value
+must be supplied for every input):
 
-- `aoi` (**required**): URL to a GeoJSON file representing your area of interest
-- `columns`: Comma-separated list of column names to include in output file.
-  (**Default:**
-  `agbd, agbd_se, l2_quality_flag, l4_quality_flag, sensitivity, sensitivity_a2`)
-- `query`: Query expression for subsetting the rows in the output file.
-  (**Default:** `l2_quality_flag == 1 and l4_quality_flag == 1 and sensitivity >
-  0.95 and sensitivity_a2 > 0.95"`)
+- `aoi`: URL to a GeoJSON file representing your area of interest (see
+  [Specifying an AOI](#specifying-an-aoi))
+
+- `doi`: [Digital Object Identifier] (DOI) of the GEDI collection to subset, or
+  a logical name representing such a DOI (see
+  [Specifying a DOI](#specifying-a-doi))
+
+- `lat`: Name of the dataset used for latitude.
+
+- `lon`: Name of the dataset used for longitude.
+
+- `columns`: Comma-separated list of column names to include in the output file.
+  These names correspond to the variables (layers) within the data files, and
+  vary from collection to collection.  Consult the documentation for a list of
+  variables available per collection (see [Specifying a DOI](#specifying-a-doi)
+  for documentation links).
+
+  In addition to the specified columns, the output file will also include a
+  `filename` (`str`) column that includes the name of the original `h5` file,
+  and a `BEAM` (`str`) column with the 4-digit bit string suffix of the original
+  `BEAM*` group name (e.g., `0000` representing the original `BEAM0000` name),
+  both for traceability.
+
+  **IMPORTANT:** To specify nested variables (i.e., variables _not_ at the top
+  of a BEAM), you may use a path containing forward slashes (`/`) that is
+  relative to the BEAM it appears within.  For example, if a BEAM contains a
+  `geolocation` group, and within that group is a variable named
+  `sensitivity_a2`, then you would refer to that nested variable as
+  `geolocation/sensitivity_a2`.
+
+- `query`: Query expression for subsetting the rows in the output file.  This
+  expression selects rows of data for which the expression is true.  Again,
+  names in the expression are variable (layer) names.  For example:
+  `quality_flag == 1`.
+
+  **NOTE:** This input is _optional_.  If not supplied, all rows will be
+  selected.  To indicate _no_ query, enter a dash (`-`) as the input value.
+
+  To combine multiple expressions, you may use the `and` and `or` boolean
+  operators.  Alternatively, you may use the `&` and `|` operators, which are
+  interpreted as boolean operators rather than bitwise operators, as would be
+  the case in standard Python code.  See [pandas.DataFrame.query].
+
+  Examples:
+
+  ```plain
+  quality_flag == 1 and sensitivity > 0.95
+  quality_flag == 1 & sensitivity > 0.95
+  ```
+
+  **IMPORTANT:** To specify nested variables (i.e., variables _not_ at the top
+  of a BEAM), you may use a relative path, as described above for column names,
+  but you must surround such nested path names with backticks.  For example:
+
+  ```plain
+  quality_flag == 1 & `geolocation/sensitivity_a2` > 0.95
+  ```
+
+  Alternatively, "dot" notation may be used in place of using slashes.  This
+  eliminates the need to use backticks to surround a path.  Note, however, that
+  the **corresponding columns in the output will still contain slashes in their
+  names**:
+
+  ```plain
+  quality_flag == 1 & geolocation.sensitivity_a2 > 0.95
+  ```
+
 - `limit`: Maximum number of GEDI granule data files to download (among those
-  that intersect the specified AOI).  (**Default:** 10,000)
+  that intersect the specified AOI).  To leave unlimited, specify `0` (or any
+  non-positive integer).
 
-|**IMPORTANT**
-|:-------------
-|_When supplying input values (either via the ADE UI or programmatically, as shown in the next section), to use the default value (where indicated) for an input, enter a dash (`-`) as the input value, otherwise you will receive an error if you leave any input blank (or unspecified)._
+### Specifying an AOI
 
 If your AOI is a publicly available geoBoundary, see
 [Getting the GeoJSON URL for a geoBoundary](#getting-the-geojson-url-for-a-geoboundary)
@@ -49,7 +118,7 @@ supply for the `aoi` input.
 
 Alternatively, you can make your own GeoJSON file for your AOI and place it
 within your public bucket within the ADE.  Based upon where you place your
-GeoJSON file, you can construct a URL to specify for the a job's `aoi` input.
+GeoJSON file, you can construct a URL to specify for a job's `aoi` input.
 
 Specifically, you should place your GeoJSON file at a location of the following
 form within the ADE (where `path/to/aio.geojson` can be any path and filename
@@ -69,6 +138,71 @@ https://maap-ops-workspace.s3.amazonaws.com/shared/<USERNAME>/path/to/aoi.geojso
       Replace "~/my-public-bucket" with this URL prefix
 ```
 
+### Specifying a DOI
+
+To avoid the need to remember or lookup a DOI for a GEDI collection, you may
+supply one of the following "logical" names as the value of the `doi` input
+(case is ignored):
+
+|Logical name|Corresponding DOI
+|:-----------|:----------------
+|L1B         |[10.5067/GEDI/GEDI01_B.002](https://doi.org/10.5067/GEDI/GEDI01_B.002)
+|L2A         |[10.5067/GEDI/GEDI02_A.002](https://doi.org/10.5067/GEDI/GEDI02_A.002)
+|L2B         |[10.5067/GEDI/GEDI02_B.002](https://doi.org/10.5067/GEDI/GEDI02_B.002)
+|L4A         |[10.3334/ORNLDAAC/2056](https://doi.org/10.3334/ORNLDAAC/2056)
+
+If, however, a new version of a collection is published, the new version will
+have a different DOI assigned, and the old version of the collection will likely
+be removed from the CMR.  In this case, the job will fail because it will be
+unable to obtain the collection data via the CMR.
+
+Therefore, to avoid being blocked by this, you may specify a DOI name as the
+value for the `doi` input field until this algorithm is updated to associate the
+new DOI with the logical name.
+
+When supplying a DOI name (rather than a logical name), the job will fail for
+any of the following reasons:
+
+- There is no collection in the MAAP CMR corresponding to the DOI
+- There is such a collection in the MAAP CMR, but it is not a GEDI collection
+- The collection is a GEDI collection, but its data format is not HDF5
+
+Here are some sample input values per DOI:
+
+#### L1B
+
+- **doi:** `L1B`, `l1b`, or a specific DOI name
+- **lat**: `geolocation/latitude_bin0`, `geolocation/latitude_instrument`, or
+  `geolocation/latitude_lastbin`
+- **lon**: `geolocation/longitude_bin0`, `geolocation/longitude_instrument`, or
+  `geolocation/longitude_lastbin`
+- **columns:** TBD
+- **query:** TBD
+
+#### L2A
+
+- **doi:** `L2A`, `l2a`, or a specific DOI name
+- **lat**: `lat_lowestmode` or `lat_highestreturn`
+- **lon**: `lon_lowestmode` or `lon_highestreturn`
+- **columns:** `rh50, rh98`
+- **query:** `quality_flag == 1 & sensitivity > 0.95`
+
+#### L2B
+
+- **doi:** `L2B`, `l2b`, or a specific DOI name
+- **lat**: `geolocation/lat_lowestmode` or `geolocation/lat_highestreturn`
+- **lon**: `geolocation/lon_lowestmode` or `geolocation/lon_highestreturn`
+- **columns:** `rh100`
+- **query:** `l2a_quality_flag == 1 & l2b_quality_flag == 1 & sensitivity > 0.95`
+
+#### L4A
+
+- **doi:** `L4A`, `l4a`, or a specific DOI name
+- **lat**: `lat_lowestmode`
+- **lon**: `lon_lowestmode`
+- **columns:** `agbd, agbd_se, sensitivity, sensitivity_a2`
+- **query:** ``l2_quality_flag == 1 & l4_quality_flag == 1 & sensitivity > 0.95 & `geolocation/sensitivity_a2` > 0.95``
+
 ## Running a GEDI Subsetting DPS Job
 
 ### Submitting a DPS Job
@@ -86,8 +220,17 @@ MAAP API from a Notebook (or a Python script), as follows:
 from maap.maap import MAAP
 
 maap = MAAP(maap_host='api.ops.maap-project.org')
-aoi = "<AOI GeoJSON URL>"  # See previous section
-limit = 2000  # Maximum number of granule files to download
+
+# See "Algorithm Inputs" section as well as "Specifying a DOI"
+inputs = dict(
+   aoi="<AOI GeoJSON URL>"
+   doi="<DOI>",
+   lat="<LATITUDE>",
+   lon="<LONGITUDE>",
+   columns="<COLUMNS>",
+   query="<QUERY>",
+   limit = 10_000
+)
 
 result = maap.submitJob(
     identifier="<DESCRIPTION>",
@@ -95,10 +238,7 @@ result = maap.submitJob(
     version="<VERSION>",
     queue="maap-dps-worker-32gb",
     username="<USERNAME>",  # Your Earthdata Login username
-    aoi=aoi,
-    columns="<COLUMNS>", # See previous section
-    query="<QUERY>", # See previous section
-    limit=limit,
+    **inputs
 )
 
 job_id = result["job_id"]
@@ -349,6 +489,8 @@ administrative boundaries.  PLoS ONE 15(4): e0231866.
 
 [conda installation]:
    https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
+[Digital Object Identifier]:
+   https://doi.org
 [geoBoundaries]:
   https://www.geoboundaries.org
 [geoBoundaries API]:
@@ -361,3 +503,5 @@ administrative boundaries.  PLoS ONE 15(4): e0231866.
   https://repo.ops.maap-project.org/data-team/gedi-subsetter.git
 [NASA MAAP]:
   https://ops.maap-project.org/
+[pandas.DataFrame.query]:
+   https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.query.html
