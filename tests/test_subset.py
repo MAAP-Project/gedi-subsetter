@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import geopandas as gpd
 from maap.maap import MAAP
@@ -42,9 +43,10 @@ def test_subset_granule(maap: MAAP, h5_path: str, aoi_gdf: gpd.GeoDataFrame):
             aoi_gdf,
             "lat_lowestmode",
             "lon_lowestmode",
+            "all",
             ["agbd"],
             "l2_quality_flag == 1",
-            output_dir,
+            Path(output_dir),
         )
     )
 
