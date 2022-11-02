@@ -3,7 +3,7 @@ import logging
 import os
 import os.path
 import warnings
-from typing import Any, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, Mapping, Optional, Sequence, Union
 
 import h5py
 import numpy as np
@@ -15,6 +15,7 @@ from returns.io import IOResultE, impure_safe
 from shapely.geometry import Polygon
 from shapely.geometry.base import BaseGeometry
 
+import gedi_subset.fp as fp
 from gedi_subset.h5frame import H5DataFrame
 
 # Suppress UserWarning: The Shapely GEOS version (3.10.2-CAPI-1.16.0) is incompatible
@@ -124,11 +125,28 @@ def spatial_filter(beam, aoi):
     return indices
 
 
+def is_coverage_beam(beam: h5py.Group) -> bool:
+    return "COVERAGE" in beam.attrs.get("description", "").upper()
+
+
+def is_power_beam(beam: h5py.Group) -> bool:
+    return "POWER" in beam.attrs.get("description", "").upper()
+
+
+def beam_filter_from_names(names: Sequence[str]):
+    def is_named_beam(beam: h5py.Group) -> bool:
+        return any(name.upper() in beam.name.upper() for name in names)
+
+    return is_named_beam
+
+
 def subset_hdf5(
     hdf5: h5py.Group,
+    *,
     aoi: gpd.GeoDataFrame,
     lat: str,
     lon: str,
+    beam_filter: Callable[[h5py.Group], bool] = fp.always(True),
     columns: Sequence[str],
     query: Optional[str],
 ) -> gpd.GeoDataFrame:
@@ -336,7 +354,11 @@ def subset_hdf5(
         # Clip subset to the area of interest
         return gpd.clip(gdf, aoi.set_crs(epsg=4326))
 
-    beams = (group for name, group in hdf5.items() if name.startswith("BEAM"))
+    beams = (
+        group
+        for name, group in hdf5.items()
+        if name.startswith("BEAM") and beam_filter(group)
+    )
     beams_gdf = pd.concat(map(subset_beam, beams), ignore_index=True, copy=False)
     beams_gdf.insert(0, "filename", os.path.basename(hdf5.file.filename))
 
