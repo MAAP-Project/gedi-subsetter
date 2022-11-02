@@ -49,6 +49,10 @@ must be supplied for every input):
 
 - `lon`: Name of the dataset used for longitude.
 
+- `beams`: Selection of beams using the keyword `all`, a comma-separated list
+   of specified beams to select (e.g., `BEAM0000,BEAM0001` or `0000,0001`),
+   or a BEAM type being `coverage` or `power` (Default: `all` beams selected).
+
 - `columns`: Comma-separated list of column names to include in the output file.
   These names correspond to the variables (layers) within the data files, and
   vary from collection to collection.  Consult the documentation for a list of
@@ -227,6 +231,7 @@ inputs = dict(
    doi="<DOI>",
    lat="<LATITUDE>",
    lon="<LONGITUDE>",
+   beams="<BEAMS>",
    columns="<COLUMNS>",
    query="<QUERY>",
    limit = 10_000
