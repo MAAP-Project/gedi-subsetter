@@ -55,7 +55,20 @@ def test_subset_granule(maap: MAAP, h5_path: str, aoi_gdf: gpd.GeoDataFrame):
     assert io_result == IOSuccess(Some(expected_path))
 
 
-@pytest.mark.parametrize("value", ["0100", "0111", "BEAM1001", "beam1010"])
+@pytest.mark.parametrize(
+    "value",
+    [
+        "0100",
+        "0111",
+        "BEAM1001",
+        "beam1010",
+        "foo",
+        "BEAMS0000",
+        "all,power",
+        "beam0000,beam0100",
+        "BEAM0000,coverage",
+    ],
+)
 def test_bad_check_beams_option(value: str):
     with pytest.raises(BadParameter):
         check_beams_option(value)
@@ -67,6 +80,10 @@ def test_bad_check_beams_option(value: str):
         ("0000,0001,0010", "BEAM0000,BEAM0001,BEAM0010"),
         ("BEAM1011,BEAM1000,BEAM0110", "BEAM1011,BEAM1000,BEAM0110"),
         ("beam0000,beam0001,beam0010", "BEAM0000,BEAM0001,BEAM0010"),
+        ("all", "ALL"),
+        ("Coverage", "COVERAGE"),
+        ("POWER", "POWER"),
+        ("0000,Beam0001", "BEAM0000,BEAM0001"),
     ],
 )
 def test_valid_check_beams_option(value: str, expected_value: str):
