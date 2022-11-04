@@ -7,7 +7,7 @@ import os.path
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Iterable, Mapping, Optional, Sequence, Tuple
+from typing import Any, Callable, Iterable, Mapping, NoReturn, Optional, Sequence, Tuple
 
 import geopandas as gpd
 import h5py
@@ -131,6 +131,23 @@ def beam_filter(beams: str) -> Callable[[h5py.Group], bool]:
     if beams.upper() == "ALL":
         return fp.always(True)
     return beam_filter_from_names([item.strip() for item in beams.split(",")])
+
+
+def check_beams_option(value: str) -> str | NoReturn:
+    upper_value = value.upper()
+    suffixes = [name.strip().lstrip("BEAM") for name in upper_value.split(",")]
+    valid_suffixes = ["0000", "0001", "0010", "0011", "0101", "0110", "1000", "1011"]
+
+    if upper_value not in ["ALL", "COVERAGE", "POWER"] and any(
+        suffix not in valid_suffixes for suffix in suffixes
+    ):
+        raise typer.BadParameter(value)
+
+    return (
+        ",".join(f"BEAM{suffix}" for suffix in suffixes)
+        if len(suffixes) > 1
+        else upper_value
+    )
 
 
 @impure_safe
@@ -281,10 +298,11 @@ def main(
     ),
     beams: str = typer.Option(
         "all",
+        callback=check_beams_option,
         help=(
-            "`all` BEAMS, "
-            " a comma-separated list of columns to select,"
-            " or a BEAM type being `coverage` or `power`"
+            "Which beams to include in the subset. Must be 'all', 'coverage', 'power',"
+            " OR a comma-separated list of beam names, with or without the 'BEAM'"
+            " prefix (e.g., 'BEAM0000,BEAM0001' or '0000,0001')"
         ),
     ),
     columns: str = typer.Option(

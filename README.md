@@ -49,9 +49,9 @@ must be supplied for every input):
 
 - `lon`: Name of the dataset used for longitude.
 
-- `beams`: Selection of beams using the keyword `all`, a comma-separated list
-   of specified beams to select (e.g., `BEAM0000,BEAM0001` or `0000,0001`),
-   or a BEAM type being `coverage` or `power` (Default: `all` beams selected).
+- `beams`: Which beams to include in the subset. Must be `all`, `coverage`,
+  `power`, _OR_ a comma-separated list of beam names, with or without the `BEAM`
+  prefix (e.g., `BEAM0000,BEAM0001` or `0000,0001`)
 
 - `columns`: Comma-separated list of column names to include in the output file.
   These names correspond to the variables (layers) within the data files, and
