@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+### Added
+- [#6](https://github.com/MAAP-Project/gedi-subsetter/issues/6): Allow user to
+  specify which BEAMs to subset
+
 ## [0.3.0] - 2022-10-31
 
 ### Fixed

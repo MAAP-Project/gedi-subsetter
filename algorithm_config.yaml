@@ -17,6 +17,8 @@ inputs:
     download: False
   - name: lon
     download: False
+  - name: beams
+    download: False
   - name: columns
     download: False
   - name: query
