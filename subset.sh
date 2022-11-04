@@ -15,7 +15,7 @@ else
     aoi="$(ls input/*)"
 
     n_actual=${#}
-    n_expected=4
+    n_expected=7
 
     if test ${n_actual} -gt 0 -a ${n_actual} -ne ${n_expected}; then
         echo "Expected ${n_expected} inputs, but got ${n_actual}:$(printf " '%b'" "$@")" >&2
