@@ -158,7 +158,7 @@ def subset_hdf5(
     query criteria.  The resulting ``geopandas.GeoDataFrame`` is further reduced to
     include only the specified columns, which must be names of datasets within the
     HDF5 group (specifically, datasets within subgroups named with the prefix `"BEAM"`
-    which can be further reduced to specified BEAMs).
+    for which invocation of the specified ``beam_filter`` callable returns ``True``).
 
     To illustrate, assume an HDF5 file (`hdf5`) structured like so (values are for
     illustration purposes only):
@@ -200,8 +200,10 @@ def subset_hdf5(
     Assumptions:
 
     - The HDF5 group/file contains subgroups that are named with the prefix `"BEAM"`.
-    - Every `"BEAM*"` subgroup contains degree unit datasets representing the latitude
-      and longitude which are used for the geometry of the resulting ``GeoDataFrame``.
+    - Every `"BEAM*"` subgroup contains degree unit datasets with names given by the
+      specified ``lat`` and ``lon`` parameters, representing the latitude and longitude,
+      respectively, used to create the ``geometry`` column of the resulting
+      ``GeoDataFrame``.
     - For every column name in `columns` and every column name appearing in the `query`
       expression, every `"BEAM*"` subgroup contains a dataset of the same name.
 
@@ -223,9 +225,14 @@ def subset_hdf5(
     lon: str
         Name of the longitude dataset used for the resulting ``GeoDataFrame`` geometry.
     beam_filter: Callable[[h5py.Group], bool] = fp.always(True)
-        Call to the beam_filter function located in subset.py. The function returns a
-        boolean value that dictates whether the `BEAM` group falls within the list of
-        beams to subset.
+        Callable used to determine whether or not a top-level BEAM subgroup within the
+        specified ``hdf5`` group should be included in the subset. This callable is
+        called once for each subgroup that has a name prefixed with `"BEAM"`. If not
+        supplied, the default callable always returns ``True``, such that every
+        ``"BEAM*"`` subgroup is included. For convenience, the predicate functions
+        py:`is_coverage_beam` and py:`is_power_beam` may be used. Further, the function
+        returned by calling py:`beam_filter_from_names` with a specific list of BEAM
+        names may be used.
     columns : Sequence[str]
         Column names to be included in the subset.  The specified column names must
         match dataset names within the `"BEAM*"` groups of the HDF5 file.  Although the
@@ -243,9 +250,12 @@ def subset_hdf5(
     -------
     subset : gpd.GeoDataFrame
         GeoDataFrame containing the subset of the data from the HDF5 group/file that
-        fall within the specified area of interest and satisfy the specified query and
-        `BEAM`s. Columns are limited to the specified sequence of column names, along
-        with `filename` (str) and `BEAM` (str) columns.
+        fall within the specified area of interest and satisfy the specified query.
+        Columns are limited to the specified sequence of column names, along with
+        `filename` (str) and `BEAM` (str) columns. Further, the query is applied to, and
+        the columns are selected from, only the top-level subgroups that have names
+        prefixed with ``"BEAM"`` and for which the ``beam_filter`` function returns
+        ``True``.
 
     Examples
     --------
@@ -324,14 +334,13 @@ def subset_hdf5(
     selecting only the coverage beams, and selecting only the rows that satisfy
     the specified query:
 
-    >>> from gedi_subset.subset import beam_filter
     >>> with h5py.File(bio) as hdf5:
     ...     gdf = subset_hdf5(
     ...         hdf5,
     ...         aoi=aoi,
     ...         lat="lat_lowestmode",
     ...         lon="lon_lowestmode",
-    ...         beam_filter=beam_filter("coverage"),
+    ...         beam_filter=is_coverage_beam,
     ...         columns=["agbd", "sensitivity"],
     ...         query="l2_quality_flag == 1 and sensitivity > 0.95"
     ...     )
