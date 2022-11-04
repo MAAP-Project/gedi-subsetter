@@ -2,12 +2,14 @@ import os
 from pathlib import Path
 
 import geopandas as gpd
+import pytest
 from maap.maap import MAAP
 from maap.Result import Granule
 from returns.io import IOSuccess
 from returns.maybe import Some
+from typer import BadParameter
 
-from gedi_subset.subset import SubsetGranuleProps, subset_granule
+from gedi_subset.subset import SubsetGranuleProps, check_beams_option, subset_granule
 
 
 def test_subset_granule(maap: MAAP, h5_path: str, aoi_gdf: gpd.GeoDataFrame):
@@ -51,3 +53,8 @@ def test_subset_granule(maap: MAAP, h5_path: str, aoi_gdf: gpd.GeoDataFrame):
     )
 
     assert io_result == IOSuccess(Some(expected_path))
+
+
+def test_bad_check_beams_option(value="0100"):
+    with pytest.raises(BadParameter):
+        check_beams_option(value)
