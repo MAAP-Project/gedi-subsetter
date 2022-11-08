@@ -204,7 +204,7 @@ Here are some sample input values per DOI:
 - **doi:** `L4A`, `l4a`, or a specific DOI name
 - **lat**: `lat_lowestmode`
 - **lon**: `lon_lowestmode`
-- **columns:** `agbd, agbd_se, sensitivity, sensitivity_a2`
+- **columns:** `agbd, agbd_se, sensitivity, geolocation/sensitivity_a2`
 - **query:** ``l2_quality_flag == 1 & l4_quality_flag == 1 & sensitivity > 0.95 & `geolocation/sensitivity_a2` > 0.95``
 
 ## Running a GEDI Subsetting DPS Job
