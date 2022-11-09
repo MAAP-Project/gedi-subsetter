@@ -5,13 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog], and this project adheres to
 [Semantic Versioning].
 
-## [0.4.0] - 2022-11-08
+## [0.4.0] - 2022-11-09
 
 ### Added
 - [#6](https://github.com/MAAP-Project/gedi-subsetter/issues/6): Allow user to
   specify which BEAMs to subset
 
-## [0.3.0] - 2022-10-31 [YANKED]
+## [0.3.0] - 2022-10-31
 
 ### Fixed
 
