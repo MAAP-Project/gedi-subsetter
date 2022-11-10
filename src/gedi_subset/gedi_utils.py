@@ -3,7 +3,7 @@ import logging
 import os
 import os.path
 import warnings
-from typing import Any, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, Mapping, Optional, Sequence, Union
 
 import h5py
 import numpy as np
@@ -15,6 +15,7 @@ from returns.io import IOResultE, impure_safe
 from shapely.geometry import Polygon
 from shapely.geometry.base import BaseGeometry
 
+import gedi_subset.fp as fp
 from gedi_subset.h5frame import H5DataFrame
 
 # Suppress UserWarning: The Shapely GEOS version (3.10.2-CAPI-1.16.0) is incompatible
@@ -124,11 +125,28 @@ def spatial_filter(beam, aoi):
     return indices
 
 
+def is_coverage_beam(beam: h5py.Group) -> bool:
+    return "COVERAGE" in beam.attrs.get("description", "").upper()
+
+
+def is_power_beam(beam: h5py.Group) -> bool:
+    return "POWER" in beam.attrs.get("description", "").upper()
+
+
+def beam_filter_from_names(names: Sequence[str]):
+    def is_named_beam(beam: h5py.Group) -> bool:
+        return any(name.upper() in beam.name.upper() for name in names)
+
+    return is_named_beam
+
+
 def subset_hdf5(
     hdf5: h5py.Group,
+    *,
     aoi: gpd.GeoDataFrame,
     lat: str,
     lon: str,
+    beam_filter: Callable[[h5py.Group], bool] = fp.always(True),
     columns: Sequence[str],
     query: Optional[str],
 ) -> gpd.GeoDataFrame:
@@ -139,7 +157,8 @@ def subset_hdf5(
     that fall within the specified area of interest (AOI) and also satisfy the specified
     query criteria.  The resulting ``geopandas.GeoDataFrame`` is further reduced to
     include only the specified columns, which must be names of datasets within the
-    HDF5 group (specifically, datasets within subgroups named with the prefix `"BEAM"`).
+    HDF5 group (specifically, datasets within subgroups named with the prefix `"BEAM"`
+    for which invocation of the specified ``beam_filter`` callable returns ``True``).
 
     To illustrate, assume an HDF5 file (`hdf5`) structured like so (values are for
     illustration purposes only):
@@ -181,9 +200,10 @@ def subset_hdf5(
     Assumptions:
 
     - The HDF5 group/file contains subgroups that are named with the prefix `"BEAM"`.
-    - Every `"BEAM*"` subgroup contains datasets named `lat_lowestmode` and
-      `lon_lowestmode`, representing the latitude and longitude, respectively, which are
-      used for the geometry of the resulting ``GeoDataFrame``.
+    - Every `"BEAM*"` subgroup contains degree unit datasets with names given by the
+      specified ``lat`` and ``lon`` parameters, representing the latitude and longitude,
+      respectively, used to create the ``geometry`` column of the resulting
+      ``GeoDataFrame``.
     - For every column name in `columns` and every column name appearing in the `query`
       expression, every `"BEAM*"` subgroup contains a dataset of the same name.
 
@@ -198,8 +218,21 @@ def subset_hdf5(
         HDF5 group to subset (typically an ``h5py.File`` instance).
     aoi : gpd.GeoDataFrame
         Area of Interest.  The subset is limited to data points that fall within this
-        area of interest, as determined by the `lat_lowestmode` and `lon_lowestmode`
-        datasets of each `"BEAM*"` group within the HDF5 file.
+        area of interest, as determined by the latitude and longitude datasets of each
+        `"BEAM*"` group within the HDF5 file.
+    lat: str
+        Name of the latitude dataset used for the resulting ``GeoDataFrame`` geometry.
+    lon: str
+        Name of the longitude dataset used for the resulting ``GeoDataFrame`` geometry.
+    beam_filter: Callable[[h5py.Group], bool] = fp.always(True)
+        Callable used to determine whether or not a top-level BEAM subgroup within the
+        specified ``hdf5`` group should be included in the subset. This callable is
+        called once for each subgroup that has a name prefixed with `"BEAM"`. If not
+        supplied, the default callable always returns ``True``, such that every
+        ``"BEAM*"`` subgroup is included. For convenience, the predicate functions
+        py:`is_coverage_beam` and py:`is_power_beam` may be used. Further, the function
+        returned by calling py:`beam_filter_from_names` with a specific list of BEAM
+        names may be used.
     columns : Sequence[str]
         Column names to be included in the subset.  The specified column names must
         match dataset names within the `"BEAM*"` groups of the HDF5 file.  Although the
@@ -219,7 +252,10 @@ def subset_hdf5(
         GeoDataFrame containing the subset of the data from the HDF5 group/file that
         fall within the specified area of interest and satisfy the specified query.
         Columns are limited to the specified sequence of column names, along with
-        `filename` (str) and `BEAM` (str) columns.
+        `filename` (str) and `BEAM` (str) columns. Further, the query is applied to, and
+        the columns are selected from, only the top-level subgroups that have names
+        prefixed with ``"BEAM"`` and for which the ``beam_filter`` function returns
+        ``True``.
 
     Examples
     --------
@@ -236,12 +272,14 @@ def subset_hdf5(
     ...     group.create_dataset("lat_lowestmode", data=[-1.82556, -9.82514, -1.82471])
     ...     group.create_dataset("lon_lowestmode", data=[12.06648, 12.06678, 12.06707])
     ...     group.create_dataset("sensitivity", data=[0.9, 0.97, 0.99])
-    ...     group = hdf5.create_group("BEAM0001")
+    ...     group.attrs.create("description", "Coverage beam")
+    ...     group = hdf5.create_group("BEAM1011")
     ...     group.create_dataset("agbd", data=[1.1715966, 1.630395, 3.5265787])
     ...     group.create_dataset("l2_quality_flag", data=[0, 1, 1], dtype="i1")
     ...     group.create_dataset("lat_lowestmode", data=[-1.82557, -9.82515, -1.82472])
     ...     group.create_dataset("lon_lowestmode", data=[12.06649, 12.06679, 12.06708])
     ...     group.create_dataset("sensitivity", data=[0.93, 0.96, 0.98])
+    ...     group.attrs.create("description", "Full power beam")
     <HDF5 dataset "agbd": ...>
     <HDF5 dataset "l2_quality_flag": ...>
     <HDF5 dataset "lat_lowestmode": ...>
@@ -292,13 +330,19 @@ def subset_hdf5(
     ... }}])
 
     We can now subset the data in the HDF5 file to points that fall within the AOI,
-    selecting only the desired columns (i.e., named datasets within the HDF5 file), and
-    selecting only the rows that satisfy the specified query:
+    selecting only the desired columns (i.e., named datasets within the HDF5 file),
+    selecting only the coverage beams, and selecting only the rows that satisfy
+    the specified query:
 
     >>> with h5py.File(bio) as hdf5:
     ...     gdf = subset_hdf5(
-    ...         hdf5, aoi, ["agbd", "sensitivity"],
-    ...         "l2_quality_flag == 1 and sensitivity > 0.95"
+    ...         hdf5,
+    ...         aoi=aoi,
+    ...         lat="lat_lowestmode",
+    ...         lon="lon_lowestmode",
+    ...         beam_filter=is_coverage_beam,
+    ...         columns=["agbd", "sensitivity"],
+    ...         query="l2_quality_flag == 1 and sensitivity > 0.95"
     ...     )
     ...     # Since the source of our HDF5 file is an ``io.BytesIO``, we'll drop the
     ...     # `filename` column (which refers to the memory location of the
@@ -306,12 +350,12 @@ def subset_hdf5(
     ...     gdf.drop(columns=["filename"])
        BEAM      agbd  sensitivity                   geometry
     0  0000  1.116093         0.99  POINT (12.06707 -1.82471)
-    1  0001  3.526579         0.98  POINT (12.06708 -1.82472)
 
     Note that the resulting ``geopandas.GeoDataFrame`` contains only the specified
-    columns (`agbd` and `sensitivity`), and only the rows (only 1 from each "beam" in
-    this example) that have a geometry that falls within the AOI and also satisfy the
-    query (i.e., `l2_quality_flag == 1` and `sensitivity > 0.95`).
+    coverage `BEAM`s, specified columns (`agbd` and `sensitivity`), and only the
+    rows (only 1 from each "beam" in this example) that have a geometry that falls
+    within the AOI and also satisfy the query
+    (i.e., `l2_quality_flag == 1` and `sensitivity > 0.95`).
 
     Note also that although the `l2_quality_flag` was specified in the query, it does
     not appear in the result because it was not specified in the sequence of column
@@ -336,7 +380,11 @@ def subset_hdf5(
         # Clip subset to the area of interest
         return gpd.clip(gdf, aoi.set_crs(epsg=4326))
 
-    beams = (group for name, group in hdf5.items() if name.startswith("BEAM"))
+    beams = (
+        group
+        for name, group in hdf5.items()
+        if name.startswith("BEAM") and beam_filter(group)
+    )
     beams_gdf = pd.concat(map(subset_beam, beams), ignore_index=True, copy=False)
     beams_gdf.insert(0, "filename", os.path.basename(hdf5.file.filename))
 

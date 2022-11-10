@@ -7,7 +7,7 @@ import os.path
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Optional, Sequence, Tuple
+from typing import Any, Callable, Iterable, Mapping, NoReturn, Optional, Sequence, Tuple
 
 import geopandas as gpd
 import h5py
@@ -27,11 +27,14 @@ from returns.unsafe import unsafe_perform_io
 import gedi_subset.fp as fp
 from gedi_subset import osx
 from gedi_subset.gedi_utils import (
+    beam_filter_from_names,
     chext,
     gdf_read_parquet,
     gdf_to_file,
     gdf_to_parquet,
     granule_intersects,
+    is_coverage_beam,
+    is_power_beam,
     subset_hdf5,
 )
 from gedi_subset.maapx import download_granule, find_collection
@@ -75,6 +78,7 @@ class SubsetGranuleProps:
     aoi_gdf: gpd.GeoDataFrame
     lat: str
     lon: str
+    beams: str
     columns: Sequence[str]
     query: Optional[str]
     output_dir: Path
@@ -119,6 +123,33 @@ def find_gedi_collection(
     )
 
 
+def beam_filter(beams: str) -> Callable[[h5py.Group], bool]:
+    if beams.upper() == "COVERAGE":
+        return is_coverage_beam
+    if beams.upper() == "POWER":
+        return is_power_beam
+    if beams.upper() == "ALL":
+        return fp.always(True)
+    return beam_filter_from_names([item.strip() for item in beams.split(",")])
+
+
+def check_beams_option(value: str) -> str | NoReturn:
+    upper_value = value.upper()
+    suffixes = [name.strip().lstrip("BEAM") for name in upper_value.split(",")]
+    valid_suffixes = ["0000", "0001", "0010", "0011", "0101", "0110", "1000", "1011"]
+
+    if upper_value not in ["ALL", "COVERAGE", "POWER"] and any(
+        suffix not in valid_suffixes for suffix in suffixes
+    ):
+        raise typer.BadParameter(value)
+
+    return (
+        ",".join(f"BEAM{suffix}" for suffix in suffixes)
+        if len(suffixes) > 1
+        else upper_value
+    )
+
+
 @impure_safe
 def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
     """Subset a granule to a GeoParquet file and return the output path.
@@ -149,7 +180,13 @@ def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
 
     try:
         gdf = subset_hdf5(
-            hdf5, props.aoi_gdf, props.lat, props.lon, props.columns, props.query
+            hdf5,
+            aoi=props.aoi_gdf,
+            lat=props.lat,
+            lon=props.lon,
+            beam_filter=beam_filter(props.beams),
+            columns=props.columns,
+            query=props.query,
         )
     finally:
         hdf5.close()
@@ -181,6 +218,7 @@ def subset_granules(
     aoi_gdf: gpd.GeoDataFrame,
     lat: str,
     lon: str,
+    beams: str,
     columns: Sequence[str],
     query: Optional[str],
     output_dir: Path,
@@ -210,7 +248,9 @@ def subset_granules(
     chunksize = 10
     processes = os.cpu_count()
     payloads = (
-        SubsetGranuleProps(granule, maap, aoi_gdf, lat, lon, columns, query, output_dir)
+        SubsetGranuleProps(
+            granule, maap, aoi_gdf, lat, lon, beams, columns, query, output_dir
+        )
         for granule in granules
     )
 
@@ -255,6 +295,15 @@ def main(
     ),
     lon: str = typer.Option(
         ..., help=("Longitude dataset used in the geometry of the dataframe")
+    ),
+    beams: str = typer.Option(
+        "all",
+        callback=check_beams_option,
+        help=(
+            "Which beams to include in the subset. Must be 'all', 'coverage', 'power',"
+            " OR a comma-separated list of beam names, with or without the 'BEAM'"
+            " prefix (e.g., 'BEAM0000,BEAM0001' or '0000,0001')"
+        ),
     ),
     columns: str = typer.Option(
         ...,
@@ -315,6 +364,7 @@ def main(
             aoi_gdf,
             lat,
             lon,
+            beams,
             [c.strip() for c in columns.split(",")],
             query,
             output_dir,
