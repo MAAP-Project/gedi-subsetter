@@ -49,6 +49,10 @@ must be supplied for every input):
 
 - `lon`: Name of the dataset used for longitude.
 
+- `beams`: Which beams to include in the subset. Must be `all`, `coverage`,
+  `power`, _OR_ a comma-separated list of beam names, with or without the `BEAM`
+  prefix (e.g., `BEAM0000,BEAM0001` or `0000,0001`)
+
 - `columns`: Comma-separated list of column names to include in the output file.
   These names correspond to the variables (layers) within the data files, and
   vary from collection to collection.  Consult the documentation for a list of
@@ -200,7 +204,7 @@ Here are some sample input values per DOI:
 - **doi:** `L4A`, `l4a`, or a specific DOI name
 - **lat**: `lat_lowestmode`
 - **lon**: `lon_lowestmode`
-- **columns:** `agbd, agbd_se, sensitivity, sensitivity_a2`
+- **columns:** `agbd, agbd_se, sensitivity, geolocation/sensitivity_a2`
 - **query:** ``l2_quality_flag == 1 & l4_quality_flag == 1 & sensitivity > 0.95 & `geolocation/sensitivity_a2` > 0.95``
 
 ## Running a GEDI Subsetting DPS Job
@@ -227,6 +231,7 @@ inputs = dict(
    doi="<DOI>",
    lat="<LATITUDE>",
    lon="<LONGITUDE>",
+   beams="<BEAMS>",
    columns="<COLUMNS>",
    query="<QUERY>",
    limit = 10_000

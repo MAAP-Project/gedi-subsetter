@@ -96,8 +96,9 @@ def h5_path(tmp_path_factory: pytest.TempPathFactory) -> str:
         geolocation.create_dataset(
             "longitude_instrument", data=[13.06648, 13.06678, 13.06707]
         )
+        beam.attrs.create("description", "Coverage beam")
 
-        beam = h5_file.create_group("BEAM0001")
+        beam = h5_file.create_group("BEAM1011")
         beam.create_dataset("agbd", data=[1.1715966, 1.630395, 3.5265787], dtype="f4")
         beam.create_dataset("agbd_se", data=[3.063243, 3.037882, 2.9968245], dtype="f4")
         beam.create_dataset("l2_quality_flag", data=[0, 1, 1], dtype="i1")
@@ -117,5 +118,6 @@ def h5_path(tmp_path_factory: pytest.TempPathFactory) -> str:
         geolocation.create_dataset(
             "longitude_instrument", data=[13.06648, 13.06678, 13.06707]
         )
+        beam.attrs.create("description", "Full power beam")
 
     return str(path)
