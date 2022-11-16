@@ -15,7 +15,7 @@ else
     aoi="$(ls input/*)"
 
     n_actual=${#}
-    n_expected=7
+    n_expected=5
 
     if test ${n_actual} -gt 0 -a ${n_actual} -ne ${n_expected}; then
         echo "Expected ${n_expected} inputs, but got ${n_actual}:$(printf " '%b'" "$@")" >&2
@@ -23,13 +23,13 @@ else
     fi
 
     options=()
-    [[ "${1:--}" != "-" ]] && options=("${options[@]}" --doi "${1:--}")
-    [[ "${2:--}" != "-" ]] && options=("${options[@]}" --lat "${2:--}")
-    [[ "${3:--}" != "-" ]] && options=("${options[@]}" --lon "${3:--}")
-    [[ "${4:--}" != "-" ]] && options=("${options[@]}" --beams "${4:--}")
-    [[ "${5:--}" != "-" ]] && options=("${options[@]}" --columns "${5:--}")
-    [[ "${6:--}" != "-" ]] && options=("${options[@]}" --query "${6:--}")
-    [[ "${7:--}" != "-" ]] && options=("${options[@]}" --limit "${7:--}")
+    # [[ "${1:--}" != "-" ]] && options=("${options[@]}" --doi "${1:--}")
+    [[ "${1:--}" != "-" ]] && options=("${options[@]}" --lat "${1:--}")
+    [[ "${2:--}" != "-" ]] && options=("${options[@]}" --lon "${2:--}")
+    [[ "${3:--}" != "-" ]] && options=("${options[@]}" --beams "${3:--}")
+    [[ "${4:--}" != "-" ]] && options=("${options[@]}" --columns "${4:--}")
+    [[ "${5:--}" != "-" ]] && options=("${options[@]}" --query "${5:--}")
+    # [[ "${7:--}" != "-" ]] && options=("${options[@]}" --limit "${7:--}")
 
     ${subset_py} --verbose --aoi "${aoi}" "${options[@]}"
 fi

@@ -1,6 +1,6 @@
 description: Subset GEDI L1B, L2A, L2B, or L4A granules within an area of interest (AOI)
 algo_name: gedi-subset
-version: develop
+version: hec
 environment: ubuntu
 repository_url: https://repo.ops.maap-project.org/data-team/gedi-subsetter.git
 docker_url: mas.dit.maap-project.org/root/maap-workspaces/base_images/r:dit
@@ -11,8 +11,8 @@ disk_space: 20GB
 inputs:
   - name: aoi
     download: True
-  - name: doi
-    download: False
+  # - name: doi
+  #   download: False
   - name: lat
     download: False
   - name: lon
@@ -23,5 +23,5 @@ inputs:
     download: False
   - name: query
     download: False
-  - name: limit
-    download: False
+  # - name: limit
+  #   download: False

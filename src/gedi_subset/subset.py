@@ -331,7 +331,10 @@ def main(
     # ),
     granules: Path = typer.Option(
         ...,
-        help="file of granule locations to subset",
+        help=(
+            "Path to file containing absolute paths to granule data files (.h5) to"
+            " subset (one path per line)"
+        ),
         exists=True,
         file_okay=True,
         dir_okay=False,
