@@ -5,57 +5,68 @@ import multiprocessing
 import os
 import os.path
 from dataclasses import dataclass
-from enum import Enum
+
+# from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Iterable, Mapping, NoReturn, Optional, Sequence, Tuple
+from typing import (  # Mapping,
+    Any,
+    Callable,
+    Iterable,
+    NoReturn,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 import geopandas as gpd
 import h5py
 import typer
 from maap.maap import MAAP
-from maap.Result import Collection, Granule
+
+# from maap.Result import Collection, Granule
 from returns.curry import partial
 from returns.functions import raise_exception, tap
 from returns.io import IOFailure, IOResult, IOResultE, IOSuccess, impure_safe
 from returns.iterables import Fold
 from returns.maybe import Maybe, Nothing, Some
 from returns.pipeline import flow, is_successful, pipe
-from returns.pointfree import bind, bind_ioresult, bind_result, lash, map_
-from returns.result import Failure, Success
+from returns.pointfree import bind, bind_ioresult, lash, map_
+
+# from returns.result import Failure, Success
 from returns.unsafe import unsafe_perform_io
 
 import gedi_subset.fp as fp
 from gedi_subset import osx
-from gedi_subset.gedi_utils import (
+from gedi_subset.gedi_utils import (  # granule_intersects,
     beam_filter_from_names,
     chext,
     gdf_read_parquet,
     gdf_to_file,
     gdf_to_parquet,
-    granule_intersects,
     is_coverage_beam,
     is_power_beam,
     subset_hdf5,
 )
-from gedi_subset.maapx import download_granule, find_collection
+
+# from gedi_subset.maapx import download_granule, find_collection
 
 
-class CMRHost(str, Enum):
-    maap = "cmr.maap-project.org"
-    nasa = "cmr.earthdata.nasa.gov"
+# class CMRHost(str, Enum):
+#     maap = "cmr.maap-project.org"
+#     nasa = "cmr.earthdata.nasa.gov"
 
-    def __str__(self) -> str:
-        return self.value
+#     def __str__(self) -> str:
+#         return self.value
 
 
-logical_dois = {
-    "L1B": "10.5067/GEDI/GEDI01_B.002",
-    "L2A": "10.5067/GEDI/GEDI02_A.002",
-    "L2B": "10.5067/GEDI/GEDI02_B.002",
-    "L4A": "10.3334/ORNLDAAC/2056",
-}
+# logical_dois = {
+#     "L1B": "10.5067/GEDI/GEDI01_B.002",
+#     "L2A": "10.5067/GEDI/GEDI02_A.002",
+#     "L2B": "10.5067/GEDI/GEDI02_B.002",
+#     "L4A": "10.3334/ORNLDAAC/2056",
+# }
 
-DEFAULT_LIMIT = 10_000
+# DEFAULT_LIMIT = 10_000
 
 LOGGING_FORMAT = "%(asctime)s [%(processName)s:%(name)s] [%(levelname)s] %(message)s"
 
@@ -73,7 +84,7 @@ class SubsetGranuleProps:
     single argument.
     """
 
-    granule: Granule
+    granule: str
     maap: MAAP
     aoi_gdf: gpd.GeoDataFrame
     lat: str
@@ -84,43 +95,43 @@ class SubsetGranuleProps:
     output_dir: Path
 
 
-def is_gedi_collection(c: Collection) -> bool:
-    """Return True if the specified collection is a GEDI collection containing granule
-    data files in HDF5 format; False otherwise."""
+# def is_gedi_collection(c: Collection) -> bool:
+#     """Return True if the specified collection is a GEDI collection containing granule
+#     data files in HDF5 format; False otherwise."""
 
-    c = c.get("Collection", {})
-    attrs = c.get("AdditionalAttributes", {}).get("AdditionalAttribute", [])
-    data_format_attrs = (attr for attr in attrs if attr.get("Name") == "Data Format")
-    data_format = next(data_format_attrs, {"Value": c.get("DataFormat")}).get("Value")
+#     c = c.get("Collection", {})
+#     attrs = c.get("AdditionalAttributes", {}).get("AdditionalAttribute", [])
+#     data_format_attrs = (attr for attr in attrs if attr.get("Name") == "Data Format")
+#     data_format = next(data_format_attrs, {"Value": c.get("DataFormat")}).get("Value")
 
-    return c.get("ShortName", "").startswith("GEDI") and data_format == "HDF5"
+#     return c.get("ShortName", "").startswith("GEDI") and data_format == "HDF5"
 
 
-def find_gedi_collection(
-    maap: MAAP,
-    cmr_host: str,
-    params: Mapping[str, str],
-) -> IOResultE[Collection]:
-    """Find a GEDI collection matching the given parameters.
+# def find_gedi_collection(
+#     maap: MAAP,
+#     cmr_host: str,
+#     params: Mapping[str, str],
+# ) -> IOResultE[Collection]:
+#     """Find a GEDI collection matching the given parameters.
 
-    Return `IOSuccess[Collection]` containing the collection upon successful
-    search; otherwise return `IOFailure[Exception]` containing the reason for
-    failure, which is a `ValueError` when there is no matching collection or
-    the collection is _not_ a GEDI collection.
-    """
-    return flow(
-        find_collection(maap, cmr_host, params),
-        bind_result(
-            lambda c: Success(c)
-            if is_gedi_collection(c)
-            else Failure(
-                ValueError(
-                    f"Collection {c['Collection']['ShortName']} is not a GEDI"
-                    " collection, or does not contain HDF5 data files."
-                )
-            )
-        ),
-    )
+#     Return `IOSuccess[Collection]` containing the collection upon successful
+#     search; otherwise return `IOFailure[Exception]` containing the reason for
+#     failure, which is a `ValueError` when there is no matching collection or
+#     the collection is _not_ a GEDI collection.
+#     """
+#     return flow(
+#         find_collection(maap, cmr_host, params),
+#         bind_result(
+#             lambda c: Success(c)
+#             if is_gedi_collection(c)
+#             else Failure(
+#                 ValueError(
+#                     f"Collection {c['Collection']['ShortName']} is not a GEDI"
+#                     " collection, or does not contain HDF5 data files."
+#                 )
+#             )
+#         ),
+#     )
 
 
 def beam_filter(beams: str) -> Callable[[h5py.Group], bool]:
@@ -166,16 +177,16 @@ def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
     GeoParquet file.
     """
 
-    io_result = download_granule(props.maap, str(props.output_dir), props.granule)
-    inpath = unsafe_perform_io(io_result.alt(raise_exception).unwrap())
-
+    # io_result = download_granule(props.maap, str(props.output_dir), props.granule)
+    # inpath = unsafe_perform_io(io_result.alt(raise_exception).unwrap())
+    inpath = props.granule
     logger.debug(f"Subsetting {inpath}")
 
     try:
         hdf5 = h5py.File(inpath)
     except Exception as e:
-        granule_ur = props.granule["Granule"]["GranuleUR"]
-        logger.warning(f"Skipping granule {granule_ur} [failed to read {inpath}: {e}]")
+        # granule_ur = props.granule["Granule"]["GranuleUR"]
+        logger.warning(f"Skipping granule [failed to read {inpath}: {e}]")
         return Nothing
 
     try:
@@ -224,7 +235,7 @@ def subset_granules(
     output_dir: Path,
     dest: Path,
     init_args: Tuple[Any, ...],
-    granules: Iterable[Granule],
+    granules: Iterable[str],
 ) -> IOResultE[Tuple[str, ...]]:
     def subset_saved(path: IOResultE[Maybe[str]]) -> bool:
         """Return `True` if `path`'s value is a `Some`, otherwise `False` if it
@@ -253,7 +264,7 @@ def subset_granules(
         )
         for granule in granules
     )
-
+    logger.info(granules)
     logger.info(f"Subsetting on {processes} processes (chunksize={chunksize})")
 
     with multiprocessing.Pool(processes, init_process, init_args) as pool:
@@ -277,19 +288,19 @@ def main(
         readable=True,
         resolve_path=True,
     ),
-    doi=typer.Option(
-        ...,
-        callback=lambda value: logical_dois.get(value.upper(), value),
-        help=(
-            "Digital Object Identifier (DOI) of collection to subset"
-            " (https://www.doi.org/), or one of these logical, case-insensitive"
-            f" names: {', '.join(logical_dois)}"
-        ),
-    ),
-    cmr_host: CMRHost = typer.Option(
-        CMRHost.maap,
-        help="CMR hostname",
-    ),
+    # doi=typer.Option(
+    #     ...,
+    #     callback=lambda value: logical_dois.get(value.upper(), value),
+    #     help=(
+    #         "Digital Object Identifier (DOI) of collection to subset"
+    #         " (https://www.doi.org/), or one of these logical, case-insensitive"
+    #         f" names: {', '.join(logical_dois)}"
+    #     ),
+    # ),
+    # cmr_host: CMRHost = typer.Option(
+    #     CMRHost.maap,
+    #     help="CMR hostname",
+    # ),
     lat: str = typer.Option(
         ..., help=("Latitude dataset used in the geometry of the dataframe")
     ),
@@ -313,10 +324,20 @@ def main(
         None,
         help="Boolean query expression to select rows",
     ),
-    limit: int = typer.Option(
-        DEFAULT_LIMIT,
-        callback=lambda value: DEFAULT_LIMIT if value < 1 else value,
-        help="Maximum number of granules to subset",
+    # limit: int = typer.Option(
+    #     DEFAULT_LIMIT,
+    #     callback=lambda value: DEFAULT_LIMIT if value < 1 else value,
+    #     help="Maximum number of granules to subset",
+    # ),
+    granules: Path = typer.Option(
+        ...,
+        help="file of granule locations to subset",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        writable=False,
+        readable=True,
+        resolve_path=True,
     ),
     output_dir: Path = typer.Option(
         f"{os.path.join(os.path.abspath(os.path.curdir), 'output')}",
@@ -346,19 +367,22 @@ def main(
 
     maap = MAAP("api.ops.maap-project.org")
 
+    with open(granules) as input:
+        granule_paths = input.read().splitlines()
+
     IOResult.do(
         subsets
         for aoi_gdf in impure_safe(gpd.read_file)(aoi)
         # Use wildcards around DOI value because some collections have incorrect
         # DOI values. For example, the L2B collection has the full DOI URL as
         # the DOI value (i.e., https://doi.org/<DOI> rather than just <DOI>).
-        for collection in find_gedi_collection(maap, cmr_host, {"doi": f"*{doi}*"})
-        for granules in impure_safe(maap.searchGranule)(
-            cmr_host=cmr_host,
-            collection_concept_id=collection["concept-id"],
-            bounding_box=",".join(fp.map(str)(aoi_gdf.total_bounds)),
-            limit=limit,
-        )
+        # for collection in find_gedi_collection(maap, cmr_host, {"doi": f"*{doi}*"})
+        # for granules in impure_safe(maap.searchGranule)(
+        #     cmr_host=cmr_host,
+        #     collection_concept_id=collection["concept-id"],
+        #     bounding_box=",".join(fp.map(str)(aoi_gdf.total_bounds)),
+        #     limit=limit,
+        # )
         for subsets in subset_granules(
             maap,
             aoi_gdf,
@@ -370,7 +394,7 @@ def main(
             output_dir,
             dest,
             (logging_level,),
-            fp.filter(partial(granule_intersects, aoi_gdf.geometry[0]))(granules),
+            granule_paths,
         )
     ).bind_ioresult(
         lambda subsets: IOSuccess(subsets)
