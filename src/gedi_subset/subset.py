@@ -4,6 +4,7 @@ import logging
 import multiprocessing
 import os
 import os.path
+import tempfile
 from dataclasses import dataclass
 
 # from enum import Enum
@@ -93,6 +94,7 @@ class SubsetGranuleProps:
     columns: Sequence[str]
     query: Optional[str]
     output_dir: Path
+    temp_dir: str
 
 
 # def is_gedi_collection(c: Collection) -> bool:
@@ -208,7 +210,7 @@ def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
         logger.debug(f"Empty subset produced from {inpath}; not writing")
         return Nothing
 
-    outpath = chext(".gpq", inpath)
+    outpath = os.path.join(props.temp_dir, chext(".gpq", inpath.rsplit("/", 1)[-1]))
     logger.debug(f"Writing subset to {outpath}")
     gdf_to_parquet(outpath, gdf).alt(raise_exception)
 
@@ -258,23 +260,33 @@ def subset_granules(
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool.imap
     chunksize = 10
     processes = os.cpu_count()
-    payloads = (
-        SubsetGranuleProps(
-            granule, maap, aoi_gdf, lat, lon, beams, columns, query, output_dir
+    with tempfile.TemporaryDirectory() as temp_dir:
+        payloads = (
+            SubsetGranuleProps(
+                granule,
+                maap,
+                aoi_gdf,
+                lat,
+                lon,
+                beams,
+                columns,
+                query,
+                output_dir,
+                temp_dir,
+            )
+            for granule in granules
         )
-        for granule in granules
-    )
-    logger.info(granules)
-    logger.info(f"Subsetting on {processes} processes (chunksize={chunksize})")
+        logger.info(granules)
+        logger.info(f"Subsetting on {processes} processes (chunksize={chunksize})")
 
-    with multiprocessing.Pool(processes, init_process, init_args) as pool:
-        return flow(
-            pool.imap_unordered(subset_granule, payloads, chunksize),
-            fp.map(lash(raise_exception)),  # Fail fast (if subsetting errored out)
-            fp.filter(subset_saved),  # Skip granules that produced empty subsets
-            fp.map(bind(bind(append_subset))),  # Append non-empty subset
-            partial(Fold.collect, acc=IOSuccess(())),
-        )
+        with multiprocessing.Pool(processes, init_process, init_args) as pool:
+            return flow(
+                pool.imap_unordered(subset_granule, payloads, chunksize),
+                fp.map(lash(raise_exception)),  # Fail fast (if subsetting errored out)
+                fp.filter(subset_saved),  # Skip granules that produced empty subsets
+                fp.map(bind(bind(append_subset))),  # Append non-empty subset
+                partial(Fold.collect, acc=IOSuccess(())),
+            )
 
 
 def main(
