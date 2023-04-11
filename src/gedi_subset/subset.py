@@ -5,7 +5,6 @@ import multiprocessing
 import os
 import os.path
 from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping, NoReturn, Optional, Sequence, Tuple
 
@@ -38,15 +37,6 @@ from gedi_subset.gedi_utils import (
     subset_hdf5,
 )
 from gedi_subset.maapx import download_granule, find_collection
-
-
-class CMRHost(str, Enum):
-    maap = "cmr.maap-project.org"
-    nasa = "cmr.earthdata.nasa.gov"
-
-    def __str__(self) -> str:
-        return self.value
-
 
 logical_dois = {
     "L1B": "10.5067/GEDI/GEDI01_B.002",
@@ -286,10 +276,6 @@ def main(
             f" names: {', '.join(logical_dois)}"
         ),
     ),
-    cmr_host: CMRHost = typer.Option(
-        CMRHost.maap,
-        help="CMR hostname",
-    ),
     lat: str = typer.Option(
         ..., help=("Latitude dataset used in the geometry of the dataframe")
     ),
@@ -345,6 +331,7 @@ def main(
     osx.remove(dest)
 
     maap = MAAP("api.ops.maap-project.org")
+    cmr_host = "cmr.earthdata.nasa.gov"
 
     IOResult.do(
         subsets
