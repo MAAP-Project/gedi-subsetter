@@ -24,15 +24,15 @@ esac
 conda create -y -n gedi_subset --file "${basedir}/environment/conda-${platform}-64.lock"
 
 # Install maap-py, since it cannot be specified in the lock file
-conda env update -n gedi_subset --file "${basedir}/environment/environment-maappy.yml"
+PIP_REQUIRE_VENV=0 conda env update -n gedi_subset --file "${basedir}/environment/environment-maappy.yml"
 
 # Install development environment dependencies if the --dev flag is set
 # Running build.sh in gedi-subset directory with --dev
 if [[ "${1:-}" == "--dev" ]]; then
-    conda env update -n gedi_subset --file "${basedir}/environment/environment-dev.yml"
+   PIP_REQUIRE_VENV=0 conda env update -n gedi_subset --file "${basedir}/environment/environment-dev.yml"
 fi
 
-conda run --no-capture-output -n gedi_subset pip install -e "${basedir}"
+conda run --no-capture-output -n gedi_subset PIP_REQUIRE_VENV=0 python -m pip install -e "${basedir}"
 
 # Fail build if finicky mix of fiona and gdal isn't correct, so that we don't
 # have to wait to execute a DPS job to find out.

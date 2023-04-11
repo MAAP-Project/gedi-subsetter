@@ -5,9 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog], and this project adheres to
 [Semantic Versioning].
 
+## [0.5.0] - 2023-04-11
+
+### Changed
+
+- [#36](https://github.com/MAAP-Project/gedi-subsetter/issues/36): All CMR
+  queries now use the NASA CMR, because the MAAP CMR is being retired.  If you
+  wish to query the MAAP CMR until it is taken down, you may still use an
+  earlier version of this algorithm (ideally, 0.4.0).
+
 ## [0.4.0] - 2022-11-14
 
 ### Added
+
 - [#6](https://github.com/MAAP-Project/gedi-subsetter/issues/6): Allow user to
   specify which BEAMs to subset
 
