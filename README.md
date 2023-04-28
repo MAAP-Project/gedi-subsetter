@@ -45,13 +45,30 @@ must be supplied for every input):
   a logical name representing such a DOI (see
   [Specifying a DOI](#specifying-a-doi))
 
+  Since 0.3.0
+
+- `temporal`: Temporal range to subset.  To use an unbounded temporal range, set
+  this input to a dash (`-`).  Otherwise, you can specify either a closed range,
+  with start and end dates, or a half-open range, with either a start date or an
+  end date.  For full details on the valid formats, see the NASA CMR's
+  documentation on
+  [temporal range searches](https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html#temporal-range-searches).
+
+  Since 0.6.0
+
 - `lat`: Name of the dataset used for latitude.
 
+  Since 0.3.0
+
 - `lon`: Name of the dataset used for longitude.
+
+  Since 0.3.0
 
 - `beams`: Which beams to include in the subset. Must be `all`, `coverage`,
   `power`, _OR_ a comma-separated list of beam names, with or without the `BEAM`
   prefix (e.g., `BEAM0000,BEAM0001` or `0000,0001`)
+
+  Since 0.4.0
 
 - `columns`: Comma-separated list of column names to include in the output file.
   These names correspond to the variables (layers) within the data files, and
@@ -77,19 +94,17 @@ must be supplied for every input):
   names in the expression are variable (layer) names.  For example:
   `quality_flag == 1`.
 
-  **NOTE:** This input is _optional_.  If not supplied, all rows will be
-  selected.  To indicate _no_ query, enter a dash (`-`) as the input value.
+  **NOTE:** If you do not wish to subset the rows of the data, set this input
+  value to a dash (`-`) to indicate _no_ query.
 
   To combine multiple expressions, you may use the `and` and `or` boolean
-  operators.  Alternatively, you may use the `&` and `|` operators, which are
-  interpreted as boolean operators rather than bitwise operators, as would be
-  the case in standard Python code.  See [pandas.DataFrame.query].
+  operators.
 
   Examples:
 
   ```plain
   quality_flag == 1 and sensitivity > 0.95
-  quality_flag == 1 & sensitivity > 0.95
+  (l2a_quality_flag == 1 or l2b_quality_flag == 1) and sensitivity > 0.95
   ```
 
   **IMPORTANT:** To specify nested variables (i.e., variables _not_ at the top
@@ -97,7 +112,7 @@ must be supplied for every input):
   but you must surround such nested path names with backticks.  For example:
 
   ```plain
-  quality_flag == 1 & `geolocation/sensitivity_a2` > 0.95
+  quality_flag == 1 and `geolocation/sensitivity_a2` > 0.95
   ```
 
   Alternatively, "dot" notation may be used in place of using slashes.  This
@@ -106,12 +121,12 @@ must be supplied for every input):
   names**:
 
   ```plain
-  quality_flag == 1 & geolocation.sensitivity_a2 > 0.95
+  quality_flag == 1 and geolocation.sensitivity_a2 > 0.95
   ```
 
-- `limit`: Maximum number of GEDI granule data files to download (among those
-  that intersect the specified AOI).  To leave unlimited, specify `0` (or any
-  non-positive integer).
+- `limit`: Maximum number of GEDI granule data files to download, among those
+  that intersect the specified AOI, and fall within the specified temporal range
+  (if supplied).  To leave unlimited, specify `0` (or any non-positive integer).
 
 ### Specifying an AOI
 
@@ -171,41 +186,72 @@ any of the following reasons:
 - There is such a collection in the MAAP CMR, but it is not a GEDI collection
 - The collection is a GEDI collection, but its data format is not HDF5
 
-Here are some sample input values per DOI:
+Here are some _example_ input values per DOI, where ellipses should be replaced
+with appropriate values:
 
 #### L1B
 
-- **doi:** `L1B`, `l1b`, or a specific DOI name
-- **lat**: `geolocation/latitude_bin0`, `geolocation/latitude_instrument`, or
-  `geolocation/latitude_lastbin`
-- **lon**: `geolocation/longitude_bin0`, `geolocation/longitude_instrument`, or
-  `geolocation/longitude_lastbin`
-- **columns:** TBD
-- **query:** TBD
+```python
+inputs = dict(
+   aoi=...,
+   doi="L1B",  # or a specific DOI
+   lat="geolocation/latitude_bin0",
+   lon="geolocation/longitude_bin0",
+   beams="all",
+   columns=...,
+   query=...,
+   limit=0,
+   temporal="-",
+)
+```
 
 #### L2A
 
-- **doi:** `L2A`, `l2a`, or a specific DOI name
-- **lat**: `lat_lowestmode` or `lat_highestreturn`
-- **lon**: `lon_lowestmode` or `lon_highestreturn`
-- **columns:** `rh50, rh98`
-- **query:** `quality_flag == 1 & sensitivity > 0.95`
+```python
+inputs = dict(
+   aoi=...,
+   doi="L2A",  # or a specific DOI
+   lat="lat_lowestmode",  # or "lat_highestreturn"
+   lon="lon_lowestmode",  # or "lon_highestreturn"
+   beams="all",
+   columns="rh50,rh98",
+   query="quality_flag == 1 and sensitivity > 0.95",
+   limit=0,
+   temporal="-",
+)
+```
 
 #### L2B
 
-- **doi:** `L2B`, `l2b`, or a specific DOI name
-- **lat**: `geolocation/lat_lowestmode` or `geolocation/lat_highestreturn`
-- **lon**: `geolocation/lon_lowestmode` or `geolocation/lon_highestreturn`
-- **columns:** `rh100`
-- **query:** `l2a_quality_flag == 1 & l2b_quality_flag == 1 & sensitivity > 0.95`
+```python
+inputs = dict(
+   aoi=...,
+   doi="L2B",  # or a specific DOI
+   lat="geolocation/lat_lowestmode", # or "geolocation/lat_highestreturn"
+   lon="geolocation/lon_lowestmode", # or "geolocation/lon_highestreturn"
+   beams="all",
+   columns="rh100",
+   query="l2a_quality_flag == 1 and l2b_quality_flag == 1 and sensitivity > 0.95",
+   limit=0,
+   temporal="-",
+)
+```
 
 #### L4A
 
-- **doi:** `L4A`, `l4a`, or a specific DOI name
-- **lat**: `lat_lowestmode`
-- **lon**: `lon_lowestmode`
-- **columns:** `agbd, agbd_se, sensitivity, geolocation/sensitivity_a2`
-- **query:** ``l2_quality_flag == 1 & l4_quality_flag == 1 & sensitivity > 0.95 & `geolocation/sensitivity_a2` > 0.95``
+```python
+inputs = dict(
+   aoi=...,
+   doi="L4A",  # or a specific DOI
+   lat="lat_lowestmode",
+   lon="lon_lowestmode",
+   beams="all",
+   columns="agbd, agbd_se, sensitivity, geolocation/sensitivity_a2",
+   query="l2_quality_flag == 1 and l4_quality_flag == 1 and sensitivity > 0.95 and `geolocation/sensitivity_a2` > 0.95",
+   limit=0,
+   temporal="-",
+)
+```
 
 ## Running a GEDI Subsetting DPS Job
 
@@ -223,7 +269,7 @@ MAAP API from a Notebook (or a Python script), as follows:
 ```python
 from maap.maap import MAAP
 
-maap = MAAP(maap_host='api.ops.maap-project.org')
+maap = MAAP(maap_host='api.maap-project.org')
 
 # See "Algorithm Inputs" section as well as "Specifying a DOI"
 inputs = dict(
@@ -234,7 +280,8 @@ inputs = dict(
    beams="<BEAMS>",
    columns="<COLUMNS>",
    query="<QUERY>",
-   limit = 10_000
+   limit=0,  # 0 implies no limit to the number of granules downloaded
+   temporal="<RANGE>",  # or "-" for unlimited temporal range
 )
 
 result = maap.submitJob(
@@ -247,7 +294,7 @@ result = maap.submitJob(
 )
 
 job_id = result["job_id"]
-job_id
+job_id or result
 ```
 
 ### Checking the DPS Job Status
@@ -265,15 +312,31 @@ run it repeatedly until you get a status of either `'Succeeded'` or `'Failed'`:
 import re
 
 # Should evaluate to 'Accepted', 'Running', 'Succeeded', or 'Failed'
-re.search(r"Status>(?P<status>.+)</wps:Status>", maap.getJobStatus(job_id).text).group('status')
+re.search(
+   r"Status>(?P<status>.+)</wps:Status>",
+   maap.getJobStatus(job_id).text
+).group('status')
 ```
 
 ### Getting the DPS Job Results
 
 Once the job status is either **Succeeded** or **Failed**, you may obtain the
-job result either via the UI (**DPS/MAS Operations** > **Get DPS Job Result**),
-or programmatically, but given that the programmatic results are in XML format,
-it will be difficult to read, so using the UI is ideal in this case.
+job results either via the UI.
+
+To obtain the results programmatically, you can use the following to see the
+details.  Note the use of `print`, which is necessary within a Jupyter notebook
+because the output may contain multiple lines.  Without wrapping everything in a
+call to `print`, the output might be very hard to read:
+
+```python
+print(
+   re.search(
+      r"Data>(?P<data>.+)</wps:Data>",
+      maap.getJobResult(job_id).text,
+      re.DOTALL
+   ).group('data')
+)
+```
 
 If the jobs status is **Failed**, the job results should show failure details.
 
@@ -508,5 +571,3 @@ administrative boundaries.  PLoS ONE 15(4): e0231866.
   https://repo.ops.maap-project.org/data-team/gedi-subsetter.git
 [NASA MAAP]:
   https://ops.maap-project.org/
-[pandas.DataFrame.query]:
-   https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.query.html

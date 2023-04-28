@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog], and this project adheres to
 [Semantic Versioning].
 
+## [0.6.0] - 2023-05-03
+
+### Changed
+
+- Changed the MAAP host from `"api.ops.maap-project.org"` to
+  `"api.maap-project.org"`
+
+### Added
+
+- [#38](https://github.com/MAAP-Project/gedi-subsetter/issues/38): Temporal
+  filtering is now supported, such that specifying a temporal range will
+  limit the granules downloaded from the CMR, pulling only granules obtained
+  within the specified range.
+
+  A temporal range is specified via the new `temporal` input, and the value must
+  adhere to the formats specified by the NASA CMR's documentation on
+  [temporal range searches](https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html#temporal-range-searches).
+
 ## [0.5.0] - 2023-04-11
 
 ### Changed

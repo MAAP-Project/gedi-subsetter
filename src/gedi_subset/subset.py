@@ -304,6 +304,13 @@ def main(
         callback=lambda value: DEFAULT_LIMIT if value < 1 else value,
         help="Maximum number of granules to subset",
     ),
+    temporal: str = typer.Option(
+        None,
+        help=(
+            "Temporal range to subset"
+            " (e.g., '2019-01-01T00:00:00Z,2020-01-01T00:00:00Z')"
+        ),
+    ),
     output_dir: Path = typer.Option(
         f"{os.path.join(os.path.abspath(os.path.curdir), 'output')}",
         "-d",
@@ -330,7 +337,7 @@ def main(
     # output directory.
     osx.remove(dest)
 
-    maap = MAAP("api.ops.maap-project.org")
+    maap = MAAP("api.maap-project.org")
     cmr_host = "cmr.earthdata.nasa.gov"
 
     IOResult.do(
@@ -345,6 +352,7 @@ def main(
             collection_concept_id=collection["concept-id"],
             bounding_box=",".join(fp.map(str)(aoi_gdf.total_bounds)),
             limit=limit,
+            **(dict(temporal=temporal) if temporal else {}),
         )
         for subsets in subset_granules(
             maap,
