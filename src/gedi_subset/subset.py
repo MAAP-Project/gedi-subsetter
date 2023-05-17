@@ -140,8 +140,7 @@ def check_beams_option(value: str) -> str | NoReturn:
     )
 
 
-@impure_safe
-def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
+def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
     """Subset a granule to a GeoParquet file and return the output path.
 
     Download the specified granule (`props.granule`) obtained from a CMR search
@@ -166,7 +165,7 @@ def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
     except Exception as e:
         granule_ur = props.granule["Granule"]["GranuleUR"]
         logger.warning(f"Skipping granule {granule_ur} [failed to read {inpath}: {e}]")
-        return Nothing
+        return IOSuccess(Nothing)
 
     try:
         gdf = subset_hdf5(
@@ -185,13 +184,12 @@ def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
 
     if gdf.empty:
         logger.debug(f"Empty subset produced from {inpath}; not writing")
-        return Nothing
+        return IOSuccess(Nothing)
 
     outpath = chext(".gpq", inpath)
     logger.debug(f"Writing subset to {outpath}")
-    gdf_to_parquet(outpath, gdf).alt(raise_exception)
 
-    return Some(outpath)
+    return gdf_to_parquet(outpath, gdf).map(fp.always(Some(outpath)))
 
 
 def init_process(logging_level: int) -> None:
@@ -221,7 +219,7 @@ def subset_granules(
         is `Nothing`.  This indicates whether or not a subset file was written
         (and thus whether or not the subset was empty).
         """
-        return unsafe_perform_io(map_(is_successful)(path).unwrap())
+        return unsafe_perform_io(path.map(is_successful).value_or(False))
 
     def append_subset(src: str) -> IOResultE[str]:
         to_file_props = dict(index=False, mode="a", driver="GPKG")
@@ -249,10 +247,10 @@ def subset_granules(
     with multiprocessing.Pool(processes, init_process, init_args) as pool:
         return flow(
             pool.imap_unordered(subset_granule, payloads, chunksize),
-            fp.map(lash(raise_exception)),  # Fail fast (if subsetting errored out)
             fp.filter(subset_saved),  # Skip granules that produced empty subsets
-            fp.map(bind(bind(append_subset))),  # Append non-empty subset
+            fp.map(bind(bind(append_subset))),  # Append non-empty subset # type: ignore
             partial(Fold.collect, acc=IOSuccess(())),
+            lash(raise_exception),  # Fail fast (if subsetting errored out)
         )
 
 
@@ -311,14 +309,14 @@ def main(
             " (e.g., '2019-01-01T00:00:00Z,2020-01-01T00:00:00Z')"
         ),
     ),
-    output_dir: Path = typer.Option(
+    output: Path = typer.Option(
         f"{os.path.join(os.path.abspath(os.path.curdir), 'output')}",
-        "-d",
-        "--output-directory",
-        help="Output directory for generated subset file",
+        "-o",
+        "--output",
+        help="Output file path for generated subset file",
         exists=False,
-        file_okay=False,
-        dir_okay=True,
+        file_okay=True,
+        dir_okay=False,
         writable=True,
         readable=True,
         resolve_path=True,
@@ -328,14 +326,18 @@ def main(
     logging_level = logging.DEBUG if verbose else logging.INFO
     set_logging_level(logging_level)
 
+    output_dir = output.parent
     os.makedirs(output_dir, exist_ok=True)
-    dest = output_dir / "gedi_subset.gpkg"
+    # If output path already has ".gpkg" extension, use it as-is.  Otherwise,
+    # append ".gpkg" extension, leaving existing extension intact rather than
+    # replacing it.
+    dest = output if output.suffix == ".gpkg" else Path(f"{output}.gpkg")
 
     # Remove existing combined subset file, primarily to support
     # testing.  When running in the context of a DPS job, there
     # should be no existing file since every job uses a unique
     # output directory.
-    osx.remove(dest)
+    osx.remove(f"{dest}")
 
     maap = MAAP("api.maap-project.org")
     cmr_host = "cmr.earthdata.nasa.gov"
@@ -350,7 +352,7 @@ def main(
         for granules in impure_safe(maap.searchGranule)(
             cmr_host=cmr_host,
             collection_concept_id=collection["concept-id"],
-            bounding_box=",".join(fp.map(str)(aoi_gdf.total_bounds)),
+            bounding_box=",".join(fp.map(str)(aoi_gdf.total_bounds)),  # pyright: ignore
             limit=limit,
             **(dict(temporal=temporal) if temporal else {}),
         )

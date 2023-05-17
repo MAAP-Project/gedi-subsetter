@@ -11,17 +11,19 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 - Changed the MAAP host from `"api.ops.maap-project.org"` to
   `"api.maap-project.org"`
+- Upgraded Python to version 3.11 to take advantage of the addition of
+  [fine-grained error locations in tracebacks](https://docs.python.org/3/whatsnew/3.11.html#whatsnew311-pep657)
+  to help with debugging errors.
 
 ### Added
 
 - [#38](https://github.com/MAAP-Project/gedi-subsetter/issues/38): Temporal
   filtering is now supported, such that specifying a temporal range will
   limit the granules downloaded from the CMR, pulling only granules obtained
-  within the specified range.
-
-  A temporal range is specified via the new `temporal` input, and the value must
-  adhere to the formats specified by the NASA CMR's documentation on
-  [temporal range searches](https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html#temporal-range-searches).
+  within the specified range.  See [README.md] for more information.
+- Added an input parameter named `output` to allow user to specify the name of
+  the output file, rather than hard-code the name to `gedi-subset.gpkg`.  See
+  [README.md] for more information.
 
 ## [0.5.0] - 2023-04-11
 
@@ -77,3 +79,5 @@ The format is based on [Keep a Changelog], and this project adheres to
     https://semver.org/spec/v2.0.0.html
 [MAAP-Project/maap-documentation-examples]:
     https://github.com/MAAP-Project/maap-documentation-examples
+[README.md]:
+    README.md

@@ -128,6 +128,24 @@ must be supplied for every input):
   that intersect the specified AOI, and fall within the specified temporal range
   (if supplied).  To leave unlimited, specify `0` (or any non-positive integer).
 
+- `output`: Name to use for the output file.  This can also include a path,
+  which will be relative to the standard DPS output directory for a job.
+
+  The name does not need to include an extension, as a `.gpkg` extension will be
+  added automatically.  If a `.gpkg` extension is supplied, it will remain
+  unchanged.  If a different extension is supplied, a `.gpkg` extension will be
+  added after the specified extension.
+
+  Examples showing how the value specified for `output` is mapped to a final
+  output file:
+
+  - `myoutput` -> `myoutput.gpkg`
+  - `myoutput.gpkg` -> `myoutput.gpkg`
+  - `myoutput.h5` -> `myoutput.h5.gpkg`
+  - `mypath/myoutput` -> `mypath/myoutput.gpkg`
+
+  Since 0.6.0
+
 ### Specifying an AOI
 
 If your AOI is a publicly available geoBoundary, see

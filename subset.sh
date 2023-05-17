@@ -15,7 +15,7 @@ else
     aoi="$(ls input/*)"
 
     n_actual=${#}
-    n_expected=8
+    n_expected=9
 
     if test ${n_actual} -gt 0 -a ${n_actual} -ne ${n_expected}; then
         echo "Expected ${n_expected} inputs, but got ${n_actual}:$(printf " '%b'" "$@")" >&2
@@ -31,6 +31,7 @@ else
     [[ "${6:--}" != "-" ]] && options=("${options[@]}" --columns "${6:--}")
     [[ "${7:--}" != "-" ]] && options=("${options[@]}" --query "${7:--}")
     [[ "${8:--}" != "-" ]] && options=("${options[@]}" --limit "${8:--}")
+    [[ "${9:--}" != "-" ]] && options=("${options[@]}" --output "${9:--}")
 
     ${subset_py} --verbose --aoi "${aoi}" "${options[@]}"
 fi

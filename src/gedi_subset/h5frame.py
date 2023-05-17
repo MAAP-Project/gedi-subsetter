@@ -130,13 +130,13 @@ class H5DataFrame(pd.DataFrame):
     expression, you must surround the name within backticks.  Otherwise, the
     slashes will be interpreted as division operators:
 
-    >>> df.query(group/vector > 0.5)  # doctest: +SKIP
+    >>> df.query("group/vector > 0.5")  # doctest: +SKIP
     ...
     pandas.core.computation.ops.UndefinedVariableError: name 'vector' is not defined
 
     Using backticks around the path prevents such unintended interpretation:
 
-    >>> df.query(`group/vector` > 0.5)  # doctest: +SKIP
+    >>> df.query("`group/vector` > 0.5")  # doctest: +SKIP
         group/vector
     0           <v0>
     1           <v1>
@@ -146,7 +146,7 @@ class H5DataFrame(pd.DataFrame):
     of slashes, backticks can be avoided.  Note, however, that column names will
     still contain slashes:
 
-    >>> df.query(group.vector > 0.5)  # doctest: +SKIP
+    >>> df.query("group.vector > 0.5")  # doctest: +SKIP
         group/vector
     0           <v0>
     1           <v1>
@@ -258,8 +258,14 @@ class H5DataFrame(pd.DataFrame):
 
     @property
     def relpath(self) -> str:
-        path = self.root.group.name
-        return self.group.name[len(path) :].lstrip("/")
+        root_path = self.root.group.name
+        self_path = self.group.name
+
+        return (
+            self_path[len(root_path) :].lstrip("/")
+            if isinstance(root_path, str) and isinstance(self_path, str)
+            else ""
+        )
 
     @property
     def root(self) -> H5DataFrame:
@@ -272,13 +278,19 @@ class H5DataFrame(pd.DataFrame):
     @overload
     def query(
         self, expr: str, *, inplace: Literal[False] = ..., **kwargs: Any
-    ) -> pd.DataFrame:
+    ) -> H5DataFrame:
         ...
 
-    def query(self, expr: str, inplace: bool = False, **kwargs):
+    def query(
+        self,
+        expr: str,
+        *,
+        inplace: bool = False,
+        **kwargs: Any,
+    ) -> H5DataFrame | None:
         # Insert self as a resolver since the built-in columns resolver won't resolve
         # columns that have not yet been loaded from the backing store.
         kwargs["resolvers"] = (self, *tuple(kwargs.get("resolvers", ())))
-        result = super().query(expr, inplace, **kwargs)  # type: ignore
+        result = super().query(expr, inplace=inplace, **kwargs)  # type: ignore
 
         return self.__narrow(result) if isinstance(result, pd.DataFrame) else result

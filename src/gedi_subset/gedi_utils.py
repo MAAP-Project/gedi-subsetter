@@ -3,10 +3,9 @@ import logging
 import os
 import os.path
 import warnings
-from typing import Any, Callable, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, Mapping, Optional, Sequence, Union, cast
 
 import h5py
-import numpy as np
 import pandas as pd
 import requests
 from maap.Result import Granule
@@ -102,29 +101,6 @@ def granule_intersects(aoi: BaseGeometry, granule: Granule):
     return polygon.intersects(aoi)
 
 
-def spatial_filter(beam, aoi):
-    """
-    Find the record indices within the aoi
-    TODO: Make this faster
-    """
-    lat = beam["lat_lowestmode"][:]
-    lon = beam["lon_lowestmode"][:]
-    i = np.arange(0, len(lat), 1)  # index
-    geo_arr = list(zip(lat, lon, i))
-    l4adf = pd.DataFrame(geo_arr, columns=["lat_lowestmode", "lon_lowestmode", "i"])
-    l4agdf = gpd.GeoDataFrame(
-        l4adf, geometry=gpd.points_from_xy(l4adf.lon_lowestmode, l4adf.lat_lowestmode)
-    )
-    l4agdf.crs = "EPSG:4326"
-    # TODO: is it faster with a spatial index, or rough pass with BBOX first?
-    bbox = aoi.geometry[0].bounds
-    l4agdf_clip = l4agdf.cx[bbox[0] : bbox[2], bbox[1] : bbox[3]]
-    l4agdf_gsrm = l4agdf_clip[l4agdf_clip["geometry"].within(aoi.geometry[0])]
-    indices = l4agdf_gsrm.i
-
-    return indices
-
-
 def is_coverage_beam(beam: h5py.Group) -> bool:
     return "COVERAGE" in beam.attrs.get("description", "").upper()
 
@@ -135,7 +111,9 @@ def is_power_beam(beam: h5py.Group) -> bool:
 
 def beam_filter_from_names(names: Sequence[str]):
     def is_named_beam(beam: h5py.Group) -> bool:
-        return any(name.upper() in beam.name.upper() for name in names)
+        return isinstance(beam.name, str) and any(
+            name.upper() in beam.name.upper() for name in names
+        )
 
     return is_named_beam
 
@@ -366,19 +344,21 @@ def subset_hdf5(
 
     def subset_beam(beam: h5py.Group) -> gpd.GeoDataFrame:
         """Subset an individual `"BEAM*"` group as described above."""
-        df: pd.DataFrame = H5DataFrame(beam)
+        df = H5DataFrame(beam)
         # Keep only the rows matching the specified query
         if query:
-            df.query(query, inplace=True)
+            df = df.query(query)
         # Grab the coordinates for the geometry, before dropping columns
         geometry = gpd.points_from_xy(df[lon], df[lat])
         # Drop all columns NOT specified by the columns parameter
         df = df[list(columns)]
-        df.insert(0, "BEAM", beam.name[5:])
-        gdf = gpd.GeoDataFrame(df, geometry=geometry, crs="EPSG:4326")
+        df.insert(0, "BEAM", beam.name[5:] if beam.name else "0000")
+        gdf = gpd.GeoDataFrame(
+            df, geometry=geometry, crs="EPSG:4326"
+        )  # pyright: ignore
 
         # Clip subset to the area of interest
-        return gpd.clip(gdf, aoi.set_crs(epsg=4326))
+        return cast(gpd.GeoDataFrame, gpd.clip(gdf, aoi.set_crs(epsg=4326)))
 
     beams = (
         group
@@ -388,7 +368,7 @@ def subset_hdf5(
     beams_gdf = pd.concat(map(subset_beam, beams), ignore_index=True, copy=False)
     beams_gdf.insert(0, "filename", os.path.basename(hdf5.file.filename))
 
-    return beams_gdf
+    return cast(gpd.GeoDataFrame, beams_gdf)
 
 
 def write_subset(infile, gdf):

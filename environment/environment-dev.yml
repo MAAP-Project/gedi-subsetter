@@ -3,28 +3,20 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - backoff=2.1.2
-  - black=22.6.0
-  - boto3-stubs=1.24.68
-  - boto3-stubs-essential=1.24.68
-  - botocore-stubs=1.27.66
-  - contextily=1.2.0
-  - ipykernel=6.15.2
-  - isort=5.10.1
-  - memray=1.3.1
-  - moto=4.0.2
-  # The returns package requires 0.950 because it calls a method of MessageBuilder that
-  # was removed from 0.960 for some reason, which is unclear.  Therefore, running mypy
-  # with the returns plugin fails when using mypy versions after 0.950.  However, since
-  # the returns plugin appears to generate many false positives, it is commented out,
-  # and a newer version of mypy is specified instead.
-  # - mypy=0.950
-  - mypy=0.971
+  - backoff>=2.2
+  - black>=23.3
+  - boto3-stubs>=1.26
+  - boto3-stubs-essential>=1.26
+  - botocore-stubs>=1.29
+  - contextily>=1.3
+  - ipykernel>=6.23
+  - isort>=5.12
+  - memray>=1.7
+  - moto>=4.1
+  - mypy>=1.2
   - pandas-stubs
-  - pip=23.0.1
-  - pre-commit=2.20.0
-  - pytest=7.1.3
-  - types-cachetools=5.2.1
-  - types-requests=2.28.9
-  - pip:
-    - filprofiler==2022.9.1
+  - pip>=23.1
+  - pre-commit>=3.3
+  - pytest>=7.3
+  - types-cachetools>=5.3
+  - types-requests>=2.30

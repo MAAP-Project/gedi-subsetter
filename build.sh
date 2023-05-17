@@ -7,27 +7,16 @@ basedir=$(dirname "$(readlink -f "$0")")
 # Make sure conda is updated to a version that supports the --no-capture-output option
 conda install -y -n base -c conda-forge "conda>=4.13.0"
 
-# Install dependencies from lock file for speed and reproducibility
-case $(uname) in
-Linux)
-    platform="linux"
-    ;;
-Darwin)
-    platform="osx"
-    ;;
-*)
-    echo >&2 "Unsupported platform: $(uname)"
-    exit 1
-    ;;
-esac
+# Create conda env containing only conda-lock
+conda create -y -n gedi_subset conda-lock
 
-conda create -y -n gedi_subset --file "${basedir}/environment/conda-${platform}-64.lock"
+# Install dependencies from lock file for speed and reproducibility
+conda run --no-capture-output -n gedi_subset conda lock install -n gedi_subset "${basedir}/environment/conda-lock.yml"
 
 # Install maap-py, since it cannot be specified in the lock file
 PIP_REQUIRE_VENV=0 conda env update -n gedi_subset --file "${basedir}/environment/environment-maappy.yml"
 
-# Install development environment dependencies if the --dev flag is set
-# Running build.sh in gedi-subset directory with --dev
+# Install development environment dependencies if the --dev flag is supplied
 if [[ "${1:-}" == "--dev" ]]; then
    PIP_REQUIRE_VENV=0 conda env update -n gedi_subset --file "${basedir}/environment/environment-dev.yml"
 fi
