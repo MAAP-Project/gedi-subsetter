@@ -21,7 +21,14 @@ def fixture_path(filename: str) -> str:
     "lat, lon, beams, columns, query, n_expected_rows",
     [
         # Test: Varying columns and queries
-        ("lat_lowestmode", "lon_lowestmode", "all", {"agbd"}, "sensitivity < 0.9", 0),
+        (
+            "lat_lowestmode",
+            "lon_lowestmode",
+            "all",
+            {"agbd"},
+            "sensitivity < 0.9",
+            0,
+        ),
         (
             "lat_lowestmode",
             "lon_lowestmode",
@@ -97,7 +104,14 @@ def fixture_path(filename: str) -> str:
             None,
             4,
         ),
-        ("lat_lowestmode", "lon_lowestmode", "all", {"sensitivity"}, None, 4),
+        (
+            "lat_lowestmode",
+            "lon_lowestmode",
+            "all",
+            {"sensitivity"},
+            None,
+            4,
+        ),
         # Test: Varying lat/lon
         (
             "lat_highestreturn",
@@ -188,14 +202,14 @@ def test_subset_hdf5(
         gdf = subset_hdf5(
             hdf5,
             aoi=aoi_gdf,
-            lat=lat,
-            lon=lon,
+            lat_col=lat,
+            lon_col=lon,
             beam_filter=beam_filter(beams),
             columns=list(columns),
             query=query,
         )
 
-    expected_columns = columns | {"filename", "BEAM", "geometry"}
+    expected_columns = columns | {"filename", "beam", "shot_number", "geometry"}
 
     assert set(gdf.columns) == expected_columns
     assert gdf.shape == (n_expected_rows, len(expected_columns))

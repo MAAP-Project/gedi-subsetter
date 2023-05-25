@@ -5,12 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog], and this project adheres to
 [Semantic Versioning].
 
-## [0.6.0] - 2023-05-03
+## [0.6.0] - 2023-05-26
+
+### Fixed
+
+- Granules without a download link in their metadata are now skipped.
+  Previously, encountering such granules would cause a job failure.
 
 ### Changed
 
-- Changed the MAAP host from `"api.ops.maap-project.org"` to
-  `"api.maap-project.org"`
 - Upgraded Python to version 3.11 to take advantage of the addition of
   [fine-grained error locations in tracebacks](https://docs.python.org/3/whatsnew/3.11.html#whatsnew311-pep657)
   to help with debugging errors.

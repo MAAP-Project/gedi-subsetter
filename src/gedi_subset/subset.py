@@ -66,8 +66,8 @@ class SubsetGranuleProps:
     granule: Granule
     maap: MAAP
     aoi_gdf: gpd.GeoDataFrame
-    lat: str
-    lon: str
+    lat_col: str
+    lon_col: str
     beams: str
     columns: Sequence[str]
     query: Optional[str]
@@ -171,8 +171,8 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
         gdf = subset_hdf5(
             hdf5,
             aoi=props.aoi_gdf,
-            lat=props.lat,
-            lon=props.lon,
+            lat_col=props.lat_col,
+            lon_col=props.lon_col,
             beam_filter=beam_filter(props.beams),
             columns=props.columns,
             query=props.query,
@@ -233,13 +233,19 @@ def subset_granules(
         )
 
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool.imap
-    chunksize = 10
+    # We're dealing with relatively small numbers of granules (dozens, perhaps
+    # hundreds, at most), so we can stick with a chunksize of 1.
+    chunksize = 1
     processes = os.cpu_count()
     payloads = (
         SubsetGranuleProps(
             granule, maap, aoi_gdf, lat, lon, beams, columns, query, output_dir
         )
         for granule in granules
+        # On occasion, a granule is missing a download URL, so the _downloadname
+        # attribute is set to None, and attempting to download it throws an
+        # exception, so we just skip such granules to avoid failing.
+        if granule._downloadname
     )
 
     logger.info(f"Subsetting on {processes} processes (chunksize={chunksize})")
@@ -310,7 +316,7 @@ def main(
         ),
     ),
     output: Path = typer.Option(
-        f"{os.path.join(os.path.abspath(os.path.curdir), 'output')}",
+        None,
         "-o",
         "--output",
         help="Output file path for generated subset file",
@@ -326,12 +332,9 @@ def main(
     logging_level = logging.DEBUG if verbose else logging.INFO
     set_logging_level(logging_level)
 
-    output_dir = output.parent
+    dest = ("output" / (output or aoi)).with_suffix(".gpkg").absolute()
+    output_dir = dest.parent
     os.makedirs(output_dir, exist_ok=True)
-    # If output path already has ".gpkg" extension, use it as-is.  Otherwise,
-    # append ".gpkg" extension, leaving existing extension intact rather than
-    # replacing it.
-    dest = output if output.suffix == ".gpkg" else Path(f"{output}.gpkg")
 
     # Remove existing combined subset file, primarily to support
     # testing.  When running in the context of a DPS job, there
@@ -339,7 +342,7 @@ def main(
     # output directory.
     osx.remove(f"{dest}")
 
-    maap = MAAP("api.maap-project.org")
+    maap = MAAP("api.ops.maap-project.org")
     cmr_host = "cmr.earthdata.nasa.gov"
 
     IOResult.do(
@@ -367,7 +370,7 @@ def main(
             output_dir,
             dest,
             (logging_level,),
-            fp.filter(partial(granule_intersects, aoi_gdf.geometry[0]))(granules),
+            fp.filter(partial(granule_intersects, aoi_gdf.unary_union))(granules),
         )
     ).bind_ioresult(
         lambda subsets: IOSuccess(subsets)

@@ -35,52 +35,54 @@ At a high level, the GEDI subsetting algorithm does the following:
 
 ## Algorithm Inputs
 
-To run a GEDI subsetting DPS job, you must supply the following inputs (a value
-must be supplied for every input):
+To run a GEDI subsetting DPS job, you must supply the following inputs.
 
-- `aoi`: URL to a GeoJSON file representing your area of interest (see
-  [Specifying an AOI](#specifying-an-aoi))
+|**IMPORTANT:**|
+|:---|
+| _When submitting a job via the ADE's user interface, to indicate that you do not want to specify a particular value for an **optional** input, you must enter a single dash/hyphen (`-`) in the input field.  This will indicate that you wish to use the default value indicated for that optional input._
 
-- `doi`: [Digital Object Identifier] (DOI) of the GEDI collection to subset, or
-  a logical name representing such a DOI (see
+- `aoi` (_required_): URL to a GeoJSON file representing your area of interest
+  (see [Specifying an AOI](#specifying-an-aoi)).  This may contain multiple
+  geometries.
+
+- `doi` (_required_): [Digital Object Identifier] (DOI) of the GEDI collection to
+  subset, or a logical name representing such a DOI (see
   [Specifying a DOI](#specifying-a-doi))
 
   Since 0.3.0
 
-- `temporal`: Temporal range to subset.  To use an unbounded temporal range, set
-  this input to a dash (`-`).  Otherwise, you can specify either a closed range,
-  with start and end dates, or a half-open range, with either a start date or an
-  end date.  For full details on the valid formats, see the NASA CMR's
-  documentation on
+- `temporal` (_optional_; default: full temporal range available): Temporal range
+  to subset.  You may specify either a closed range, with start and end dates,
+  or a half-open range, with either a start date or an end date.  For full
+  details on the valid formats, see the NASA CMR's documentation on
   [temporal range searches](https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html#temporal-range-searches).
 
   Since 0.6.0
 
-- `lat`: Name of the dataset used for latitude.
+- `lat` (_required_): Name of the dataset used for latitude.
 
   Since 0.3.0
 
-- `lon`: Name of the dataset used for longitude.
+- `lon` (_required_): Name of the dataset used for longitude.
 
   Since 0.3.0
 
-- `beams`: Which beams to include in the subset. Must be `all`, `coverage`,
-  `power`, _OR_ a comma-separated list of beam names, with or without the `BEAM`
+- `beams` (_optional_; default: `"all"`): Which beams to include in the subset.
+  If supplied, must be one of logical names `all`, `coverage`, or `power`, _OR_
+  a comma-separated list of specific beam names, with or without the `BEAM`
   prefix (e.g., `BEAM0000,BEAM0001` or `0000,0001`)
 
   Since 0.4.0
 
-- `columns`: Comma-separated list of column names to include in the output file.
-  These names correspond to the variables (layers) within the data files, and
-  vary from collection to collection.  Consult the documentation for a list of
-  variables available per collection (see [Specifying a DOI](#specifying-a-doi)
-  for documentation links).
+- `columns` (_required_): One or more column names, separated by commas, to
+  include in the output file.  These names correspond to the variables (layers)
+  within the data files, and vary from collection to collection.  Consult the
+  documentation for a list of variables available per collection (see
+  [Specifying a DOI](#specifying-a-doi) for documentation links).
 
   In addition to the specified columns, the output file will also include a
-  `filename` (`str`) column that includes the name of the original `h5` file,
-  and a `BEAM` (`str`) column with the 4-digit bit string suffix of the original
-  `BEAM*` group name (e.g., `0000` representing the original `BEAM0000` name),
-  both for traceability.
+  `filename` (`str`) column that includes the name of the original `h5` file, a
+  `beam` (`int`) column, and a `shot_number` (`int`) column.
 
   **IMPORTANT:** To specify nested variables (i.e., variables _not_ at the top
   of a BEAM), you may use a path containing forward slashes (`/`) that is
@@ -89,16 +91,13 @@ must be supplied for every input):
   `sensitivity_a2`, then you would refer to that nested variable as
   `geolocation/sensitivity_a2`.
 
-- `query`: Query expression for subsetting the rows in the output file.  This
-  expression selects rows of data for which the expression is true.  Again,
-  names in the expression are variable (layer) names.  For example:
-  `quality_flag == 1`.
+- `query` (_optional_; default: no query, select all rows): Query expression
+  for subsetting the rows in the output file.  This expression selects rows of
+  data for which the expression is true.  Again, names in the expression are
+  variable (layer) names.  For example: `quality_flag == 1`.
 
-  **NOTE:** If you do not wish to subset the rows of the data, set this input
-  value to a dash (`-`) to indicate _no_ query.
-
-  To combine multiple expressions, you may use the `and` and `or` boolean
-  operators.
+  **NOTE:** To combine multiple expressions, you may use the `and` and `or`
+  boolean operators.
 
   Examples:
 
@@ -124,24 +123,26 @@ must be supplied for every input):
   quality_flag == 1 and geolocation.sensitivity_a2 > 0.95
   ```
 
-- `limit`: Maximum number of GEDI granule data files to download, among those
-  that intersect the specified AOI, and fall within the specified temporal range
-  (if supplied).  To leave unlimited, specify `0` (or any non-positive integer).
+- `limit` (_optional_; default: 10,000): Maximum number of GEDI granule data files
+  to download from the CMR, among those that intersect the specified AOI's
+  bounding box, and fall within the specified temporal range (if supplied).
 
-- `output`: Name to use for the output file.  This can also include a path,
-  which will be relative to the standard DPS output directory for a job.
+- `output` (_optional_): Name to use for the output file.  This can also include
+  a path, which will be relative to the standard DPS output directory for a job.
+  **Default:** the output file will be named the same as the name of the AOI
+  file, but with a suffix of `".gpkg"`.
 
-  The name does not need to include an extension, as a `.gpkg` extension will be
-  added automatically.  If a `.gpkg` extension is supplied, it will remain
-  unchanged.  If a different extension is supplied, a `.gpkg` extension will be
-  added after the specified extension.
+  When explicitly specifying a name, it does not need to include an extension,
+  because a `.gpkg` extension will be added automatically.  If an extension is
+  supplied, it will be replaced with `.gpkg`.
 
   Examples showing how the value specified for `output` is mapped to a final
   output file:
 
+  - Unspecified -> `myaoi.gpkg`, where `myaoi.geojson` is the name of the AOI file
   - `myoutput` -> `myoutput.gpkg`
   - `myoutput.gpkg` -> `myoutput.gpkg`
-  - `myoutput.h5` -> `myoutput.h5.gpkg`
+  - `myoutput.h5` -> `myoutput.gpkg`
   - `mypath/myoutput` -> `mypath/myoutput.gpkg`
 
   Since 0.6.0
@@ -287,7 +288,7 @@ MAAP API from a Notebook (or a Python script), as follows:
 ```python
 from maap.maap import MAAP
 
-maap = MAAP(maap_host='api.maap-project.org')
+maap = MAAP(maap_host='api.ops.maap-project.org')
 
 # See "Algorithm Inputs" section as well as "Specifying a DOI"
 inputs = dict(

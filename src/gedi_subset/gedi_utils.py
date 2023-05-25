@@ -122,11 +122,11 @@ def subset_hdf5(
     hdf5: h5py.Group,
     *,
     aoi: gpd.GeoDataFrame,
-    lat: str,
-    lon: str,
+    lat_col: str,
+    lon_col: str,
     beam_filter: Callable[[h5py.Group], bool] = fp.always(True),
     columns: Sequence[str],
-    query: Optional[str],
+    query: Optional[str] = None,
 ) -> gpd.GeoDataFrame:
     """Subset the data in an HDF5 Group into a ``geopandas.GeoDataFrame``.
 
@@ -198,9 +198,9 @@ def subset_hdf5(
         Area of Interest.  The subset is limited to data points that fall within this
         area of interest, as determined by the latitude and longitude datasets of each
         `"BEAM*"` group within the HDF5 file.
-    lat: str
+    lat_col: str
         Name of the latitude dataset used for the resulting ``GeoDataFrame`` geometry.
-    lon: str
+    lon_col: str
         Name of the longitude dataset used for the resulting ``GeoDataFrame`` geometry.
     beam_filter: Callable[[h5py.Group], bool] = fp.always(True)
         Callable used to determine whether or not a top-level BEAM subgroup within the
@@ -316,8 +316,8 @@ def subset_hdf5(
     ...     gdf = subset_hdf5(
     ...         hdf5,
     ...         aoi=aoi,
-    ...         lat="lat_lowestmode",
-    ...         lon="lon_lowestmode",
+    ...         lat_col="lat_lowestmode",
+    ...         lon_col="lon_lowestmode",
     ...         beam_filter=is_coverage_beam,
     ...         columns=["agbd", "sensitivity"],
     ...         query="l2_quality_flag == 1 and sensitivity > 0.95"
@@ -344,22 +344,17 @@ def subset_hdf5(
 
     def subset_beam(beam: h5py.Group) -> gpd.GeoDataFrame:
         """Subset an individual `"BEAM*"` group as described above."""
-        df = H5DataFrame(beam)
-        # Keep only the rows matching the specified query
-        if query:
-            df = df.query(query)
+        df = H5DataFrame(beam).query(query) if query else H5DataFrame(beam)
         # Grab the coordinates for the geometry, before dropping columns
-        geometry = gpd.points_from_xy(df[lon], df[lat])
-        # Drop all columns NOT specified by the columns parameter
-        df = df[list(columns)]
-        df.insert(0, "BEAM", beam.name[5:] if beam.name else "0000")
-        gdf = gpd.GeoDataFrame(
-            df, geometry=geometry, crs="EPSG:4326"
-        )  # pyright: ignore
+        geometry = gpd.points_from_xy(df[lon_col], df[lat_col])
+        # Select only the "beam", "shot_number", and the user-specified columns
+        df = df[list({"beam", "shot_number"} | set(columns))]
+        gdf = gpd.GeoDataFrame(df, geometry=geometry, crs=aoi.crs)  # pyright: ignore
 
-        # Clip subset to the area of interest
-        return cast(gpd.GeoDataFrame, gpd.clip(gdf, aoi.set_crs(epsg=4326)))
+        # Subset to the area of interest
+        return cast(gpd.GeoDataFrame, gdf[gdf.geometry.covered_by(aoi_unary_union)])
 
+    aoi_unary_union = aoi.unary_union
     beams = (
         group
         for name, group in hdf5.items()
