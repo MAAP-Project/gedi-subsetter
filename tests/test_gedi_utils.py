@@ -3,6 +3,7 @@ import warnings
 from typing import Optional, Set
 
 import h5py
+import pandas as pd
 import pytest
 
 from gedi_subset.gedi_utils import subset_hdf5
@@ -21,7 +22,14 @@ def fixture_path(filename: str) -> str:
     "lat, lon, beams, columns, query, n_expected_rows",
     [
         # Test: Varying columns and queries
-        ("lat_lowestmode", "lon_lowestmode", "all", {"agbd"}, "sensitivity < 0.9", 0),
+        (
+            "lat_lowestmode",
+            "lon_lowestmode",
+            "all",
+            {"agbd"},
+            "sensitivity < 0.9",
+            0,
+        ),
         (
             "lat_lowestmode",
             "lon_lowestmode",
@@ -97,7 +105,14 @@ def fixture_path(filename: str) -> str:
             None,
             4,
         ),
-        ("lat_lowestmode", "lon_lowestmode", "all", {"sensitivity"}, None, 4),
+        (
+            "lat_lowestmode",
+            "lon_lowestmode",
+            "all",
+            {"sensitivity"},
+            None,
+            4,
+        ),
         # Test: Varying lat/lon
         (
             "lat_highestreturn",
@@ -188,14 +203,14 @@ def test_subset_hdf5(
         gdf = subset_hdf5(
             hdf5,
             aoi=aoi_gdf,
-            lat=lat,
-            lon=lon,
+            lat_col=lat,
+            lon_col=lon,
             beam_filter=beam_filter(beams),
             columns=list(columns),
             query=query,
         )
 
-    expected_columns = columns | {"filename", "BEAM", "geometry"}
+    expected_columns = columns | {"filename", "geometry"}
 
     assert set(gdf.columns) == expected_columns
     assert gdf.shape == (n_expected_rows, len(expected_columns))
@@ -205,3 +220,51 @@ def test_subset_hdf5(
     # should first verify the correctness of our fixture data, otherwise we might spend
     # unnecessary time hunting down a non-existent bug.
     assert gdf.notna().all(axis=None)
+
+
+def test_subset_hdf5_2d_dataset(h5_path: str, aoi_gdf: gpd.GeoDataFrame) -> None:
+    with pytest.raises(TypeError):
+        with h5py.File(h5_path) as hdf5:
+            subset_hdf5(
+                hdf5,
+                aoi=aoi_gdf,
+                lat_col="lat_lowestmode",
+                lon_col="lon_lowestmode",
+                columns=["x_var"],  # 2D column not allowed, must specify index
+            )
+
+
+def test_subset_hdf5_2d_dataset_indexed(
+    h5_path: str, aoi_gdf: gpd.GeoDataFrame
+) -> None:
+    with h5py.File(h5_path) as hdf5:
+        gdf = subset_hdf5(
+            hdf5,
+            aoi=aoi_gdf,
+            lat_col="lat_lowestmode",
+            lon_col="lon_lowestmode",
+            columns=["x_var0"],
+        )
+
+    x_var0 = gdf["x_var0"]
+
+    assert isinstance(x_var0, pd.Series) and len(x_var0) == 4
+
+
+def test_subset_hdf5_repeated_nested_column_in_query_expr(
+    h5_path: str, aoi_gdf: gpd.GeoDataFrame
+) -> None:
+    with h5py.File(h5_path) as hdf5:
+        gdf = subset_hdf5(
+            hdf5,
+            aoi=aoi_gdf,
+            lat_col="lat_lowestmode",
+            lon_col="lon_lowestmode",
+            columns=["x_var0", "land_cover_data/landsat_treecover"],
+            query=(
+                "land_cover_data.landsat_treecover > 80"
+                " and land_cover_data.landsat_treecover < 90"
+            ),
+        )
+
+    assert len(gdf) == 1 and gdf["land_cover_data/landsat_treecover"][0] == 83

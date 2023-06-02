@@ -7,14 +7,13 @@ Since the functions in this module are curried, there's no need to use
 `functools.partial` for partially binding arguments.
 """
 import builtins
-from typing import Callable, Iterable, ParamSpec, TypeVar, cast
+from typing import Any, Callable, Iterable, TypeVar, cast
 
 from returns.curry import partial
 from returns.maybe import Maybe, Nothing, Some
 
 _A = TypeVar("_A")
 _B = TypeVar("_B")
-_P = ParamSpec("_P")
 
 
 def always(a: _A) -> Callable[..., _A]:
@@ -63,7 +62,7 @@ def find(predicate: Callable[[_A], bool]) -> Callable[[Iterable[_A]], Maybe[_A]]
     return go
 
 
-def for_each(f: Callable[[_A], _B]) -> Callable[[Iterable[_A]], None]:
+def for_each(f: Callable[[_A], Any]) -> Callable[[Iterable[_A]], None]:
     """Return a callable that accepts an iterable and applies a function to each
     element of the iterable.
 

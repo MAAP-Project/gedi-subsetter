@@ -45,7 +45,7 @@ logical_dois = {
     "L4A": "10.3334/ORNLDAAC/2056",
 }
 
-DEFAULT_LIMIT = 10_000
+DEFAULT_LIMIT = 1_000
 
 LOGGING_FORMAT = "%(asctime)s [%(processName)s:%(name)s] [%(levelname)s] %(message)s"
 
@@ -66,8 +66,8 @@ class SubsetGranuleProps:
     granule: Granule
     maap: MAAP
     aoi_gdf: gpd.GeoDataFrame
-    lat: str
-    lon: str
+    lat_col: str
+    lon_col: str
     beams: str
     columns: Sequence[str]
     query: Optional[str]
@@ -140,8 +140,7 @@ def check_beams_option(value: str) -> str | NoReturn:
     )
 
 
-@impure_safe
-def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
+def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
     """Subset a granule to a GeoParquet file and return the output path.
 
     Download the specified granule (`props.granule`) obtained from a CMR search
@@ -166,14 +165,14 @@ def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
     except Exception as e:
         granule_ur = props.granule["Granule"]["GranuleUR"]
         logger.warning(f"Skipping granule {granule_ur} [failed to read {inpath}: {e}]")
-        return Nothing
+        return IOSuccess(Nothing)
 
     try:
         gdf = subset_hdf5(
             hdf5,
             aoi=props.aoi_gdf,
-            lat=props.lat,
-            lon=props.lon,
+            lat_col=props.lat_col,
+            lon_col=props.lon_col,
             beam_filter=beam_filter(props.beams),
             columns=props.columns,
             query=props.query,
@@ -185,13 +184,12 @@ def subset_granule(props: SubsetGranuleProps) -> Maybe[str]:
 
     if gdf.empty:
         logger.debug(f"Empty subset produced from {inpath}; not writing")
-        return Nothing
+        return IOSuccess(Nothing)
 
     outpath = chext(".gpq", inpath)
     logger.debug(f"Writing subset to {outpath}")
-    gdf_to_parquet(outpath, gdf).alt(raise_exception)
 
-    return Some(outpath)
+    return gdf_to_parquet(outpath, gdf).map(fp.always(Some(outpath)))
 
 
 def init_process(logging_level: int) -> None:
@@ -221,7 +219,7 @@ def subset_granules(
         is `Nothing`.  This indicates whether or not a subset file was written
         (and thus whether or not the subset was empty).
         """
-        return unsafe_perform_io(map_(is_successful)(path).unwrap())
+        return unsafe_perform_io(path.map(is_successful).value_or(False))
 
     def append_subset(src: str) -> IOResultE[str]:
         to_file_props = dict(index=False, mode="a", driver="GPKG")
@@ -235,13 +233,26 @@ def subset_granules(
         )
 
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool.imap
-    chunksize = 10
-    processes = os.cpu_count()
+    # We're dealing with relatively small numbers of granules (dozens, perhaps
+    # hundreds, at most), so we can stick with a chunksize of 1.
+    chunksize = 1
+    processes = min(8, os.cpu_count() or 32)
+    found_granules = list(granules)
+    # On occasion, a granule is missing a download URL, so the _downloadname
+    # attribute is set to None, and attempting to download it throws an
+    # exception, so we just skip such granules to avoid failing.
+    downloadable_granules = [
+        granule for granule in found_granules if granule._downloadname
+    ]
+
+    logger.info(f"Found {len(found_granules)} in the CMR")
+    logger.info(f"Total downloadable granules: {len(downloadable_granules)}")
+
     payloads = (
         SubsetGranuleProps(
             granule, maap, aoi_gdf, lat, lon, beams, columns, query, output_dir
         )
-        for granule in granules
+        for granule in downloadable_granules
     )
 
     logger.info(f"Subsetting on {processes} processes (chunksize={chunksize})")
@@ -249,10 +260,10 @@ def subset_granules(
     with multiprocessing.Pool(processes, init_process, init_args) as pool:
         return flow(
             pool.imap_unordered(subset_granule, payloads, chunksize),
-            fp.map(lash(raise_exception)),  # Fail fast (if subsetting errored out)
             fp.filter(subset_saved),  # Skip granules that produced empty subsets
-            fp.map(bind(bind(append_subset))),  # Append non-empty subset
+            fp.map(bind(bind(append_subset))),  # Append non-empty subset # type: ignore
             partial(Fold.collect, acc=IOSuccess(())),
+            lash(raise_exception),  # Fail fast (if subsetting errored out)
         )
 
 
@@ -304,31 +315,42 @@ def main(
         callback=lambda value: DEFAULT_LIMIT if value < 1 else value,
         help="Maximum number of granules to subset",
     ),
-    output_dir: Path = typer.Option(
-        f"{os.path.join(os.path.abspath(os.path.curdir), 'output')}",
-        "-d",
-        "--output-directory",
-        help="Output directory for generated subset file",
+    temporal: str = typer.Option(
+        None,
+        help=(
+            "Temporal range to subset"
+            " (e.g., '2019-01-01T00:00:00Z,2020-01-01T00:00:00Z')"
+        ),
+    ),
+    output: Path = typer.Option(
+        None,
+        "-o",
+        "--output",
+        help="Output file path for generated subset file",
         exists=False,
-        file_okay=False,
-        dir_okay=True,
+        file_okay=True,
+        dir_okay=False,
         writable=True,
         readable=True,
-        resolve_path=True,
     ),
     verbose: bool = typer.Option(False, help="Provide verbose output"),
 ) -> None:
     logging_level = logging.DEBUG if verbose else logging.INFO
     set_logging_level(logging_level)
 
+    dest = (
+        ("output" / (output or Path(f"{aoi.stem}_subset")))
+        .with_suffix(".gpkg")
+        .absolute()
+    )
+    output_dir = dest.parent
     os.makedirs(output_dir, exist_ok=True)
-    dest = output_dir / "gedi_subset.gpkg"
 
     # Remove existing combined subset file, primarily to support
     # testing.  When running in the context of a DPS job, there
     # should be no existing file since every job uses a unique
     # output directory.
-    osx.remove(dest)
+    osx.remove(f"{dest}")
 
     maap = MAAP("api.ops.maap-project.org")
     cmr_host = "cmr.earthdata.nasa.gov"
@@ -343,8 +365,9 @@ def main(
         for granules in impure_safe(maap.searchGranule)(
             cmr_host=cmr_host,
             collection_concept_id=collection["concept-id"],
-            bounding_box=",".join(fp.map(str)(aoi_gdf.total_bounds)),
+            bounding_box=",".join(fp.map(str)(aoi_gdf.total_bounds)),  # pyright: ignore
             limit=limit,
+            **(dict(temporal=temporal) if temporal else {}),
         )
         for subsets in subset_granules(
             maap,
@@ -357,7 +380,7 @@ def main(
             output_dir,
             dest,
             (logging_level,),
-            fp.filter(partial(granule_intersects, aoi_gdf.geometry[0]))(granules),
+            fp.filter(granule_intersects(aoi_gdf.unary_union))(granules),
         )
     ).bind_ioresult(
         lambda subsets: IOSuccess(subsets)

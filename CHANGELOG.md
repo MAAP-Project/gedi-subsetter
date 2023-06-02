@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog], and this project adheres to
 [Semantic Versioning].
 
+## [0.6.0] - 2023-06-02
+
+### Fixed
+
+- [#40](https://github.com/MAAP-Project/gedi-subsetter/issues/40) All geometries
+  in an AOI (area of interest) file are now used for granule selection and
+  subsetting.  Previously, only the first geometry was used, resulting in a much
+  smaller subset than expected, in cases where the AOI contains multiple
+  geometries.
+- [#41](https://github.com/MAAP-Project/gedi-subsetter/issues/41) Granules
+  without a download link in their metadata are now skipped.  Previously,
+  encountering such granules would cause a job failure, due to being unable to
+  download a file without having a download link.
+- [#42](https://github.com/MAAP-Project/gedi-subsetter/issues/42) Granules with
+  metadata containing multiple boundaries within the horizontal spatial domain
+  are now supported.  In such cases, a single boundary is obtained by taking the
+  union of the individual boundaries.  If the result intersects with the AOI,
+  then the granule is included in the subset.  Previously, although rare, such
+  granule metadata would cause a job failure.
+
+### Changed
+
+- Upgraded Python to version 3.11 to take advantage of the addition of
+  [fine-grained error locations in tracebacks](https://docs.python.org/3/whatsnew/3.11.html#whatsnew311-pep657)
+  to help with debugging errors.
+- The `beam` column is no longer automatically included in the output file.  If
+  you wish to include the `beam` column, you must specify it explicitly in the
+  `columns` input.
+- The default value for `limit` was reduced from 10000 to 1000.  The AOI for
+  most subsetting operations are likely to incur a request for well under 1000
+  granules for downloading, so a larger default value might only lead to longer
+  CMR query times.
+
+### Added
+
+- [#38](https://github.com/MAAP-Project/gedi-subsetter/issues/38): Temporal
+  filtering is now supported, such that specifying a temporal range will
+  limit the granules downloaded from the CMR, pulling only granules obtained
+  within the specified range.  See [README.md] for more information.
+- Added an input parameter named `output` to allow user to specify the name of
+  the output file, rather than hard-code the name to `gedi-subset.gpkg`.  See
+  [README.md] for more information.
+
 ## [0.5.0] - 2023-04-11
 
 ### Changed
@@ -59,3 +102,5 @@ The format is based on [Keep a Changelog], and this project adheres to
     https://semver.org/spec/v2.0.0.html
 [MAAP-Project/maap-documentation-examples]:
     https://github.com/MAAP-Project/maap-documentation-examples
+[README.md]:
+    README.md

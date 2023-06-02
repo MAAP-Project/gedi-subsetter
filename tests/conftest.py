@@ -60,13 +60,28 @@ def aoi_gdf() -> gpd.GeoDataFrame:
                         [
                             [8.45, 2.35],
                             [14.35, 2.35],
-                            [14.35, -4.15],
-                            [8.45, -4.15],
+                            [14.35, 0.0],
+                            [8.45, 0.0],
                             [8.45, 2.35],
                         ]
                     ],
                 },
-            }
+            },
+            {
+                "properties": {},
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [8.45, 0.0],
+                            [14.35, 0.0],
+                            [14.35, -4.15],
+                            [8.45, -4.15],
+                            [8.45, 0.0],
+                        ]
+                    ],
+                },
+            },
         ],
     )
 
@@ -77,6 +92,8 @@ def h5_path(tmp_path_factory: pytest.TempPathFactory) -> str:
 
     with h5py.File(path, "w") as h5_file:
         beam = h5_file.create_group("BEAM0000")
+        beam.create_dataset("beam", data=[0, 0, 0], dtype="uint16")
+        beam.create_dataset("shot_number", data=[0, 1, 2], dtype="uint64")
         beam.create_dataset("agbd", data=[1.271942, 1.3311168, 1.1160929], dtype="f4")
         beam.create_dataset("agbd_se", data=[3.057197, 3.053778, 3.06673], dtype="f4")
         beam.create_dataset("l2_quality_flag", data=[0, 1, 1], dtype="i1")
@@ -99,6 +116,8 @@ def h5_path(tmp_path_factory: pytest.TempPathFactory) -> str:
         beam.attrs.create("description", "Coverage beam")
 
         beam = h5_file.create_group("BEAM1011")
+        beam.create_dataset("beam", data=[11, 11, 11], dtype="uint16")
+        beam.create_dataset("shot_number", data=[0, 1, 2], dtype="uint64")
         beam.create_dataset("agbd", data=[1.1715966, 1.630395, 3.5265787], dtype="f4")
         beam.create_dataset("agbd_se", data=[3.063243, 3.037882, 2.9968245], dtype="f4")
         beam.create_dataset("l2_quality_flag", data=[0, 1, 1], dtype="i1")

@@ -3,17 +3,15 @@ import logging
 import os
 import os.path
 import warnings
-from typing import Any, Callable, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, Mapping, Optional, Sequence, Union, cast
 
 import h5py
-import numpy as np
 import pandas as pd
 import requests
+import shapely
 from maap.Result import Granule
 from returns.curry import curry
 from returns.io import IOResultE, impure_safe
-from shapely.geometry import Polygon
-from shapely.geometry.base import BaseGeometry
 
 import gedi_subset.fp as fp
 from gedi_subset.h5frame import H5DataFrame
@@ -84,45 +82,41 @@ def get_geo_boundary(iso: str, level: int) -> gpd.GeoDataFrame:
     return gpd.read_file(file_path)
 
 
+def granule_geometry(granule: Granule) -> shapely.Geometry:
+    gpolygon = (
+        granule.get("Granule", {})
+        .get("Spatial", {})
+        .get("HorizontalSpatialDomain", {})
+        .get("Geometry", {})
+        .get("GPolygon", [])
+    )
+    gpolygons = gpolygon if isinstance(gpolygon, list) else [gpolygon]
+    boundaries = [gpolygon.get("Boundary", {}) for gpolygon in gpolygons]
+    polygons = [
+        shapely.Polygon(
+            (
+                (point["PointLongitude"], point["PointLatitude"])
+                for boundary in boundaries
+                for point in boundary.get("Point", [])
+            )
+            # TODO: The second argument (`holes`) to the Polygon constructor
+            # should be constructed from the ECHO-10 XML ExclusiveZones element.
+            # See https://git.earthdata.nasa.gov/projects/EMFD/repos/echo-schemas/browse/schemas/10.0/MetadataCommon.xsd#125  # noqa: E501
+        )
+    ]
+
+    return shapely.union_all(polygons)
+
+
 @curry
-def granule_intersects(aoi: BaseGeometry, granule: Granule):
+def granule_intersects(aoi: shapely.Geometry, granule: Granule):
     """Determines whether or not a granule intersects an Area of Interest
 
     Returns `True` if the polygon determined by the points in the `granule`'s
     horizontal spatial domain intersects the geometry of the Area of Interest;
     `False` otherwise.
     """
-    points = granule["Granule"]["Spatial"]["HorizontalSpatialDomain"]["Geometry"][
-        "GPolygon"
-    ]["Boundary"]["Point"]
-    polygon = Polygon(
-        [[float(p["PointLongitude"]), float(p["PointLatitude"])] for p in points]
-    )
-
-    return polygon.intersects(aoi)
-
-
-def spatial_filter(beam, aoi):
-    """
-    Find the record indices within the aoi
-    TODO: Make this faster
-    """
-    lat = beam["lat_lowestmode"][:]
-    lon = beam["lon_lowestmode"][:]
-    i = np.arange(0, len(lat), 1)  # index
-    geo_arr = list(zip(lat, lon, i))
-    l4adf = pd.DataFrame(geo_arr, columns=["lat_lowestmode", "lon_lowestmode", "i"])
-    l4agdf = gpd.GeoDataFrame(
-        l4adf, geometry=gpd.points_from_xy(l4adf.lon_lowestmode, l4adf.lat_lowestmode)
-    )
-    l4agdf.crs = "EPSG:4326"
-    # TODO: is it faster with a spatial index, or rough pass with BBOX first?
-    bbox = aoi.geometry[0].bounds
-    l4agdf_clip = l4agdf.cx[bbox[0] : bbox[2], bbox[1] : bbox[3]]
-    l4agdf_gsrm = l4agdf_clip[l4agdf_clip["geometry"].within(aoi.geometry[0])]
-    indices = l4agdf_gsrm.i
-
-    return indices
+    return granule_geometry(granule).intersects(aoi)
 
 
 def is_coverage_beam(beam: h5py.Group) -> bool:
@@ -135,7 +129,9 @@ def is_power_beam(beam: h5py.Group) -> bool:
 
 def beam_filter_from_names(names: Sequence[str]):
     def is_named_beam(beam: h5py.Group) -> bool:
-        return any(name.upper() in beam.name.upper() for name in names)
+        return isinstance(beam.name, str) and any(
+            name.upper() in beam.name.upper() for name in names
+        )
 
     return is_named_beam
 
@@ -144,11 +140,11 @@ def subset_hdf5(
     hdf5: h5py.Group,
     *,
     aoi: gpd.GeoDataFrame,
-    lat: str,
-    lon: str,
+    lat_col: str,
+    lon_col: str,
     beam_filter: Callable[[h5py.Group], bool] = fp.always(True),
     columns: Sequence[str],
-    query: Optional[str],
+    query: Optional[str] = None,
 ) -> gpd.GeoDataFrame:
     """Subset the data in an HDF5 Group into a ``geopandas.GeoDataFrame``.
 
@@ -220,9 +216,9 @@ def subset_hdf5(
         Area of Interest.  The subset is limited to data points that fall within this
         area of interest, as determined by the latitude and longitude datasets of each
         `"BEAM*"` group within the HDF5 file.
-    lat: str
+    lat_col: str
         Name of the latitude dataset used for the resulting ``GeoDataFrame`` geometry.
-    lon: str
+    lon_col: str
         Name of the longitude dataset used for the resulting ``GeoDataFrame`` geometry.
     beam_filter: Callable[[h5py.Group], bool] = fp.always(True)
         Callable used to determine whether or not a top-level BEAM subgroup within the
@@ -338,8 +334,8 @@ def subset_hdf5(
     ...     gdf = subset_hdf5(
     ...         hdf5,
     ...         aoi=aoi,
-    ...         lat="lat_lowestmode",
-    ...         lon="lon_lowestmode",
+    ...         lat_col="lat_lowestmode",
+    ...         lon_col="lon_lowestmode",
     ...         beam_filter=is_coverage_beam,
     ...         columns=["agbd", "sensitivity"],
     ...         query="l2_quality_flag == 1 and sensitivity > 0.95"
@@ -366,19 +362,13 @@ def subset_hdf5(
 
     def subset_beam(beam: h5py.Group) -> gpd.GeoDataFrame:
         """Subset an individual `"BEAM*"` group as described above."""
-        df: pd.DataFrame = H5DataFrame(beam)
-        # Keep only the rows matching the specified query
-        if query:
-            df.query(query, inplace=True)
+        df = H5DataFrame(beam).query(query) if query else H5DataFrame(beam)
         # Grab the coordinates for the geometry, before dropping columns
-        geometry = gpd.points_from_xy(df[lon], df[lat])
-        # Drop all columns NOT specified by the columns parameter
-        df = df[list(columns)]
-        df.insert(0, "BEAM", beam.name[5:])
-        gdf = gpd.GeoDataFrame(df, geometry=geometry, crs="EPSG:4326")
+        geometry = gpd.points_from_xy(df[lon_col], df[lat_col])
+        # Select only the user-specified columns
+        gdf = gpd.GeoDataFrame(df[[*set(columns)]], geometry=geometry, crs=aoi.crs)
 
-        # Clip subset to the area of interest
-        return gpd.clip(gdf, aoi.set_crs(epsg=4326))
+        return cast(gpd.GeoDataFrame, gdf.clip(aoi))
 
     beams = (
         group
@@ -388,7 +378,7 @@ def subset_hdf5(
     beams_gdf = pd.concat(map(subset_beam, beams), ignore_index=True, copy=False)
     beams_gdf.insert(0, "filename", os.path.basename(hdf5.file.filename))
 
-    return beams_gdf
+    return cast(gpd.GeoDataFrame, beams_gdf)
 
 
 def write_subset(infile, gdf):

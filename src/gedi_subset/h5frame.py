@@ -6,8 +6,6 @@ from typing import Any, Iterable, Literal, cast, overload
 import h5py
 import pandas as pd
 
-import gedi_subset.fp as fp
-
 
 class H5DataFrame(pd.DataFrame):
     """Pandas DataFrame backed by an HDF5 File/Group.
@@ -130,13 +128,13 @@ class H5DataFrame(pd.DataFrame):
     expression, you must surround the name within backticks.  Otherwise, the
     slashes will be interpreted as division operators:
 
-    >>> df.query(group/vector > 0.5)  # doctest: +SKIP
+    >>> df.query("group/vector > 0.5")  # doctest: +SKIP
     ...
     pandas.core.computation.ops.UndefinedVariableError: name 'vector' is not defined
 
     Using backticks around the path prevents such unintended interpretation:
 
-    >>> df.query(`group/vector` > 0.5)  # doctest: +SKIP
+    >>> df.query("`group/vector` > 0.5")  # doctest: +SKIP
         group/vector
     0           <v0>
     1           <v1>
@@ -146,7 +144,7 @@ class H5DataFrame(pd.DataFrame):
     of slashes, backticks can be avoided.  Note, however, that column names will
     still contain slashes:
 
-    >>> df.query(group.vector > 0.5)  # doctest: +SKIP
+    >>> df.query("group.vector > 0.5")  # doctest: +SKIP
         group/vector
     0           <v0>
     1           <v1>
@@ -186,8 +184,18 @@ class H5DataFrame(pd.DataFrame):
         if isinstance(key, Iterable):
             # The key is possibly a "collection" of keys, so attempt to get the
             # column for each one, to make sure each has been read from our
-            # backing h5py.Group and added as a column to self.
-            fp.for_each(self.__getitem__)(key)
+            # backing h5py.Group and added as a column to self, if it's 1-D.
+            items = {k: self.__getitem__(k) for k in key}.items()
+
+            # If there are any 2-D values, raise an error, because when an
+            # iterable key is specified, each item must result in a Series.
+            if names := [k for k, v in items if isinstance(v, pd.DataFrame)]:
+                raise TypeError(
+                    f"The following dataset{' is' if len(names) == 1 else 's are'}"
+                    f" 2-dimensional: {', '.join(names)}."
+                    f" You so you must select a column by index."
+                    f" (Examples: {names[0]}0, {names[0]}99)"
+                )
 
         result = super().__getitem__(key)
 
@@ -231,9 +239,11 @@ class H5DataFrame(pd.DataFrame):
         # previously empty columns with NaN values.
 
         name = f"{self.relpath}/{key}".lstrip("/")
-        data = [] if self.index.empty and not self.columns.empty else value
-        column = pd.Series(data, dtype=value.dtype)
-        self.root.insert(len(self.root.columns), name, column)
+
+        if name not in self.root.columns:
+            data = [] if self.index.empty and not self.columns.empty else value
+            column = pd.Series(data, dtype=value.dtype)
+            self.root.insert(len(self.root.columns), name, column)
 
         return self.root[name]
 
@@ -258,8 +268,14 @@ class H5DataFrame(pd.DataFrame):
 
     @property
     def relpath(self) -> str:
-        path = self.root.group.name
-        return self.group.name[len(path) :].lstrip("/")
+        root_path = self.root.group.name
+        self_path = self.group.name
+
+        return (
+            self_path[len(root_path) :].lstrip("/")
+            if isinstance(root_path, str) and isinstance(self_path, str)
+            else ""
+        )
 
     @property
     def root(self) -> H5DataFrame:
@@ -272,13 +288,19 @@ class H5DataFrame(pd.DataFrame):
     @overload
     def query(
         self, expr: str, *, inplace: Literal[False] = ..., **kwargs: Any
-    ) -> pd.DataFrame:
+    ) -> H5DataFrame:
         ...
 
-    def query(self, expr: str, inplace: bool = False, **kwargs):
+    def query(
+        self,
+        expr: str,
+        *,
+        inplace: bool = False,
+        **kwargs: Any,
+    ) -> H5DataFrame | None:
         # Insert self as a resolver since the built-in columns resolver won't resolve
         # columns that have not yet been loaded from the backing store.
         kwargs["resolvers"] = (self, *tuple(kwargs.get("resolvers", ())))
-        result = super().query(expr, inplace, **kwargs)  # type: ignore
+        result = super().query(expr, inplace=inplace, **kwargs)  # type: ignore
 
         return self.__narrow(result) if isinstance(result, pd.DataFrame) else result
