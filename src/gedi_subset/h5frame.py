@@ -239,9 +239,11 @@ class H5DataFrame(pd.DataFrame):
         # previously empty columns with NaN values.
 
         name = f"{self.relpath}/{key}".lstrip("/")
-        data = [] if self.index.empty and not self.columns.empty else value
-        column = pd.Series(data, dtype=value.dtype)
-        self.root.insert(len(self.root.columns), name, column)
+
+        if name not in self.root.columns:
+            data = [] if self.index.empty and not self.columns.empty else value
+            column = pd.Series(data, dtype=value.dtype)
+            self.root.insert(len(self.root.columns), name, column)
 
         return self.root[name]
 

@@ -249,3 +249,22 @@ def test_subset_hdf5_2d_dataset_indexed(
     x_var0 = gdf["x_var0"]
 
     assert isinstance(x_var0, pd.Series) and len(x_var0) == 4
+
+
+def test_subset_hdf5_repeated_nested_column_in_query_expr(
+    h5_path: str, aoi_gdf: gpd.GeoDataFrame
+) -> None:
+    with h5py.File(h5_path) as hdf5:
+        gdf = subset_hdf5(
+            hdf5,
+            aoi=aoi_gdf,
+            lat_col="lat_lowestmode",
+            lon_col="lon_lowestmode",
+            columns=["x_var0", "land_cover_data/landsat_treecover"],
+            query=(
+                "land_cover_data.landsat_treecover > 80"
+                " and land_cover_data.landsat_treecover < 90"
+            ),
+        )
+
+    assert len(gdf) == 1 and gdf["land_cover_data/landsat_treecover"][0] == 83
