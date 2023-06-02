@@ -332,7 +332,6 @@ def main(
         dir_okay=False,
         writable=True,
         readable=True,
-        resolve_path=True,
     ),
     verbose: bool = typer.Option(False, help="Provide verbose output"),
 ) -> None:
