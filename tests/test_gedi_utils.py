@@ -3,6 +3,7 @@ import warnings
 from typing import Optional, Set
 
 import h5py
+import pandas as pd
 import pytest
 
 from gedi_subset.gedi_utils import subset_hdf5
@@ -209,7 +210,7 @@ def test_subset_hdf5(
             query=query,
         )
 
-    expected_columns = columns | {"filename", "beam", "shot_number", "geometry"}
+    expected_columns = columns | {"filename", "geometry"}
 
     assert set(gdf.columns) == expected_columns
     assert gdf.shape == (n_expected_rows, len(expected_columns))
@@ -219,3 +220,32 @@ def test_subset_hdf5(
     # should first verify the correctness of our fixture data, otherwise we might spend
     # unnecessary time hunting down a non-existent bug.
     assert gdf.notna().all(axis=None)
+
+
+def test_subset_hdf5_2d_dataset(h5_path: str, aoi_gdf: gpd.GeoDataFrame) -> None:
+    with pytest.raises(TypeError):
+        with h5py.File(h5_path) as hdf5:
+            subset_hdf5(
+                hdf5,
+                aoi=aoi_gdf,
+                lat_col="lat_lowestmode",
+                lon_col="lon_lowestmode",
+                columns=["x_var"],  # 2D column not allowed, must specify index
+            )
+
+
+def test_subset_hdf5_2d_dataset_indexed(
+    h5_path: str, aoi_gdf: gpd.GeoDataFrame
+) -> None:
+    with h5py.File(h5_path) as hdf5:
+        gdf = subset_hdf5(
+            hdf5,
+            aoi=aoi_gdf,
+            lat_col="lat_lowestmode",
+            lon_col="lon_lowestmode",
+            columns=["x_var0"],
+        )
+
+    x_var0 = gdf["x_var0"]
+
+    assert isinstance(x_var0, pd.Series) and len(x_var0) == 4

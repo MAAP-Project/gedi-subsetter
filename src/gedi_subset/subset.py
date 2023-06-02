@@ -45,7 +45,7 @@ logical_dois = {
     "L4A": "10.3334/ORNLDAAC/2056",
 }
 
-DEFAULT_LIMIT = 10_000
+DEFAULT_LIMIT = 1_000
 
 LOGGING_FORMAT = "%(asctime)s [%(processName)s:%(name)s] [%(levelname)s] %(message)s"
 
@@ -236,16 +236,23 @@ def subset_granules(
     # We're dealing with relatively small numbers of granules (dozens, perhaps
     # hundreds, at most), so we can stick with a chunksize of 1.
     chunksize = 1
-    processes = os.cpu_count()
+    processes = min(8, os.cpu_count() or 32)
+    found_granules = list(granules)
+    # On occasion, a granule is missing a download URL, so the _downloadname
+    # attribute is set to None, and attempting to download it throws an
+    # exception, so we just skip such granules to avoid failing.
+    downloadable_granules = [
+        granule for granule in found_granules if granule._downloadname
+    ]
+
+    logger.info(f"Found {len(found_granules)} in the CMR")
+    logger.info(f"Total downloadable granules: {len(downloadable_granules)}")
+
     payloads = (
         SubsetGranuleProps(
             granule, maap, aoi_gdf, lat, lon, beams, columns, query, output_dir
         )
-        for granule in granules
-        # On occasion, a granule is missing a download URL, so the _downloadname
-        # attribute is set to None, and attempting to download it throws an
-        # exception, so we just skip such granules to avoid failing.
-        if granule._downloadname
+        for granule in downloadable_granules
     )
 
     logger.info(f"Subsetting on {processes} processes (chunksize={chunksize})")
@@ -332,7 +339,11 @@ def main(
     logging_level = logging.DEBUG if verbose else logging.INFO
     set_logging_level(logging_level)
 
-    dest = ("output" / (output or aoi)).with_suffix(".gpkg").absolute()
+    dest = (
+        ("output" / (output or Path(f"{aoi.stem}_subset")))
+        .with_suffix(".gpkg")
+        .absolute()
+    )
     output_dir = dest.parent
     os.makedirs(output_dir, exist_ok=True)
 
@@ -370,7 +381,7 @@ def main(
             output_dir,
             dest,
             (logging_level,),
-            fp.filter(partial(granule_intersects, aoi_gdf.unary_union))(granules),
+            fp.filter(granule_intersects(aoi_gdf.unary_union))(granules),
         )
     ).bind_ioresult(
         lambda subsets: IOSuccess(subsets)

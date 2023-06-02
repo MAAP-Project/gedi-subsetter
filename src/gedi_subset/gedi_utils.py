@@ -8,11 +8,10 @@ from typing import Any, Callable, Mapping, Optional, Sequence, Union, cast
 import h5py
 import pandas as pd
 import requests
+import shapely
 from maap.Result import Granule
 from returns.curry import curry
 from returns.io import IOResultE, impure_safe
-from shapely.geometry import Polygon
-from shapely.geometry.base import BaseGeometry
 
 import gedi_subset.fp as fp
 from gedi_subset.h5frame import H5DataFrame
@@ -83,22 +82,41 @@ def get_geo_boundary(iso: str, level: int) -> gpd.GeoDataFrame:
     return gpd.read_file(file_path)
 
 
+def granule_geometry(granule: Granule) -> shapely.Geometry:
+    gpolygon = (
+        granule.get("Granule", {})
+        .get("Spatial", {})
+        .get("HorizontalSpatialDomain", {})
+        .get("Geometry", {})
+        .get("GPolygon", [])
+    )
+    gpolygons = gpolygon if isinstance(gpolygon, list) else [gpolygon]
+    boundaries = [gpolygon.get("Boundary", {}) for gpolygon in gpolygons]
+    polygons = [
+        shapely.Polygon(
+            (
+                (point["PointLongitude"], point["PointLatitude"])
+                for boundary in boundaries
+                for point in boundary.get("Point", [])
+            )
+            # TODO: The second argument (`holes`) to the Polygon constructor
+            # should be constructed from the ECHO-10 XML ExclusiveZones element.
+            # See https://git.earthdata.nasa.gov/projects/EMFD/repos/echo-schemas/browse/schemas/10.0/MetadataCommon.xsd#125  # noqa: E501
+        )
+    ]
+
+    return shapely.union_all(polygons)
+
+
 @curry
-def granule_intersects(aoi: BaseGeometry, granule: Granule):
+def granule_intersects(aoi: shapely.Geometry, granule: Granule):
     """Determines whether or not a granule intersects an Area of Interest
 
     Returns `True` if the polygon determined by the points in the `granule`'s
     horizontal spatial domain intersects the geometry of the Area of Interest;
     `False` otherwise.
     """
-    points = granule["Granule"]["Spatial"]["HorizontalSpatialDomain"]["Geometry"][
-        "GPolygon"
-    ]["Boundary"]["Point"]
-    polygon = Polygon(
-        [[float(p["PointLongitude"]), float(p["PointLatitude"])] for p in points]
-    )
-
-    return polygon.intersects(aoi)
+    return granule_geometry(granule).intersects(aoi)
 
 
 def is_coverage_beam(beam: h5py.Group) -> bool:
@@ -347,14 +365,11 @@ def subset_hdf5(
         df = H5DataFrame(beam).query(query) if query else H5DataFrame(beam)
         # Grab the coordinates for the geometry, before dropping columns
         geometry = gpd.points_from_xy(df[lon_col], df[lat_col])
-        # Select only the "beam", "shot_number", and the user-specified columns
-        df = df[list({"beam", "shot_number"} | set(columns))]
-        gdf = gpd.GeoDataFrame(df, geometry=geometry, crs=aoi.crs)  # pyright: ignore
+        # Select only the user-specified columns
+        gdf = gpd.GeoDataFrame(df[[*set(columns)]], geometry=geometry, crs=aoi.crs)
 
-        # Subset to the area of interest
-        return cast(gpd.GeoDataFrame, gdf[gdf.geometry.covered_by(aoi_unary_union)])
+        return cast(gpd.GeoDataFrame, gdf.clip(aoi))
 
-    aoi_unary_union = aoi.unary_union
     beams = (
         group
         for name, group in hdf5.items()

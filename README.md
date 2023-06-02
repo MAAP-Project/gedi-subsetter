@@ -39,62 +39,37 @@ To run a GEDI subsetting DPS job, you must supply the following inputs.
 
 |**IMPORTANT:**|
 |:---|
-| _When submitting a job via the ADE's user interface, to indicate that you do not want to specify a particular value for an **optional** input, you must enter a single dash/hyphen (`-`) in the input field.  This will indicate that you wish to use the default value indicated for that optional input._
+| _When **submitting a job via the ADE's user interface**, to indicate that you do not want to specify a particular value for an **optional** input, you must enter a single dash/hyphen (`-`) in the input text box.  This will indicate that you wish to use the default value indicated for that optional input._ When **submitting a job via code, such as in a notebook**, if you wish to use the default value for an optional input, simply exclude the input name and value from the dictionary of inputs.
 
 - `aoi` (_required_): URL to a GeoJSON file representing your area of interest
   (see [Specifying an AOI](#specifying-an-aoi)).  This may contain multiple
-  geometries.
-
-- `doi` (_required_): [Digital Object Identifier] (DOI) of the GEDI collection to
-  subset, or a logical name representing such a DOI (see
-  [Specifying a DOI](#specifying-a-doi))
-
-  Since 0.3.0
-
-- `temporal` (_optional_; default: full temporal range available): Temporal range
-  to subset.  You may specify either a closed range, with start and end dates,
-  or a half-open range, with either a start date or an end date.  For full
-  details on the valid formats, see the NASA CMR's documentation on
-  [temporal range searches](https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html#temporal-range-searches).
-
-  Since 0.6.0
-
-- `lat` (_required_): Name of the dataset used for latitude.
-
-  Since 0.3.0
-
-- `lon` (_required_): Name of the dataset used for longitude.
-
-  Since 0.3.0
-
-- `beams` (_optional_; default: `"all"`): Which beams to include in the subset.
-  If supplied, must be one of logical names `all`, `coverage`, or `power`, _OR_
-  a comma-separated list of specific beam names, with or without the `BEAM`
-  prefix (e.g., `BEAM0000,BEAM0001` or `0000,0001`)
-
-  Since 0.4.0
+  geometries, all of which will be used.
 
 - `columns` (_required_): One or more column names, separated by commas, to
-  include in the output file.  These names correspond to the variables (layers)
+  include in the output file.  These names correspond to the _datasets_ (which
+  might also be referred to as _variables_ or _layers_ in the DOI documentation)
   within the data files, and vary from collection to collection.  Consult the
-  documentation for a list of variables available per collection (see
+  documentation for a list of datasets available per collection (see
   [Specifying a DOI](#specifying-a-doi) for documentation links).
 
   In addition to the specified columns, the output file will also include a
-  `filename` (`str`) column that includes the name of the original `h5` file, a
-  `beam` (`int`) column, and a `shot_number` (`int`) column.
+  `filename` (`str`) column that includes the name of the original `h5` file.
 
-  **IMPORTANT:** To specify nested variables (i.e., variables _not_ at the top
-  of a BEAM), you may use a path containing forward slashes (`/`) that is
-  relative to the BEAM it appears within.  For example, if a BEAM contains a
-  `geolocation` group, and within that group is a variable named
-  `sensitivity_a2`, then you would refer to that nested variable as
+  _Changed in version 0.6.0_: The `beam` column is no longer automatically
+  included.  If you wish to include the `beam` column, you must specify it
+  explicitly in this `columns` value.
+
+  **IMPORTANT:** To specify nested datasets (i.e., datasets _not_ at the top of
+  a BEAM), you may use a path containing forward slashes (`/`) that is relative
+  to the BEAM it appears within.  For example, if a BEAM contains a
+  `geolocation` group, and within that group is a dataset named
+  `sensitivity_a2`, then you would refer to that nested dataset as
   `geolocation/sensitivity_a2`.
 
-- `query` (_optional_; default: no query, select all rows): Query expression
-  for subsetting the rows in the output file.  This expression selects rows of
-  data for which the expression is true.  Again, names in the expression are
-  variable (layer) names.  For example: `quality_flag == 1`.
+- `query` (_optional_; default: no query, select all rows): Query expression for
+  subsetting the rows in the output file.  This expression selects rows of data
+  for which the expression is true.  Again, names in the expression are dataset
+  (variable/layer) names.  For example: `quality_flag == 1`.
 
   **NOTE:** To combine multiple expressions, you may use the `and` and `or`
   boolean operators.
@@ -106,31 +81,66 @@ To run a GEDI subsetting DPS job, you must supply the following inputs.
   (l2a_quality_flag == 1 or l2b_quality_flag == 1) and sensitivity > 0.95
   ```
 
-  **IMPORTANT:** To specify nested variables (i.e., variables _not_ at the top
-  of a BEAM), you may use a relative path, as described above for column names,
-  but you must surround such nested path names with backticks.  For example:
+  **IMPORTANT:** To specify nested datasets (i.e., datasets _not_ at the top of
+  a BEAM), you may use a relative path, as described above for column names, but
+  you must surround such nested path names with _backticks_ (`` ` ``).  For
+  example:
 
   ```plain
   quality_flag == 1 and `geolocation/sensitivity_a2` > 0.95
   ```
 
-  Alternatively, "dot" notation may be used in place of using slashes.  This
-  eliminates the need to use backticks to surround a path.  Note, however, that
-  the **corresponding columns in the output will still contain slashes in their
-  names**:
+  Alternatively, "dot" (`.`) notation may be used in place of using slashes.
+  This eliminates the need to use backticks to surround a path.  Note, however,
+  that the **corresponding columns in the output will still contain slashes in
+  their names**:
 
   ```plain
   quality_flag == 1 and geolocation.sensitivity_a2 > 0.95
   ```
 
-- `limit` (_optional_; default: 10,000): Maximum number of GEDI granule data files
-  to download from the CMR, among those that intersect the specified AOI's
+- `limit` (_optional_; default: 1_000): Maximum number of GEDI granule data
+  files to download from the CMR, among those that intersect the specified AOI's
   bounding box, and fall within the specified temporal range (if supplied).
+
+  _Changed in version 0.6.0_: The default value was reduced from 10000 to 1000.
+  The AOI for most subsetting operations are likely to incur a request for well
+  under 1000 granules for downloading, so a larger default value might only lead
+  to longer CMR query times.
+
+- `doi` (_required_): [Digital Object Identifier] (DOI) of the GEDI collection to
+  subset, or a logical name representing such a DOI (see
+  [Specifying a DOI](#specifying-a-doi))
+
+  _New in version 0.3.0_
+
+- `lat` (_required_): _Name_ of the dataset used for latitude.
+
+  _New in version 0.3.0_
+
+- `lon` (_required_): _Name_ of the dataset used for longitude.
+
+  _New in version 0.3.0_
+
+- `beams` (_optional_; default: `"all"`): Which beams to include in the subset.
+  If supplied, must be one of logical names `all`, `coverage`, or `power`, _OR_
+  a comma-separated list of specific beam names, with or without the `BEAM`
+  prefix (e.g., `BEAM0000,BEAM0001` or `0000,0001`)
+
+  _New in version 0.4.0_
+
+- `temporal` (_optional_; default: full temporal range available): Temporal range
+  to subset.  You may specify either a closed range, with start and end dates,
+  or a half-open range, with either a start date or an end date.  For full
+  details on the valid formats, see the NASA CMR's documentation on
+  [temporal range searches](https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html#temporal-range-searches).
+
+  _New in version 0.6.0_
 
 - `output` (_optional_): Name to use for the output file.  This can also include
   a path, which will be relative to the standard DPS output directory for a job.
   **Default:** the output file will be named the same as the name of the AOI
-  file, but with a suffix of `".gpkg"`.
+  file, but with a suffix of `"_subset.gpkg"`.
 
   When explicitly specifying a name, it does not need to include an extension,
   because a `.gpkg` extension will be added automatically.  If an extension is
@@ -145,7 +155,7 @@ To run a GEDI subsetting DPS job, you must supply the following inputs.
   - `myoutput.h5` -> `myoutput.gpkg`
   - `mypath/myoutput` -> `mypath/myoutput.gpkg`
 
-  Since 0.6.0
+  _New in version 0.6.0_
 
 ### Specifying an AOI
 
@@ -220,7 +230,6 @@ inputs = dict(
    columns=...,
    query=...,
    limit=0,
-   temporal="-",
 )
 ```
 
@@ -236,7 +245,6 @@ inputs = dict(
    columns="rh50,rh98",
    query="quality_flag == 1 and sensitivity > 0.95",
    limit=0,
-   temporal="-",
 )
 ```
 
@@ -252,7 +260,6 @@ inputs = dict(
    columns="rh100",
    query="l2a_quality_flag == 1 and l2b_quality_flag == 1 and sensitivity > 0.95",
    limit=0,
-   temporal="-",
 )
 ```
 
@@ -268,7 +275,6 @@ inputs = dict(
    columns="agbd, agbd_se, sensitivity, geolocation/sensitivity_a2",
    query="l2_quality_flag == 1 and l4_quality_flag == 1 and sensitivity > 0.95 and `geolocation/sensitivity_a2` > 0.95",
    limit=0,
-   temporal="-",
 )
 ```
 
@@ -300,7 +306,7 @@ inputs = dict(
    columns="<COLUMNS>",
    query="<QUERY>",
    limit=0,  # 0 implies no limit to the number of granules downloaded
-   temporal="<RANGE>",  # or "-" for unlimited temporal range
+   temporal="<RANGE>",  # or exclude this input for unlimited temporal range
 )
 
 result = maap.submitJob(

@@ -6,8 +6,6 @@ from typing import Any, Iterable, Literal, cast, overload
 import h5py
 import pandas as pd
 
-import gedi_subset.fp as fp
-
 
 class H5DataFrame(pd.DataFrame):
     """Pandas DataFrame backed by an HDF5 File/Group.
@@ -186,8 +184,18 @@ class H5DataFrame(pd.DataFrame):
         if isinstance(key, Iterable):
             # The key is possibly a "collection" of keys, so attempt to get the
             # column for each one, to make sure each has been read from our
-            # backing h5py.Group and added as a column to self.
-            fp.for_each(self.__getitem__)(key)
+            # backing h5py.Group and added as a column to self, if it's 1-D.
+            items = {k: self.__getitem__(k) for k in key}.items()
+
+            # If there are any 2-D values, raise an error, because when an
+            # iterable key is specified, each item must result in a Series.
+            if names := [k for k, v in items if isinstance(v, pd.DataFrame)]:
+                raise TypeError(
+                    f"The following dataset{' is' if len(names) == 1 else 's are'}"
+                    f" 2-dimensional: {', '.join(names)}."
+                    f" You so you must select a column by index."
+                    f" (Examples: {names[0]}0, {names[0]}99)"
+                )
 
         result = super().__getitem__(key)
 
