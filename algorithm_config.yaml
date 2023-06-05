@@ -27,3 +27,5 @@ inputs:
     download: False
   - name: limit
     download: False
+  - name: output
+    download: False
