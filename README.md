@@ -294,7 +294,7 @@ MAAP API from a Notebook (or a Python script), as follows:
 ```python
 from maap.maap import MAAP
 
-maap = MAAP(maap_host='api.ops.maap-project.org')
+maap = MAAP(maap_host='api.maap-project.org')
 
 # See "Algorithm Inputs" section as well as "Specifying a DOI"
 inputs = dict(
