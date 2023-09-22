@@ -352,7 +352,7 @@ def main(
     # output directory.
     osx.remove(f"{dest}")
 
-    maap = MAAP("api.ops.maap-project.org")
+    maap = MAAP("api.maap-project.org")
     cmr_host = "cmr.earthdata.nasa.gov"
 
     IOResult.do(
