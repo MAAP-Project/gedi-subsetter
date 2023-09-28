@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog], and this project adheres to
 [Semantic Versioning].
 
+## [0.6.1] - 2023-09-26
+
+### Fixed
+
+- [#49](https://github.com/MAAP-Project/gedi-subsetter/issues/49) Remove all
+  API urls that contain ops as they have now been retired (eg. api.ops.maap-project.org).
+
 ## [0.6.0] - 2023-06-02
 
 ### Fixed
