@@ -4,21 +4,20 @@ set -xeuo pipefail
 
 basedir=$(dirname "$(readlink -f "$0")")
 
+export MAMBA_ROOT_PREFIX=$(conda info --base)
+
 # Make sure conda is updated to a version that supports the --no-capture-output option
-conda install -y -n base -c conda-forge "conda>=4.13.0"
+mamba install -y -n base -c conda-forge "micromamba>=1.5.0"
 
-# Create conda env containing only conda-lock
-conda create -y -n gedi_subset conda-lock
-
-# Install dependencies from lock file for speed and reproducibility
-conda run --no-capture-output -n gedi_subset conda lock install -n gedi_subset "${basedir}/environment/conda-lock.yml"
+# Create env containing environment dependencies
+micromamba create -y -n gedi_subset -f "${basedir}/environment/conda-lock.yml"
 
 # Install maap-py, since it cannot be specified in the lock file
-PIP_REQUIRE_VENV=0 conda env update -n gedi_subset --file "${basedir}/environment/environment-maappy.yml"
+PIP_REQUIRE_VENV=0 micromamba install -y -n gedi_subset -f "${basedir}/environment/environment-maappy.yml"
 
 # Install development environment dependencies if the --dev flag is supplied
 if [[ "${1:-}" == "--dev" ]]; then
-   PIP_REQUIRE_VENV=0 conda env update -n gedi_subset --file "${basedir}/environment/environment-dev.yml"
+   PIP_REQUIRE_VENV=0 micromamba install -y -n gedi_subset -f "${basedir}/environment/environment-dev.yml"
 fi
 
 conda run --no-capture-output -n gedi_subset PIP_REQUIRE_VENV=0 python -m pip install -e "${basedir}"
