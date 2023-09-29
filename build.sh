@@ -6,7 +6,7 @@ basedir=$(dirname "$(readlink -f "$0")")
 
 export MAMBA_ROOT_PREFIX=$(conda info --base)
 
-# Make sure conda is updated to a version that supports the --no-capture-output option
+# Utilizing micromamba
 mamba install -y -n base -c conda-forge "micromamba>=1.5.0"
 
 # Create env containing environment dependencies
