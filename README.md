@@ -9,5 +9,7 @@ The Global Ecosystem Dynamics Investigation (GEDI) is a lidar instrument on the 
 ## The Subsetter
 The Subsetter utilizes the Multi-Mission Algorithm and Analysis Platform’s (MAAP) async job queuing system that runs on AWS. The tool automatically handles authentication (AWS S3 direct access) and auto-refreshes tokens. Users are able to pass a number of inputs to the Subsetter’s job to refine the results. By querying NASA Common Metadata Repository (CMR) to gather all the granules that pass through a specified region, the Subsetter is able to parallelize the process to download the granules and then append the subsetted results to a single geopackage.
 
+To read more specifics about the Subsetter: [Specification README](src/gedi_subset/Specification_README.md).
+
 ## Beyond
 The Subsetter could be generalized to work with other datasets, pass back different data formats, directly read from S3, and more. The Subsetter is a great example of how MAAP can help users with their data processing needs.
