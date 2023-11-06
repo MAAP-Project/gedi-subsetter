@@ -7,7 +7,7 @@ To contribute to this work, you must obtain access to the following:
 1. [MAAP GEDI Subsetter hosted on GitHub]: For creating new versions
    (releases) of the algorithms implemented in the repository.
 1. [NASA MAAP]: Where the ADE resides, and thus where algorithms can be
-   registered (from GitLab repositories).
+   registered.
 
 To prepare for contributing, do the following in an ADE workspace:
 
