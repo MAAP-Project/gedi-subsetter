@@ -94,11 +94,11 @@ must be registered in the ADE.  To do so, follow these steps:
       - Enter the **Run Command** as `gedi-subsetter/subset.sh`.
       - Enter the **Build Command** as `gedi-subsetter/build.sh`.
    1. Under General Information:
-      - Enter the **Algorithm Name** as `gedi-subsetter`.
+      - Enter the **Algorithm Name** as `gedi-subset`.
       - Enter the **Algorithm Description** as `Subset GEDI L1B, L2A, L2B, or L4A granules within an area of interest (AOI)`.
-      - Enter the **Disk Space** as `20GB`.
+      - Enter the **Disk Space** as `20`.
       - Enter the **Resource Allocation** as `maap-dps-worker-32gb`.
-      - Enter the **Container URL** as `mas.dit.maap-project.org/root/maap-workspaces/base_images/r:dit`.
+      - Enter the **Container URL** as `mas.maap-project.org/root/maap-workspaces/base_images/vanilla:v3.0.1`.
    1. Under Input Types, add the following Name, Description pairs:
       1. For File Inputs:
          - `aoi`: Area of Interest GeoJSON file
@@ -119,3 +119,12 @@ must be registered in the ADE.  To do so, follow these steps:
    following the release steps again).  Otherwise, you should now be able to
    open the **Jobs** menu, choose **View & Submit Jobs**, and find
    the new version of the algorithm in the dropdown list of the **Submit** tab.
+
+[conda installation]:
+   https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
+[Keep a Changelog]:
+  https://keepachangelog.com/en/1.0.0/
+[MAAP GEDI Subsetter hosted on GitHub]:
+  https://github.com/MAAP-Project/gedi-subsetter.git
+[NASA MAAP]:
+  https://maap-project.org/

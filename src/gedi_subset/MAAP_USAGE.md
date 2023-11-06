@@ -13,10 +13,6 @@
   - [Checking the DPS Job Status](#checking-the-dps-job-status)
   - [Getting the DPS Job Results](#getting-the-dps-job-results)
 - [Getting the GeoJSON URL for a geoBoundary](#getting-the-geojson-url-for-a-geoboundary)
-- [Contributing](#contributing)
-  - [Development Setup](#development-setup)
-  - [Creating an Algorithm Release](#creating-an-algorithm-release)
-  - [Registering an Algorithm Release](#registering-an-algorithm-release)
 - [Citations](#citations)
 
 ## Algorithm Outline
@@ -446,19 +442,9 @@ Runfola, D. et al. (2020) geoBoundaries: A global database of political
 administrative boundaries.  PLoS ONE 15(4): e0231866.
 <https://doi.org/10.1371/journal.pone.0231866>
 
-[conda installation]:
-   https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
 [Digital Object Identifier]:
    https://doi.org
 [geoBoundaries]:
   https://www.geoboundaries.org
 [geoBoundaries API]:
   https://www.geoboundaries.org/api.html
-[Keep a Changelog]:
-  https://keepachangelog.com/en/1.0.0/
-[MAAP GEDI Subsetter hosted on GitHub]:
-  https://github.com/MAAP-Project/gedi-subsetter.git
-[MAAP GitLab]:
-  https://repo.maap-project.org/
-[NASA MAAP]:
-  https://maap-project.org/
