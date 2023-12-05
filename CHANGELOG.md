@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog], and this project adheres to
 [Semantic Versioning].
 
+## [0.6.2] - 2023-12-05
+
+### Fixed
+
+- Updated to use v3.1.3 of maap-py in environment-maappy.yml. Previous versions
+  of maap-py were using the deprecated MAAP Query Service API endpoint.
+
 ## [0.6.1] - 2023-09-26
 
 ### Fixed
