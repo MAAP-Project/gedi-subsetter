@@ -1,5 +1,7 @@
 # GEDI Subsetter
 
+[![DOI](https://zenodo.org/badge/552133788.svg)](https://zenodo.org/doi/10.5281/zenodo.10019412)
+
 ## History
 
 The GEDI Subsetter tool was developed in response to the release of [Global Ecosystem Dynamics Investigation](https://www.earthdata.nasa.gov/sensors/gedi) (GEDI) data and the subsequent interest from the [University of Maryland biomass group](https://geog.umd.edu/). The group expressed interest in studying various regions, which requires obtaining all granules that intersect any given region. Due to GEDI products being an orbit of the International Space Station (ISS), the challenge was to efficiently subset all granules passing through the area of interest. So while the existing methods would work for a small number of granules, the users were seeking a highly scalable, automated approach that would allow them to efficiently gather their data points without the need to process each file separately.
