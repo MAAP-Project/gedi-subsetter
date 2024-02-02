@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 
-set -xuo pipefail
+set -xeuo pipefail
 
-basedir=$(dirname "$(readlink -f "$0")")
-subset_py="conda run --no-capture-output -n gedi_subset ${basedir}/src/gedi_subset/subset.py"
+# Apply dirname twice to get to the top of the repo, since this script is in the
+# `bin` directory (i.e., first dirname gets to `bin`, second gets to the top).
+basedir=$(dirname "$(dirname "$(readlink -f "$0")")")
+conda_env_prefix=$("${basedir}/bin/conda-prefix.sh")
+conda_run=("conda" "run" "--no-capture-output" "--prefix" "${conda_env_prefix}")
+subset_py="${basedir}/src/gedi_subset/subset.py"
 
-if ! test -d "input"; then
+if ! test -d "${basedir}/input"; then
     # There is no `input` sub-directory of the current working directory, so
     # simply pass all arguments through to the Python script.
-    ${subset_py} --verbose "$@"
+    "${conda_run[@]}" "${subset_py}" --verbose "$@"
 else
     # There is an `input` sub-directory of the current working directory, so
     # assume the AOI file is the sole file within the `input` sub-directory.

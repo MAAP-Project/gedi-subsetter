@@ -1,0 +1,24 @@
+name: gedi_subset
+channels:
+  - conda-forge
+  - defaults
+# Non-standard, but recognized by conda-lock
+category: dev
+dependencies:
+  - backoff~=2.2
+  - black~=23.3
+  # boto*-stubs constraints should align with boto3 constraint in environment.yml
+  - boto3-stubs~=1.33
+  - boto3-stubs-essential~=1.33
+  - botocore-stubs~=1.33
+  - contextily~=1.3
+  - ipykernel~=6.23
+  - isort~=5.12
+  - moto~=4.1
+  - mypy~=1.2
+  # pandas-stubs constraint should align with pandas constraint in environment.yml
+  - pandas-stubs~=2.0
+  - pre-commit~=3.3
+  - pytest~=7.3
+  - types-cachetools~=5.3
+  - types-requests~=2.30
