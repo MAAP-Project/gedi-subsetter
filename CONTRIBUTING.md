@@ -1,6 +1,9 @@
 # Contributing
 
 - [Development Setup](#development-setup)
+  - [Create the conda environment](#create-the-conda-environment)
+  - [Activate the conda environment](#activate-the-conda-environment)
+  - [Install Git pre-commit hooks](#install-git-pre-commit-hooks)
 - [Managing Dependencies](#managing-dependencies)
 - [Creating an Algorithm Release](#creating-an-algorithm-release)
 - [Registering an Algorithm Release](#registering-an-algorithm-release)
@@ -35,50 +38,101 @@ not necessarily the ADE):
 
 1. Clone this GitHub repository.
 1. Change directory to the cloned repository.
-1. Create the `gedi_subset` virtual environment.
+1. Create the `gedi_subset` conda environment (see below).
+1. Activate the `gedi_subset` conda environment (see below).
+1. Install Git pre-commit hooks (see below).
 
-   **NOTE:** _If you're working in the ADE, use the `--prefix` option shown
-   (excluding the square brackets), otherwise you will need to repeat this step
-   whenever your restart your ADE workspace_.  Outside of the ADE, there's no
-   such need to use the `--prefix` option, unless you prefer to use a
-   non-default location:
+### Create the conda environment
 
-   ```bash
-   bin/build.sh [--prefix "${HOME}/envs/gedi_subset"]
-   ```
+Once you have cloned this repository and changed directory to the clone, you
+must create the `gedi_subset` conda environment.  To do so, you'll use the
+script `bin/build.sh`, as instructed below, which is a script that serves
+double-duty as the script that also builds the DPS environment for executing the
+algorithm, by ensuring that all necessary Python packages are installed.
 
-   Note that you may also supply additional options, all of which are passed
-   through to the `conda-lock install` command.  For a list of options, see
-   <https://conda.github.io/conda-lock/cli/gen/#conda-lock-install>.
+**IMPORTANT:** If you're working in the ADE, the default location for conda
+environments is ephemeral, meaning that whenever your ADE workspace is
+restarted, all of the conda environments in the default location are lost.  This
+requires you to recreate any such conda environments that you wish to use after
+a workspace restart.  To prevent this from occurring, you must provide a
+location that persists across restarts via the `--prefix` option with the
+`bin/build.sh` script, as described below.  _However_, taking this approach
+means that creation of the conda environment may take significantly more time
+(possibly 10s of minutes) because the persistent location is an AWS S3 bucket.
 
-   **TROUBLESHOOTING:** If the command above fails with the error message
-   `conda: command not found`, you must first run `conda activate base`, then
-   rerun the command above.
+If you're not working in the ADE, or you are, but aren't bothered by having to
+rerun the following command every time you want to use the `gedi_subset` after
+a workspace restart, you may create the conda environment simply as follows:
 
-1. Activate the `gedi_subset` virtual environment.
+```bash
+bin/build.sh
+```
 
-   If you did _not_ specify the `--prefix` option in the previous step, you can
-   use the following command:
+_Alternatively_, if you _are_ using the ADE, and you _do_ want the `gedi_subset`
+conda environment to persist across workspace restarts, use the following
+command instead:
 
-   ```bash
-   conda activate gedi_subset
-   ```
+```bash
+bin/build.sh --prefix "${HOME}/envs/gedi_subset"
+```
 
-   Otherwise, you must instead use the following command (alter the value if you
-   specified a different prefix in the previous step):
+Note that you may supply additional options, all of which are passed through to
+the `conda-lock install` command (see
+[Managing Dependencies](#managing-dependencies)).  For a list of options, see
+[conda-lock install](https://conda.github.io/conda-lock/cli/gen/#conda-lock-install).
+By default, all _development_ dependencies will be installed along with all of
+the main dependencies (i.e., the `--dev` option is implicit).
 
-   ```bash
-   conda activate "${HOME}/envs/gedi_subset"
-   ```
+**TROUBLESHOOTING:** If the command above fails with an error that includes the
+message `conda: command not found`, it is likely due to `conda` initialization
+being skipped when your terminal window is initialized.  Here are 2 options for
+resolving this issue (do one, not both):
 
-1. Install Git pre-commit hooks:
+**Option 1:** Edit your `${HOME}/.bash_profile` file by adding the following
+line at the top of the file:
 
-   ```bash
-   pre-commit install --install-hooks
-   ```
+```bash
+source "${HOME}/.bashrc"
+```
 
-During development, you will create PRs against the GitHub repository, as
-explained below.
+**Option 2:** Move the conda initialization block from `${HOME}/.bashrc` to
+`${HOME}/.bash_profile`.  The conda initialization block is the block of lines
+that looks like the following:
+
+```plain
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+... (contents elided) ...
+# <<< conda initialize <<<
+```
+
+Move that block in it's entirety (_including_ the leading and trailing comment
+lines) from `${HOME}/.bashrc` to `${HOME}/.bash_profile`.
+
+### Activate the conda environment
+
+If you did _not_ specify the `--prefix` option to `bin/build.sh`, you can use
+the following command:
+
+```bash
+conda activate gedi_subset
+```
+
+Otherwise, you must instead use the following command (alter the value if you
+specified a different prefix with the `bin/build.sh` command earlier):
+
+```bash
+conda activate "${HOME}/envs/gedi_subset"
+```
+
+### Install Git pre-commit hooks
+
+We leverage `pre-commit` to help with some housekeeping tasks.  To enable the
+configured hooks, run the following from the root of the repository:
+
+```bash
+pre-commit install --install-hooks
+```
 
 ## Managing Dependencies
 
@@ -145,31 +199,21 @@ Specifically, it calls `bin/build.sh` with options appropriate for the DPS
 environment.
 
 Using the conda lock file in both development and DPS environments is an
-intentional consistency for dependency installation designed to eliminate
-possible differences in dependencies that might otherwise allow development and
-testing to succeed, but later result in a failure in DPS, either during
-algorithm registration, or worse, during algorithm execution.
+intentional consistency for dependency installation designed to greatly reduce,
+if not eliminate, possible differences in dependencies that might otherwise
+allow development and testing to succeed, but later result in a failure in DPS,
+either during algorithm registration, or worse, during algorithm execution.
 
 ## Creating an Algorithm Release
 
 1. Create a new branch based on an appropriate existing branch (typically based
    on `main`).
 1. Add your desired code and/or configuration changes.
-1. Add appropriate entries to the [Changelog](./CHANGELOG.md), according to
-   the [Keep a Changelog] convention.  In particular:
-   - Add a new, second-level section of the following form:
-
-      ```plain
-      ## [VERSION] - YYYY-MM-DD
-      ```
-
-      where:
-      - `VERSION` is the value of `version` specified in `algorithm_config.yaml`
-      - `YYYY-MM-DD` is the date that you expect to create the release (see the
-        following steps), which may or may not be the current date, depending
-        upon when you expect your PR (next step) to be approved and merged.
-   - Add appropriate third-level sections under the new version section (for
-     additions, changes, and fixes).  Again, see [Keep a Changelog].
+1. Add appropriate entries to the [Changelog](./CHANGELOG.md), according to the
+   [Keep a Changelog] convention.  See existing sections in the Changelog for
+   guidance on structure and format.  In general, you should add entries under
+   the `Unreleased` section at the top.  A release manager will relable the
+   `Unreleased` section to the appropriate release number upon the next release.
 1. Submit a PR to the GitHub repository.
 1. _Only when_ the PR is on a branch to be merged into the `main` branch _and_
    it has been approved and merged, create a new release in GitHub as follows:
@@ -181,8 +225,8 @@ algorithm registration, or worse, during algorithm execution.
    1. In the **Release title** input, also enter the _same_ value as the new
       value of `version` in `algorithm_config.yml`.
    1. In the description text box, copy and paste from the Changelog file only
-      the _new version section_ you added earlier to the Changelog, including
-      the new version heading.
+      the _new version section_ you added earlier to the Changelog,
+      **excluding** the new version heading.
    1. Click the **Publish release** button.
 
 ## Registering an Algorithm Release

@@ -153,6 +153,25 @@ To run a GEDI subsetting DPS job, you must supply the following inputs.
 
   _New in version 0.6.0_
 
+- `scalene_args` (_optional_): Arguments to pass to [Scalene] for performance
+  profiling.  If you do not want to profile performance of the algorithm, do
+  not specify a value for this input.
+
+  Otherwise, when this input is supplied, the algorithm will be run via the
+  `scalene` command, and the value of this input will be passed as arguments to
+  the command.  For a list of the available command-line options, see
+  <https://github.com/plasma-umass/scalene?tab=readme-ov-file#scalene>.
+
+  For first-time users of `scalene`, the recommended value for this input is
+  `--reduced-profile`.  Note that since no browser is available in DPS, when any
+  value is supplied for this input, the `--no-browser` option will be included
+  automatically, which will produce HTML output to a file named `profile.html`,
+  if you do not specify a different name via the `--outfile` option.  The
+  profiling output file will appear in the same directory as the algorithm
+  output file.
+
+  _New in version 0.6.3_
+
 ### Specifying an AOI
 
 If your AOI is a publicly available geoBoundary, see
@@ -448,3 +467,5 @@ administrative boundaries.  PLoS ONE 15(4): e0231866.
   https://www.geoboundaries.org
 [geoBoundaries API]:
   https://www.geoboundaries.org/api.html
+[Scalene]:
+  https://github.com/plasma-umass/scalene

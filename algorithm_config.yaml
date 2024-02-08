@@ -29,3 +29,5 @@ inputs:
     download: False
   - name: output
     download: False
+  - name: scalene_args
+    download: False

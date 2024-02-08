@@ -80,6 +80,9 @@ Would you like to install conda-lock into your conda base environment? [y/N] " y
         case "${yn}" in
         [Yy]*)
             conda_base_deps+=("${conda_lock_dep}")
+            echo
+            echo "Installing conda-lock into conda base environment."
+            echo
             ;;
         *)
             exit 0
@@ -88,10 +91,17 @@ Would you like to install conda-lock into your conda base environment? [y/N] " y
     fi
 fi
 
+if [[ ! $(type conda 2>/dev/null) ]]; then
+    echo "ERROR: conda was not found.  Make sure conda is installed.  If conda is" >&2
+    echo "installed, this may be due to conda's base environment being shadowed by" >&2
+    echo "some other active environment.  Run 'conda activate base' and try again." >&2
+    exit 1
+fi
+
 set -x
 
 # Install conda 'base' environment dependencies.
-# conda install --yes --solver libmamba --name base --channel conda-forge "${conda_base_deps[@]}"
+conda install --yes --solver libmamba --name base --channel conda-forge "${conda_base_deps[@]}"
 
 # Install dependencies from the conda lock file for speed and reproducibility.
 # Since there is at least one package (maap-py) that is not available on conda,

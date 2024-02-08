@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
 
-set -xeuo pipefail
+set -euo pipefail
 
 # Apply dirname twice to get to the top of the repo, since this script is in the
 # `bin` directory (i.e., first dirname gets to `bin`, second gets to the top).
 basedir=$(dirname "$(dirname "$(readlink -f "$0")")")
-conda_env_prefix=$("${basedir}/bin/conda-prefix.sh")
-conda_run=("conda" "run" "--no-capture-output" "--prefix" "${conda_env_prefix}")
+conda_prefix=$("${basedir}/bin/conda-prefix.sh")
+conda_run=("conda" "run" "--no-capture-output" "--prefix" "${conda_prefix}")
 subset_py="${basedir}/src/gedi_subset/subset.py"
 
 if ! test -d "${basedir}/input"; then
     # There is no `input` sub-directory of the current working directory, so
-    # simply pass all arguments through to the Python script.
+    # simply pass all arguments through to the Python script.  This is useful
+    # for testing in a non-DPS environment, where there is no `input` directory
+    # since the DPS system creates the `input` directory and places the AOI file
+    # within it.
     "${conda_run[@]}" "${subset_py}" --verbose "$@"
 else
     # There is an `input` sub-directory of the current working directory, so
@@ -21,21 +24,48 @@ else
     n_actual=${#}
     n_expected=9
 
-    if test ${n_actual} -gt 0 -a ${n_actual} -ne ${n_expected}; then
+    if test ${n_actual} -lt ${n_expected} -o ${n_actual} -gt $((n_expected + 1)); then
         echo "Expected ${n_expected} inputs, but got ${n_actual}:$(printf " '%b'" "$@")" >&2
         exit 1
     fi
 
-    options=()
-    [[ "${1:--}" != "-" ]] && options=("${options[@]}" --doi "${1:--}")
-    [[ "${2:--}" != "-" ]] && options=("${options[@]}" --temporal "${2:--}")
-    [[ "${3:--}" != "-" ]] && options=("${options[@]}" --lat "${3:--}")
-    [[ "${4:--}" != "-" ]] && options=("${options[@]}" --lon "${4:--}")
-    [[ "${5:--}" != "-" ]] && options=("${options[@]}" --beams "${5:--}")
-    [[ "${6:--}" != "-" ]] && options=("${options[@]}" --columns "${6:--}")
-    [[ "${7:--}" != "-" ]] && options=("${options[@]}" --query "${7:--}")
-    [[ "${8:--}" != "-" ]] && options=("${options[@]}" --limit "${8:--}")
-    [[ "${9:--}" != "-" ]] && options=("${options[@]}" --output "${9:--}")
+    inputs=()
 
-    ${subset_py} --verbose --aoi "${aoi}" "${options[@]}"
+    # Workaround for DPS bug where default input values must be quoted in order
+    # for algorithm registration to work.  We strip surrounding quotes from all
+    # arguments, either double or single quotes, if found.
+    while ((${#})); do
+        input=${1}
+
+        if [[ "${input}" =~ \".*\" ]]; then
+            input=${1%\"}     # Strip leading quote
+            input=${input#\"} # Strip trailing quote
+        elif [[ "${input}" =~ \'.*\' ]]; then
+            input=${input%\'} # Strip leading quote
+            input=${input#\'} # Strip trailing quote
+        fi
+
+        inputs+=("${input}")
+        shift
+    done
+
+    args=(--verbose --aoi "${aoi}")
+    args+=(--doi "${inputs[0]}") # doi is required
+    [[ "${inputs[1]}" != "-" ]] && args+=(--temporal "${inputs[1]}")
+    args+=(--lat "${inputs[2]}") # lat is required
+    args+=(--lon "${inputs[3]}") # lon is required
+    [[ "${inputs[4]}" != "-" ]] && args+=(--beams "${inputs[4]}")
+    args+=(--columns "${inputs[5]}") # columns is required
+    [[ "${inputs[6]}" != "-" ]] && args+=(--query "${inputs[6]}")
+    [[ "${inputs[7]}" != "-" ]] && args+=(--limit "${inputs[7]}")
+    [[ "${inputs[8]}" != "-" ]] && args+=(--output "${inputs[8]}")
+
+    if [[ "${inputs[9]:--}" != "-" ]]; then
+        # The last argument is not a hyphen, so we expect it to be arguments to
+        # pass to scalene for profiling our algorithm.
+        IFS=' ' read -ra scalene_args <<<"${inputs[9]}"
+        "${conda_run[@]}" scalene "${scalene_args[@]}" --no-browser "${subset_py}" --- "${args[@]}"
+    else
+        "${conda_run[@]}" "${subset_py}" "${args[@]}"
+    fi
 fi

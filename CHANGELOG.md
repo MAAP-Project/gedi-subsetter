@@ -5,21 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog], and this project adheres to
 [Semantic Versioning].
 
-## [0.6.2] - 2023-12-05
+## Unreleased
+
+### Added
+
+- [#57](https://github.com/MAAP-Project/gedi-subsetter/issues/57) Users may
+  choose to profile their jobs by specifying command-line options for the
+  `scalene` profiling tool. See `docs/MAAP_USAGE.md` for more information.
+
+## 0.6.2
 
 ### Fixed
 
 - Updated to use v3.1.3 of maap-py in environment-maappy.yml. Previous versions
   of maap-py were using the deprecated MAAP Query Service API endpoint.
 
-## [0.6.1] - 2023-09-26
+## 0.6.1
 
 ### Fixed
 
-- [#49](https://github.com/MAAP-Project/gedi-subsetter/issues/49) Remove all
-  API urls that contain ops as they have now been retired (eg. api.ops.maap-project.org).
+- [#49](https://github.com/MAAP-Project/gedi-subsetter/issues/49) Remove all API
+  URLs that contain ops as they have now been retired (e.g.,
+  api.ops.maap-project.org).
 
-## [0.6.0] - 2023-06-02
+## 0.6.0
 
 ### Fixed
 
@@ -42,8 +51,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 ### Changed
 
 - Upgraded Python to version 3.11 to take advantage of the addition of
-  [fine-grained error locations in tracebacks](https://docs.python.org/3/whatsnew/3.11.html#whatsnew311-pep657)
-  to help with debugging errors.
+  [fine-grained error locations in tracebacks] to help with debugging errors.
 - The `beam` column is no longer automatically included in the output file.  If
   you wish to include the `beam` column, you must specify it explicitly in the
   `columns` input.
@@ -57,12 +65,12 @@ The format is based on [Keep a Changelog], and this project adheres to
 - [#38](https://github.com/MAAP-Project/gedi-subsetter/issues/38): Temporal
   filtering is now supported, such that specifying a temporal range will
   limit the granules downloaded from the CMR, pulling only granules obtained
-  within the specified range.  See [README.md] for more information.
+  within the specified range.  See `docs/MAAP_USAGE.md` for more information.
 - Added an input parameter named `output` to allow user to specify the name of
   the output file, rather than hard-code the name to `gedi-subset.gpkg`.  See
-  [README.md] for more information.
+  `docs/MAAP_USAGE.md` for more information.
 
-## [0.5.0] - 2023-04-11
+## 0.5.0
 
 ### Changed
 
@@ -71,14 +79,14 @@ The format is based on [Keep a Changelog], and this project adheres to
   wish to query the MAAP CMR until it is taken down, you may still use an
   earlier version of this algorithm (ideally, 0.4.0).
 
-## [0.4.0] - 2022-11-14
+## 0.4.0
 
 ### Added
 
 - [#6](https://github.com/MAAP-Project/gedi-subsetter/issues/6): Allow user to
   specify which BEAMs to subset
 
-## [0.3.0] - 2022-10-31
+## 0.3.0
 
 ### Fixed
 
@@ -102,7 +110,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 - [#8](https://github.com/MAAP-Project/gedi-subsetter/issues/8): Specifying a
   query is now optional, to allow selecting all rows for specified columns.
 
-## [0.2.7] - 2022-10-18
+## 0.2.7
 
 ### Added
 
@@ -110,11 +118,11 @@ The format is based on [Keep a Changelog], and this project adheres to
   [MAAP-Project/maap-documentation-examples] repository.  This `0.2.7` version
   replicates the `gedi-subset-0.2.7` version released from that repository.
 
+[fine-grained error locations in tracebacks]:
+  https://docs.python.org/3/whatsnew/3.11.html#whatsnew311-pep657
 [Keep a Changelog]:
     https://keepachangelog.com/en/1.0.0/
 [Semantic Versioning]:
     https://semver.org/spec/v2.0.0.html
 [MAAP-Project/maap-documentation-examples]:
     https://github.com/MAAP-Project/maap-documentation-examples
-[README.md]:
-    README.md
