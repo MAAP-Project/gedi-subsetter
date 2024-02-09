@@ -1,39 +1,52 @@
 #!/usr/bin/env bash
 
-yaml_file=${1:-algorithm_config.yaml}
-tag=$(git tag --points-at HEAD)
-branch=$(git rev-parse --abbrev-ref HEAD)
-name=$(grep "^algorithm_name:" "${yaml_file}" | sed -E 's/algorithm_name: ([^[:space:]]+).*/\1/')
-version=$(grep "^algorithm_version:" "${yaml_file}" | sed -E 's/algorithm_version: ([^[:space:]]+).*/\1/')
-
 function stderr() {
     echo >&2 "${1}"
 }
 
-if [[ "${branch}" != "main" ]]; then
-    version=${branch//\//-}
-elif [[ -z "${tag}" ]]; then
-    stderr "ERROR: You're on the main branch, but there's no tag for the current commit."
-    stderr "Please follow the instructions for creating a new release in CONTRIBUTING.md."
-    exit 1
-elif [[ "${tag}" != "${version}" ]]; then
-    stderr "ERROR: The tag for the current commit is '${tag}', but the version in algorithm_config.yaml is '${version}'."
-    stderr "Please follow the instructions for creating a new release in CONTRIBUTING.md."
-    exit 1
+yes=
+
+while ((${#})); do
+    case "${1}" in
+    -y | --yes)
+        yes=1
+        ;;
+    *)
+        stderr "ERROR: unrecognized argument: ${1}"
+        exit 1
+        ;;
+    esac
+    shift
+done
+
+# Obtain the algorithm name and version from the algorithm_config.yaml file, but
+# use the current branch name as the version if the current branch is not `main`.
+
+yaml_file=${1:-algorithm_config.yaml}
+branch=$(git rev-parse --abbrev-ref HEAD)
+algorithm_name=$(grep "^algorithm_name:" "${yaml_file}" | sed -E 's/algorithm_name: ([^[:space:]]+).*/\1/')
+algorithm_version=$(grep "^algorithm_version:" "${yaml_file}" | sed -E 's/algorithm_version: ([^[:space:]]+).*/\1/')
+[[ "${branch}" != "main" ]] && algorithm_version=${branch}
+algorithm_id="${algorithm_name}:${algorithm_version}"
+
+if [[ -z "${yes}" ]]; then
+    read -rp "Are you sure you want to delete algorithm '${algorithm_id}'? [yes/NO] "
+
+    if [[ ! "${REPLY}" =~ ^[Yy][Ee][Ss]$ ]]; then
+        stderr "Aborted."
+        exit 1
+    fi
 fi
 
-# TODO: add confirmation prompt!
-
-algorithm_id="${name}:${version}"
 stderr "Deleting algorithm '${algorithm_id}'..."
 
 # Apply dirname twice to get to the top of the repo, since this script is in the
 # `bin` directory (i.e., first dirname gets to `bin`, second gets to the top).
 basedir=$(dirname "$(dirname "$(readlink -f "$0")")")
-conda_prefix=$("${basedir}/bin/conda-prefix.sh")
-conda_run=("conda" "run" "--no-capture-output" "--prefix" "${conda_prefix}")
 
-"${conda_run[@]}" python -c "
+conda_prefix=$("${basedir}/bin/conda-prefix.sh")
+
+conda run --no-capture-output --prefix "${conda_prefix}" python -c "
 import json
 import sys
 import tempfile

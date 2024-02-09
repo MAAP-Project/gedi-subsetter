@@ -2,39 +2,24 @@
 
 set -euo pipefail
 
-set -x
-
 # Apply dirname twice to get to the top of the repo, since this script is in the
 # `bin` directory (i.e., first dirname gets to `bin`, second gets to the top).
 base_dir=$(dirname "$(dirname "$(readlink -f "$0")")")
-input_dir="${base_dir}/input"
-conda_prefix=$("${base_dir}/bin/conda-prefix.sh")
-conda_run=("conda" "run" "--no-capture-output" "--prefix" "${conda_prefix}")
+
+input_dir="${PWD}/input"
 subset_py="${base_dir}/src/gedi_subset/subset.py"
 
-echo "--- listing files in $(dirname "${base_dir}") ---"
-ls -l "$(dirname "${base_dir}")" || true
-echo "--- listing files in ${base_dir} ---"
-ls -l "${base_dir}" || true
-echo "--- listing files in ${base_dir}/bin ---"
-ls -l "${base_dir}/bin" || true
-echo "--- listing files in ${input_dir} ---"
-ls -l "${input_dir}" || true
-echo "---"
-
 if ! test -d "${input_dir}"; then
-    echo "No input directory found, assuming local development environment: ${input_dir}" >&2
     # There is no `input` sub-directory of the current working directory, so
     # simply pass all arguments through to the Python script.  This is useful
     # for testing in a non-DPS environment, where there is no `input` directory
     # since the DPS system creates the `input` directory and places the AOI file
     # within it.
-    set -x
-    "${conda_run[@]}" "${subset_py}" --verbose "$@"
+    command=("${subset_py}" --verbose "$@")
 else
     # There is an `input` sub-directory of the current working directory, so
     # assume the AOI file is the sole file within the `input` sub-directory.
-    aoi="$(ls input/*)"
+    aoi="$(ls "${input_dir}"/*)"
 
     n_actual=${#}
     n_expected=9
@@ -44,45 +29,28 @@ else
         exit 1
     fi
 
-    inputs=()
-
-    # Workaround for DPS bug where default input values must be quoted in order
-    # for algorithm registration to work.  We strip surrounding quotes from all
-    # arguments, either double or single quotes, if found.
-    while ((${#})); do
-        input=${1}
-
-        # if [[ "${input}" =~ \".*\" ]]; then
-        #     input=${1%\"}     # Strip leading quote
-        #     input=${input#\"} # Strip trailing quote
-        # elif [[ "${input}" =~ \'.*\' ]]; then
-        #     input=${input%\'} # Strip leading quote
-        #     input=${input#\'} # Strip trailing quote
-        # fi
-
-        inputs+=("${input}")
-        shift
-    done
-
     args=(--verbose --aoi "${aoi}")
-    args+=(--doi "${inputs[0]}") # doi is required
-    [[ "${inputs[1]}" != "-" ]] && args+=(--temporal "${inputs[1]}")
-    args+=(--lat "${inputs[2]}") # lat is required
-    args+=(--lon "${inputs[3]}") # lon is required
-    [[ "${inputs[4]}" != "-" ]] && args+=(--beams "${inputs[4]}")
-    args+=(--columns "${inputs[5]}") # columns is required
-    [[ "${inputs[6]}" != "-" ]] && args+=(--query "${inputs[6]}")
-    [[ "${inputs[7]}" != "-" ]] && args+=(--limit "${inputs[7]}")
-    [[ "${inputs[8]}" != "-" ]] && args+=(--output "${inputs[8]}")
+    args+=(--doi "${1}") # doi is required
+    [[ "${2}" != "-" ]] && args+=(--temporal "${2}")
+    args+=(--lat "${3}") # lat is required
+    args+=(--lon "${4}") # lon is required
+    [[ "${5}" != "-" ]] && args+=(--beams "${5}")
+    args+=(--columns "${6}") # columns is required
+    [[ "${7}" != "-" ]] && args+=(--query "${7}")
+    [[ "${8}" != "-" ]] && args+=(--limit "${8}")
+    [[ "${9}" != "-" ]] && args+=(--output "${9}")
 
-    if [[ "${inputs[9]:--}" != "-" ]]; then
-        # The last argument is not a hyphen, so we expect it to be arguments to
-        # pass to scalene for profiling our algorithm.
-        IFS=' ' read -ra scalene_args <<<"${inputs[9]}"
-        set -x
-        "${conda_run[@]}" scalene "${scalene_args[@]}" --no-browser "${subset_py}" --- "${args[@]}"
+    # If the last argument is not a hyphen, we expect it to be arguments to pass
+    # to scalene for profiling our algorithm.
+    if [[ "${10:--}" != "-" ]]; then
+        # Split the 10th argument into an array of arguments to pass to scalene.
+        IFS=' ' read -ra scalene_args <<<"${10}"
+        command=(scalene "${scalene_args[@]}" --no-browser "${subset_py}" --- "${args[@]}")
     else
-        set -x
-        "${conda_run[@]}" "${subset_py}" "${args[@]}"
+        command=("${subset_py}" "${args[@]}")
     fi
 fi
+
+set -x
+conda_prefix=$("${base_dir}/bin/conda-prefix.sh")
+conda run --no-capture-output --prefix "${conda_prefix}" "${command[@]}"
