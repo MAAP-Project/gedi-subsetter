@@ -5,8 +5,9 @@
   - [Activate the conda environment](#activate-the-conda-environment)
   - [Install Git pre-commit hooks](#install-git-pre-commit-hooks)
 - [Managing Dependencies](#managing-dependencies)
-- [Creating an Algorithm Release](#creating-an-algorithm-release)
-- [Registering an Algorithm Release](#registering-an-algorithm-release)
+- [Development Process](#development-process)
+- [Registering a Version of the Algorithm](#registering-a-version-of-the-algorithm)
+- [Creating a Release](#creating-a-release)
 
 ## Development Setup
 
@@ -204,81 +205,116 @@ if not eliminate, possible differences in dependencies that might otherwise
 allow development and testing to succeed, but later result in a failure in DPS,
 either during algorithm registration, or worse, during algorithm execution.
 
-## Creating an Algorithm Release
+## Development Process
 
-1. Create a new branch based on an appropriate existing branch (typically based
-   on `main`).
+To work on a feature or bug fix, you'll generally want to follow these steps:
+
+1. Create a branch from the `main` branch.
 1. Add your desired code and/or configuration changes.
 1. Add appropriate entries to the [Changelog](./CHANGELOG.md), according to the
    [Keep a Changelog] convention.  See existing sections in the Changelog for
    guidance on structure and format.  In general, you should add entries under
    the `Unreleased` section at the top.  A release manager will relable the
    `Unreleased` section to the appropriate release number upon the next release.
-1. Submit a PR to the GitHub repository.
-1. _Only when_ the PR is on a branch to be merged into the `main` branch _and_
-   it has been approved and merged, create a new release in GitHub as follows:
-   1. Go to <https://github.com/MAAP-Project/gedi-subsetter/releases/new>
-   1. Click the **Choose a tag** dropdown.
-   1. In the input box that appears, enter the _same_ value as the new value of
-      `version` in `algorithm_config.yml`, and click the **Create a new tag**
-      label that appears immediately below the input box.
-   1. In the **Release title** input, also enter the _same_ value as the new
-      value of `version` in `algorithm_config.yml`.
-   1. In the description text box, copy and paste from the Changelog file only
-      the _new version section_ you added earlier to the Changelog,
-      **excluding** the new version heading.
-   1. Click the **Publish release** button.
+1. Register a version of the algorithm (see next section).
+1. Test your registered version, and repeat as necessary.
+1. Once you're satsified with your changes, delete your registered version.
+1. Submit a PR to the GitHub repository, targeting the `main` branch.
 
-## Registering an Algorithm Release
+## Registering a Version of the Algorithm
 
-Once a release is published in the GitHub repository (see above), the algorithm
-must be registered in the ADE.  To do so, follow these steps:
+To register a new version of the algorithm, simply run the following,
+where `YAML_FILE` is optional, and defaults to `algorithm_config.yaml`:
 
-1. Within an ADE workspace, open a **New Launcher** tab and underneath the
-   **MAAP Extensions** section, select **Register Algorithm**.
-1. On the main registration page:
-   1. Under Repository Information:
-      - Enter the **Repository URL** as
-         `https://github.com/MAAP-Project/gedi-subsetter.git`.
-      - Enter the **Repository Branch** as the name of the release tag (e.g.,
-        `1.0.0`).
-      - Enter the **Run Command** as `gedi-subsetter/bin/subset.sh`.
-      - Enter the **Build Command** as `gedi-subsetter/bin/build-dps.sh`.
-   1. Under General Information:
-      - Enter the **Algorithm Name** as `gedi-subset`.
-      - Enter the **Algorithm Description** as
-        `Subset GEDI L1B, L2A, L2B, or L4A granules within an area of interest (AOI)`.
-      - Enter the **Disk Space** as `20`.
-      - Enter the **Resource Allocation** as `maap-dps-worker-32gb`.
-      - Enter the **Container URL** as
-        `mas.maap-project.org/root/maap-workspaces/base_images/vanilla:v3.1.4`.
-   1. Under Input Types, add the following Name, Description pairs:
-      1. For File Inputs:
-         - `aoi`: Area of Interest GeoJSON file
-      1. For Positional Inputs:
-         - `doi`: Digital Object Identifier (DOI) of the GEDI collection to
-           subset, or a logical name representing such a DOI
-         - `temporal`: (Default: `-`, which means the full temporal range):
-           Temporal range to subset.
-         - `lat`: Name of the dataset used for latitude.
-         - `lon`: Name of the dataset used for longitude.
-         - `beams`: (Default: `all`): `all`, `coverage`, or `power`, or a
-           comma-separated list of specific beam names, with or without the
-           `BEAM` prefix (e.g., `BEAM0000,BEAM0001` or `0000,0001`).
-         - `columns`: One or more column names, separated by commas, to include
-           in the output file.
-         - `query`: (Default: no query): Query expression for subsetting the
-           rows in the output file.
-         - `limit`: (Default: 1_000): Maximum number of GEDI granule data files
-           to download from the CMR
-         - `output`: Name to use for the output file.
-1. Once finished, click **Register Algorithm**
-1. Check the build job status at
-   <https://repo.maap-project.org/root/register-job-hysds-v4/-/jobs>.  If the
-   job fails, you will need to correct the issue (and likely create a patch
-   release, following the release steps again).  Otherwise, you should now be
-   able to open the **Jobs** menu, choose **View & Submit Jobs**, and find the
-   new version of the algorithm in the dropdown list of the **Submit** tab.
+```plain
+bin/register-algorithm.sh [YAML_FILE]
+```
+
+When on the `main` branch (typically only after creating a release of the
+algorithm, as described in the next section), and the current commit (`HEAD`) is
+tagged, the script will check whether or not the value of `algorithm_version` in
+the specified YAML file matches the value of the git tag.  If so, the YAML file
+will be registered as-is.  If not, the script will report the version-tag
+mismatch.  A match is expected when registering from the `main` branch, as
+that's where tagging/releasing should take place.
+
+However, you will likely want to register a version of the algorithm from
+another branch when to test your changes on the branch, before opening a Pull
+Request.  In this case, when registering from another branch, the script ignores
+the value of `algorithm_version` in the YAML file, and the script will instead
+use the name of the current branch as the algorithm version during registration
+(the YAML file is _not_ modified).
+
+Once such an unreleased version is registered, you may submit jobs against it to
+test it.  Once you're satisified that your unreleased version of the algorithm
+works properly, you should delete (unregister) it, and create a Pull Request
+against the `main` branch.  If you need to make adjustments to your branch, you
+can rerun registration to replace your unreleased version of the algorithm as
+often as necessary until you're satisfied.
+
+Upon successful registration, you should see output similar to the following
+(abridged):
+
+```plain
+{
+  "code": 200,
+  "message": {
+    "id": "...",
+    ...,
+    "title": "Registering algorithm: gedi-subset",
+    "message": "Registering algorithm: gedi-subset",
+    ...,
+    "status": "created",
+    ...,
+    "job_web_url": "https://repo.maap-project.org/root/register-job-hysds-v4/-/jobs/XXXXX",
+    "job_log_url": "https://repo.maap-project.org/root/register-job-hysds-v4/-/jobs/XXXXX/raw"
+  }
+}
+```
+
+This indicates that the registration succeeded (code 200), and that the image
+for the algorithm is being built.  To see the progress of the build, open a
+browser to the `"job_web_url"` value shown in your output.  Note that although
+registration succeeded, the image build process may fail, so it is important to
+make sure the build succeeds.  If it does, then the new version of the algorithm
+should be visible in the **Algorithm** list on the form shown in the ADE after
+choosing **Jobs > Submit Jobs** menu item.
+
+If registration fails, or it succeeds, but the image build fails, analyze the
+error message from the failed registration or failed build.  If it does not
+provide the information you need to correct the problem, reach out to the
+platform team for assistance.
+
+## Creating a Release
+
+After one or more Pull Requests have landed on the `main` branch to constitute
+a new release:
+
+1. Checkout the latest changes to the `main` branch.
+1. Create a new branch named `release/VERSION`, where `VERSION` is an
+   appropriate version number, according to [Semantic Versioning].
+1. In `algorithm_config.yaml` change the value of `algorithm_version` to the
+   same value as `VERSION` from the previous step.
+1. In the [Changelog](./CHANGELOG.md), change the `Unreleased` heading to the
+   same value as `VERSION` from the previous step, and then, above the new
+   version heading, add a new `Unreleased` section, for future changes.
+1. Commit the changes, and open a Pull Request to `main`.
+1. Once the PR is approved and merged, go to
+   <https://github.com/MAAP-Project/gedi-subsetter/releases/new>
+1. Click the **Choose a tag** dropdown.
+1. In the input box that appears, enter the _same_ value as the value of
+   `VERSION` from previous steps, and click the **Create a new tag** label that
+   appears immediately below the input box.
+1. In the **Release title** input, also enter the _same_ value as the value of
+   `VERSION` in the previous step.
+1. In the description text box, copy and paste the content of only the _new
+   version section_ you added earlier to the Changelog, **excluding** the new
+   version heading.
+1. Click the **Publish release** button.
+1. Checkout and pull the `main` branch in order to pull down the new tag created
+   by the release process.
+1. Register the new release of the algorithm as described in the previous
+   section.
 
 [compatible release operator]:
    https://peps.python.org/pep-0440/#compatible-release
@@ -288,3 +324,5 @@ must be registered in the ADE.  To do so, follow these steps:
   https://github.com/MAAP-Project/gedi-subsetter.git
 [NASA MAAP]:
   https://maap-project.org/
+[Semantic Versioning]:
+    https://semver.org/spec/v2.0.0.html
