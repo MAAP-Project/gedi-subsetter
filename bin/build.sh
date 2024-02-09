@@ -25,6 +25,8 @@ conda_env=()
 conda_base_deps=("conda~=23.0")
 conda_lock_dep="conda-lock~=2.0"
 conda_lock_args=()
+# conda-lock defaults to --dev when neither --dev nor --no-dev is provided.
+dev=1
 yes=
 
 while ((${#})); do
@@ -35,6 +37,11 @@ while ((${#})); do
         ;;
     -y | --yes)
         yes=1
+        shift
+        ;;
+    --no-dev)
+        dev=
+        conda_lock_args+=("${1}")
         shift
         ;;
     -n | --name)
@@ -64,8 +71,6 @@ done
 if [[ "${#conda_env[@]}" == "0" ]]; then
     conda_env=("--name" "gedi_subset")
 fi
-
-conda_lock_args+=("${conda_env[@]}")
 
 if [[ ! $(type conda-lock 2>/dev/null) ]]; then
     if [[ -n "${yes}" ]]; then
@@ -101,18 +106,33 @@ fi
 set -x
 
 # Install conda 'base' environment dependencies.
-conda install --yes --solver libmamba --name base --channel conda-forge "${conda_base_deps[@]}"
+conda install \
+    --yes \
+    --solver libmamba \
+    --name base \
+    --channel conda-forge "${conda_base_deps[@]}"
 
 # Install dependencies from the conda lock file for speed and reproducibility.
 # Since there is at least one package (maap-py) that is not available on conda,
 # we need to use pip to install it (conda does this for us), so we must set
 # PIP_REQUIRE_VENV=0 to avoid complaints about installing packages outside of a
 # virtual environment.
-PIP_REQUIRE_VENV=0 conda lock install "${conda_lock_args[@]}" "${basedir}/conda-lock.yml"
+PIP_REQUIRE_VENV=0 conda lock install \
+    "${conda_env[@]}" "${conda_lock_args[@]}" "${basedir}/conda-lock.yml"
 
 # pip install gedi-subsetter in editable mode.
-PIP_REQUIRE_VENV=0 conda run --no-capture-output "${conda_env[@]}" \
-    python -m pip install -e "${basedir}" --no-deps
+PIP_REQUIRE_VENV=0 conda run --no-capture-output \
+    "${conda_env[@]}" python -m pip install -e "${basedir}" --no-deps
+
+# If development dependencies were installed, let's also install the conda
+# environment as a Jupyter kernel.
+if [[ -n "${dev}" ]]; then
+    conda run --no-capture-output \
+        "${conda_env[@]}" python -m ipykernel install \
+        --user \
+        --name gedi_subset \
+        --display-name "GEDI Subsetter (Python)"
+fi
 
 # Fail build if finicky mix of fiona and gdal isn't correct, so that we don't
 # have to wait to execute a DPS job to find out.

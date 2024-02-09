@@ -22,10 +22,7 @@ elif [[ "${tag}" != "${version}" ]]; then
     exit 1
 fi
 
-# TODO: add confirmation prompt!
-
 algorithm_id="${name}:${version}"
-stderr "Deleting algorithm '${algorithm_id}'..."
 
 # Apply dirname twice to get to the top of the repo, since this script is in the
 # `bin` directory (i.e., first dirname gets to `bin`, second gets to the top).
@@ -43,10 +40,9 @@ from maap.maap import MAAP
 
 maap = MAAP('api.maap-project.org')
 
-try:
-    r = maap.deleteAlgorithm('${algorithm_id}')
-    print(json.dumps(r.json(), indent=2))
-except Exception as e:
-    print(e, file=sys.stderr)
+if r := maap.describeAlgorithm('${algorithm_id}'):
+    print(r.text)
+else:
+    print(r.text, file=sys.stderr)
     sys.exit(1)
 "
