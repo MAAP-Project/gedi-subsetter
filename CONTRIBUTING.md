@@ -223,34 +223,32 @@ To work on a feature or bug fix, you'll generally want to follow these steps:
 
 ## Registering a Version of the Algorithm
 
-To register a new version of the algorithm, simply run the following,
-where `YAML_FILE` is optional, and defaults to `algorithm_config.yaml`:
+To register a new version of the algorithm, you must do so within the ADE in
+order to obtain automatic authorization.  If you have not been using the ADE for
+development, be sure to clone and/or pull the latest code from the branch from
+which you want to register the algorithm.
+
+Then, simply run the following to register the algorithm described in
+`algorithm_config.yaml`:
 
 ```plain
-bin/register-algorithm.sh [YAML_FILE]
+bin/register-algorithm.sh
 ```
 
 When on the `main` branch (typically only after creating a release of the
 algorithm, as described in the next section), and the current commit (`HEAD`) is
 tagged, the script will check whether or not the value of `algorithm_version` in
-the specified YAML file matches the value of the git tag.  If so, the YAML file
-will be registered as-is.  If not, the script will report the version-tag
-mismatch.  A match is expected when registering from the `main` branch, as
-that's where tagging/releasing should take place.
+the YAML file matches the value of the git tag.  If so, the YAML file will be
+registered as-is.  If not, the script will report the version-tag mismatch.  A
+match is expected when registering from the `main` branch, as that's where
+tagging/releasing should take place.
 
 However, you will likely want to register a version of the algorithm from
-another branch when to test your changes on the branch, before opening a Pull
+another branch when test your changes on the branch, before opening a Pull
 Request.  In this case, when registering from another branch, the script ignores
 the value of `algorithm_version` in the YAML file, and the script will instead
 use the name of the current branch as the algorithm version during registration
 (the YAML file is _not_ modified).
-
-Once such an unreleased version is registered, you may submit jobs against it to
-test it.  Once you're satisified that your unreleased version of the algorithm
-works properly, you should delete (unregister) it, and create a Pull Request
-against the `main` branch.  If you need to make adjustments to your branch, you
-can rerun registration to replace your unreleased version of the algorithm as
-often as necessary until you're satisfied.
 
 Upon successful registration, you should see output similar to the following
 (abridged):
@@ -284,6 +282,20 @@ If registration fails, or it succeeds, but the image build fails, analyze the
 error message from the failed registration or failed build.  If it does not
 provide the information you need to correct the problem, reach out to the
 platform team for assistance.
+
+Once the registration build succeeds, you may submit jobs against the algorithm.
+
+For unreleased versions, once you're satisified that your unreleased version of
+the algorithm works properly, you should delete it as follows:
+
+```bash
+bin/delete-algorithm.sh
+```
+
+Then create a Pull Request against the `main` branch.  If you need to make
+adjustments to your branch, you can rerun registration to replace your
+unreleased version of the algorithm as often as necessary until you're
+satisfied.
 
 ## Creating a Release
 

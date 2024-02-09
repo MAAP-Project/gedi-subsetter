@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+set -x
+
 # Apply dirname twice to get to the top of the repo, since this script is in the
 # `bin` directory (i.e., first dirname gets to `bin`, second gets to the top).
 base_dir=$(dirname "$(dirname "$(readlink -f "$0")")")
