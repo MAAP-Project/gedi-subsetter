@@ -4,13 +4,18 @@ set -euo pipefail
 
 # Apply dirname twice to get to the top of the repo, since this script is in the
 # `bin` directory (i.e., first dirname gets to `bin`, second gets to the top).
-basedir=$(dirname "$(dirname "$(readlink -f "$0")")")
-conda_prefix=$("${basedir}/bin/conda-prefix.sh")
+base_dir=$(dirname "$(dirname "$(readlink -f "$0")")")
+input_dir="${base_dir}/input"
+conda_prefix=$("${base_dir}/bin/conda-prefix.sh")
 conda_run=("conda" "run" "--no-capture-output" "--prefix" "${conda_prefix}")
-subset_py="${basedir}/src/gedi_subset/subset.py"
+subset_py="${base_dir}/src/gedi_subset/subset.py"
 
-if ! test -d "${basedir}/bin/input"; then
-    echo "No input directory found, assuming local development environment: ${basedir}/input" >&2
+echo "--- listing files in ${base_dir} ---"
+ls "${base_dir}/*"
+echo "---"
+
+if ! test -d "${input_dir}"; then
+    echo "No input directory found, assuming local development environment: ${input_dir}" >&2
     # There is no `input` sub-directory of the current working directory, so
     # simply pass all arguments through to the Python script.  This is useful
     # for testing in a non-DPS environment, where there is no `input` directory
