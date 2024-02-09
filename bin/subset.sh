@@ -10,8 +10,14 @@ conda_prefix=$("${base_dir}/bin/conda-prefix.sh")
 conda_run=("conda" "run" "--no-capture-output" "--prefix" "${conda_prefix}")
 subset_py="${base_dir}/src/gedi_subset/subset.py"
 
+echo "--- listing files in $(dirname "${base_dir}") ---"
+ls -l "$(dirname "${base_dir}")" || true
 echo "--- listing files in ${base_dir} ---"
-ls "${base_dir}/*"
+ls -l "${base_dir}" || true
+echo "--- listing files in ${base_dir}/bin ---"
+ls -l "${base_dir}/bin" || true
+echo "--- listing files in ${input_dir} ---"
+ls -l "${input_dir}" || true
 echo "---"
 
 if ! test -d "${input_dir}"; then
