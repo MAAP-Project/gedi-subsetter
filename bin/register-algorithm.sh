@@ -34,7 +34,7 @@ basedir=$(dirname "$(dirname "$(readlink -f "$0")")")
 algorithm_id="${algorithm_name}:${algorithm_version}"
 stderr "Registering algorithm '${algorithm_id}' (${yaml_file})..."
 
-if [[ $("${basedir}/bin/describe-algorithm.sh" 2>&1 >/dev/null) ]]; then
+if [[ $("${basedir}/bin/describe-algorithm.sh" >/dev/null 2>&1) ]]; then
     stderr ""
     stderr "ERROR: Algorithm '${algorithm_id}' already exists."
     stderr ""
