@@ -9,12 +9,14 @@ conda_prefix=$("${basedir}/bin/conda-prefix.sh")
 conda_run=("conda" "run" "--no-capture-output" "--prefix" "${conda_prefix}")
 subset_py="${basedir}/src/gedi_subset/subset.py"
 
-if ! test -d "${basedir}/input"; then
+if ! test -d "${basedir}/bin/input"; then
+    echo "No input directory found, assuming local development environment: ${basedir}/input" >&2
     # There is no `input` sub-directory of the current working directory, so
     # simply pass all arguments through to the Python script.  This is useful
     # for testing in a non-DPS environment, where there is no `input` directory
     # since the DPS system creates the `input` directory and places the AOI file
     # within it.
+    set -x
     "${conda_run[@]}" "${subset_py}" --verbose "$@"
 else
     # There is an `input` sub-directory of the current working directory, so
@@ -37,13 +39,13 @@ else
     while ((${#})); do
         input=${1}
 
-        if [[ "${input}" =~ \".*\" ]]; then
-            input=${1%\"}     # Strip leading quote
-            input=${input#\"} # Strip trailing quote
-        elif [[ "${input}" =~ \'.*\' ]]; then
-            input=${input%\'} # Strip leading quote
-            input=${input#\'} # Strip trailing quote
-        fi
+        # if [[ "${input}" =~ \".*\" ]]; then
+        #     input=${1%\"}     # Strip leading quote
+        #     input=${input#\"} # Strip trailing quote
+        # elif [[ "${input}" =~ \'.*\' ]]; then
+        #     input=${input%\'} # Strip leading quote
+        #     input=${input#\'} # Strip trailing quote
+        # fi
 
         inputs+=("${input}")
         shift
@@ -64,8 +66,10 @@ else
         # The last argument is not a hyphen, so we expect it to be arguments to
         # pass to scalene for profiling our algorithm.
         IFS=' ' read -ra scalene_args <<<"${inputs[9]}"
+        set -x
         "${conda_run[@]}" scalene "${scalene_args[@]}" --no-browser "${subset_py}" --- "${args[@]}"
     else
+        set -x
         "${conda_run[@]}" "${subset_py}" "${args[@]}"
     fi
 fi
