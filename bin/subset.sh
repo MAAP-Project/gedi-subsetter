@@ -54,7 +54,8 @@ else
         command=(
             scalene \
             "${scalene_args[@]}" \
-            --web \
+            --column-width 165 \
+            --html \
             --no-browser \
             --outfile "${output_dir}"/profile.html \
             "${subset_py}" --- "${args[@]}"
