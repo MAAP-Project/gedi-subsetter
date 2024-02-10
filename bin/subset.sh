@@ -32,18 +32,18 @@ else
 
     args=(--verbose --aoi "${aoi}")
     args+=(--doi "${1}") # doi is required
-    [[ "${2}" != "-" ]] && args+=(--temporal "${2}")
-    args+=(--lat "${3}") # lat is required
-    args+=(--lon "${4}") # lon is required
-    [[ "${5}" != "-" ]] && args+=(--beams "${5}")
-    args+=(--columns "${6}") # columns is required
-    [[ "${7}" != "-" ]] && args+=(--query "${7}")
-    [[ "${8}" != "-" ]] && args+=(--limit "${8}")
-    [[ "${9}" != "-" ]] && args+=(--output "${9}")
+    args+=(--lat "${2}") # lat is required
+    args+=(--lon "${3}") # lon is required
+    args+=(--columns "${4}") # columns is required
+    [[ -n "${5}" ]] && args+=(--query "${5}")
+    [[ -n "${6}" ]] && args+=(--temporal "${6}")
+    [[ -n "${7}" ]] && args+=(--beams "${7}")
+    [[ -n "${8}" ]] && args+=(--limit "${8}")
+    [[ -n "${9}" ]] && args+=(--output "${9}")
 
     # If the last argument is not a hyphen, we expect it to be arguments to pass
     # to scalene for profiling our algorithm.
-    if [[ "${10:--}" == "-" ]]; then
+    if [[ -z "${10}" ]]; then
         command=("${subset_py}" "${args[@]}")
     else
         # Split the 10th argument into an array of arguments to pass to scalene.
