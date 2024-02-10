@@ -46,20 +46,14 @@ basedir=$(dirname "$(dirname "$(readlink -f "$0")")")
 
 conda_prefix=$("${basedir}/bin/conda-prefix.sh")
 
-conda run --no-capture-output --prefix "${conda_prefix}" python -c "
-import json
-import sys
-import tempfile
-
-import yaml
+message=$(conda run --no-capture-output --prefix "${conda_prefix}" python -c "
 from maap.maap import MAAP
 
 maap = MAAP('api.maap-project.org')
 
-try:
-    r = maap.deleteAlgorithm('${algorithm_id}')
-    print(json.dumps(r.json(), indent=2))
-except Exception as e:
-    print(e, file=sys.stderr)
-    sys.exit(1)
-"
+if not (r := maap.deleteAlgorithm('${algorithm_id}')):
+    print(r.json()['message'])
+")
+
+echo "${message}"
+[[ -z "${message}" ]] || exit 1

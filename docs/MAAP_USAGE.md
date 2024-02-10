@@ -165,12 +165,12 @@ To run a GEDI subsetting DPS job, you must supply the following inputs.
   For first-time users of `scalene`, the recommended value for this input is
   `--reduced-profile`.  Note that since no browser is available in DPS, when any
   value is supplied for this input, the `--no-browser` option will be included
-  automatically, which will produce HTML output to a file named `profile.html`,
-  if you do not specify a different name via the `--outfile` option.  The
-  profiling output file will appear in the same directory as the algorithm
-  output file.
+  to prevent Scalene from attempting to open a browser.  However, the `--html`
+  option will also be included, which will produce HTML output to a file named
+  `profile.html`.  The profiling output file will appear in the same directory
+  as the algorithm output file.
 
-  _New in version 0.6.3_
+  _New in version 0.7.0_
 
 ### Specifying an AOI
 

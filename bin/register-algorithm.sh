@@ -54,18 +54,21 @@ fi
 basedir=$(dirname "$(dirname "$(readlink -f "$0")")")
 
 # If the algorithm already exists, delete it first.
-if [[ $("${basedir}/bin/describe-algorithm.sh") ]]; then
+if "${basedir}/bin/describe-algorithm.sh" >/dev/null 2>&1; then
     stderr "Algorithm '${algorithm_id}' already exists, so it must be deleted first."
-    # ${yes} is intentionally unquoted to allow it to be empty.
+    # ${yes} is intentionally unquoted to allow it to be empty.  Otherwise, the
+    # script would receive an empty string as an argument, rather than no argument.
     # shellcheck disable=SC2086
-    "${basedir}/bin/delete-algorithm.sh" ${yes}
-    [[ $? ]] && exit 1
+    if ! message=$("${basedir}/bin/delete-algorithm.sh" ${yes}); then
+        stderr "Failed to delete algorithm '${algorithm_id}': ${message}"
+        exit 1
+    fi
 fi
 
 stderr "Registering algorithm '${algorithm_id}' (${yaml_file})..."
 conda_prefix=$("${basedir}/bin/conda-prefix.sh")
 
-conda run --no-capture-output --prefix "${conda_prefix}" python -c "
+script="
 import json
 import sys
 import tempfile
@@ -86,10 +89,16 @@ with tempfile.NamedTemporaryFile('w+') as f:
     json.dump(algorithm_config, f, indent=2)
     f.seek(0)
 
-    try:
-        r = maap.register_algorithm_from_yaml_file(f.name)
+    if r := maap.register_algorithm_from_yaml_file(f.name):
         print(json.dumps(r.json(), indent=2))
-    except Exception as e:
-        print(e, file=sys.stderr)
+    else:
+        print(r.json()['message'])
         sys.exit(1)
 "
+
+if message=$(conda run --no-capture-output --prefix "${conda_prefix}" python -c "${script}" 2>/dev/null); then
+    echo "${message}"
+else
+    stderr "Failed to register algorithm '${algorithm_id}': ${message}"
+    exit 1
+fi
