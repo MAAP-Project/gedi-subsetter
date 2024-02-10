@@ -7,6 +7,7 @@ set -euo pipefail
 base_dir=$(dirname "$(dirname "$(readlink -f "$0")")")
 
 input_dir="${PWD}/input"
+output_dir="${PWD}/output"
 subset_py="${base_dir}/src/gedi_subset/subset.py"
 
 if ! test -d "${input_dir}"; then
@@ -42,15 +43,25 @@ else
 
     # If the last argument is not a hyphen, we expect it to be arguments to pass
     # to scalene for profiling our algorithm.
-    if [[ "${10:--}" != "-" ]]; then
+    if [[ "${10:--}" == "-" ]]; then
+        command=("${subset_py}" "${args[@]}")
+    else
         # Split the 10th argument into an array of arguments to pass to scalene.
         IFS=' ' read -ra scalene_args <<<"${10}"
-        command=(scalene "${scalene_args[@]}" --no-browser "${subset_py}" --- "${args[@]}")
-    else
-        command=("${subset_py}" "${args[@]}")
+        # Force output to be written to the output directory by adding the
+        # `--outfile` argument after any user-provided arguments.  If the user
+        # provides their own `--outfile` argument, it will be ignored.
+        command=(
+            scalene \
+            "${scalene_args[@]}" \
+            --no-browser \
+            --outfile "${output_dir}"/profile.html \
+            "${subset_py}" --- "${args[@]}"
+        )
     fi
 fi
 
 set -x
+mkdir -p "${output_dir}"
 conda_prefix=$("${base_dir}/bin/conda-prefix.sh")
 conda run --no-capture-output --prefix "${conda_prefix}" "${command[@]}"
