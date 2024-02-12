@@ -158,6 +158,13 @@ To run a GEDI subsetting DPS job, you must supply the following inputs:
   `profile.html`.  The profiling output file will appear in the same directory
   as the algorithm output file.
 
+  Starting with `--reduced-profile` produces a relatively brief report that may
+  aid in more quickly identifying hotspots than a fully profile would.  However,
+  to produce a full profile where you want to use all of Scalene's default
+  values, you must supply _some_ value for this input, so the simplest valid
+  Scalene option is `--on`.  Otherwise, as mentioned above, when no value is
+  supplied for this input, Scalene will not be used at all.
+
   _New in version 0.7.0_
 
 ### Specifying an AOI
