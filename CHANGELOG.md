@@ -13,14 +13,14 @@ The format is based on [Keep a Changelog], and this project adheres to
   choose to profile their jobs by specifying command-line options for the
   `scalene` profiling tool. See `docs/MAAP_USAGE.md` for more information.
 
-## 0.6.2
+## 0.6.2 (2023-12-05)
 
 ### Fixed
 
 - Updated to use v3.1.3 of maap-py in environment-maappy.yml. Previous versions
   of maap-py were using the deprecated MAAP Query Service API endpoint.
 
-## 0.6.1
+## 0.6.1 (2023-09-28)
 
 ### Fixed
 
@@ -28,7 +28,7 @@ The format is based on [Keep a Changelog], and this project adheres to
   URLs that contain ops as they have now been retired (e.g.,
   api.ops.maap-project.org).
 
-## 0.6.0
+## 0.6.0 (2023-06-02)
 
 ### Fixed
 
@@ -70,7 +70,7 @@ The format is based on [Keep a Changelog], and this project adheres to
   the output file, rather than hard-code the name to `gedi-subset.gpkg`.  See
   `docs/MAAP_USAGE.md` for more information.
 
-## 0.5.0
+## 0.5.0 (2023-04-11)
 
 ### Changed
 
@@ -79,14 +79,14 @@ The format is based on [Keep a Changelog], and this project adheres to
   wish to query the MAAP CMR until it is taken down, you may still use an
   earlier version of this algorithm (ideally, 0.4.0).
 
-## 0.4.0
+## 0.4.0 (2022-11-14)
 
 ### Added
 
 - [#6](https://github.com/MAAP-Project/gedi-subsetter/issues/6): Allow user to
   specify which BEAMs to subset
 
-## 0.3.0
+## 0.3.0 (2022-11-10)
 
 ### Fixed
 
@@ -110,7 +110,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 - [#8](https://github.com/MAAP-Project/gedi-subsetter/issues/8): Specifying a
   query is now optional, to allow selecting all rows for specified columns.
 
-## 0.2.7
+## 0.2.7 (2022-10-18)
 
 ### Added
 

@@ -142,28 +142,30 @@ To run a GEDI subsetting DPS job, you must supply the following inputs:
   _New in version 0.6.0_
 
 - `scalene_args` (_optional_): Arguments to pass to [Scalene] for performance
-  profiling.  If you do not want to profile performance of the algorithm, do
-  not specify a value for this input.
+  profiling.  Normal usage should leave this argument blank.
 
-  Otherwise, when this input is supplied, the algorithm will be run via the
-  `scalene` command, and the value of this input will be passed as arguments to
-  the command.  For a list of the available command-line options, see
+  Fill this in if you want to collect performance metrics (i.e.  CPU and RAM
+  usage).  The recommended value for this input is `--reduced-profile` (see
+  below for more advanced usage).  When used, you will find `profile.html` in
+  your algorithm output folder.
+
+  When this input is supplied, the algorithm will be run via the `scalene`
+  command, and the value of this input will be passed as arguments to the
+  command.  For a list of the available command-line options, see
   <https://github.com/plasma-umass/scalene?tab=readme-ov-file#scalene>.
 
-  For first-time users of `scalene`, the recommended value for this input is
-  `--reduced-profile`.  Note that since no browser is available in DPS, when any
-  value is supplied for this input, the `--no-browser` option will be included
-  to prevent Scalene from attempting to open a browser.  However, the `--web`
-  option will also be included, which will produce HTML output to a file named
-  `profile.html`.  The profiling output file will appear in the same directory
-  as the algorithm output file.
-
   Starting with `--reduced-profile` produces a relatively brief report that may
-  aid in more quickly identifying hotspots than a fully profile would.  However,
+  aid in more quickly identifying hotspots than a full profile would.  However,
   to produce a full profile where you want to use all of Scalene's default
   values, you must supply _some_ value for this input, so the simplest valid
   Scalene option is `--on`.  Otherwise, as mentioned above, when no value is
   supplied for this input, Scalene will not be used at all.
+
+  > **Note:** that since no browser is available in DPS, when any value is
+  > supplied for this input, the `--no-browser` option will be included to
+  > prevent Scalene from attempting to open a browser.  However, the `--web`
+  > option will also be included, which will produce HTML output to a file named
+  > `profile.html`.
 
   _New in version 0.7.0_
 

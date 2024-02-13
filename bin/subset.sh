@@ -23,9 +23,9 @@ else
     aoi="$(ls "${input_dir}"/*)"
 
     n_actual=${#}
-    n_expected=9
+    n_expected=10
 
-    if test ${n_actual} -lt ${n_expected} -o ${n_actual} -gt $((n_expected + 1)); then
+    if test ${n_actual} -ne ${n_expected}; then
         echo "Expected ${n_expected} inputs, but got ${n_actual}:$(printf " '%b'" "$@")" >&2
         exit 1
     fi
@@ -40,14 +40,13 @@ else
     [[ -n "${7}" ]] && args+=(--beams "${7}")
     [[ -n "${8}" ]] && args+=(--limit "${8}")
     [[ -n "${9}" ]] && args+=(--output "${9}")
+    # Split the 10th argument into an array of arguments to pass to scalene.
+    IFS=' ' read -ra scalene_args <<<"${10}"
 
-    # If the last argument is not a hyphen, we expect it to be arguments to pass
-    # to scalene for profiling our algorithm.
-    if [[ -z "${10}" ]]; then
+    if [[ ${#scalene_args[@]} -eq 0 ]]; then
+        # There are no scalene arguments, so don't use scalene
         command=("${subset_py}" "${args[@]}")
     else
-        # Split the 10th argument into an array of arguments to pass to scalene.
-        IFS=' ' read -ra scalene_args <<<"${10}"
         # Force output to be written to the output directory by adding the
         # `--outfile` argument after any user-provided arguments.  If the user
         # provides their own `--outfile` argument, it will be ignored.
@@ -58,12 +57,13 @@ else
             --html \
             --no-browser \
             --outfile "${output_dir}"/profile.html \
-            "${subset_py}" --- "${args[@]}"
+            --- \
+            "${subset_py}" "${args[@]}"
         )
     fi
 fi
 
 set -x
 mkdir -p "${output_dir}"
-conda_prefix=$("${base_dir}/bin/conda-prefix.sh")
+conda_prefix=$("${base_dir}/bin/conda-prefix.py")
 conda run --no-capture-output --prefix "${conda_prefix}" "${command[@]}"

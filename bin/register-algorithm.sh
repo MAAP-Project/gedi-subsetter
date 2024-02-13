@@ -1,5 +1,18 @@
 #!/usr/bin/env bash
 
+# Registers the version of the algorithm that is currently checked out.  If the
+# current branch is not `main`, uses the current branch name as the version.
+# Otherwise, uses the version from the `algorithm_config.yaml` file, if and only
+# if the current commit is tagged with that version.
+#
+# If the algorithm already exists, it is first deleted (`delete-algorithm.sh`).
+# Prompts for confirmation before deleting the algorithm, unless the `-y` or
+# `--yes` option is given:
+#
+#     register-algorithm.sh [-y|--yes]
+
+set -euo pipefail
+
 function stderr() {
     echo 1>&2 "${1}"
 }
@@ -60,13 +73,13 @@ if "${basedir}/bin/describe-algorithm.sh" >/dev/null 2>&1; then
     # script would receive an empty string as an argument, rather than no argument.
     # shellcheck disable=SC2086
     if ! message=$("${basedir}/bin/delete-algorithm.sh" ${yes}); then
-        stderr "Failed to delete algorithm '${algorithm_id}': ${message}"
+        [[ -z "${message}" ]] || stderr "Failed to delete algorithm '${algorithm_id}': ${message}"
         exit 1
     fi
 fi
 
 stderr "Registering algorithm '${algorithm_id}' (${yaml_file})..."
-conda_prefix=$("${basedir}/bin/conda-prefix.sh")
+conda_prefix=$("${basedir}/bin/conda-prefix.py")
 
 script="
 import json

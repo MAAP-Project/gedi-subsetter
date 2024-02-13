@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 
+# Deletes the version of the algorithm that is currently checked out.  If the
+# current branch is not `main`, uses the current branch name as the version.
+# Otherwise, uses the version from the `algorithm_config.yaml` file, if and only
+# if the current commit is tagged with that version.
+#
+# Prompts for confirmation before deleting the algorithm, unless the `-y` or
+# `--yes` option is given:
+#
+#     delete-algorithm.sh [-y|--yes]
+
+set -euo pipefail
+
 function stderr() {
     echo >&2 "${1}"
 }
@@ -44,7 +56,7 @@ stderr "Deleting algorithm '${algorithm_id}'..."
 # `bin` directory (i.e., first dirname gets to `bin`, second gets to the top).
 basedir=$(dirname "$(dirname "$(readlink -f "$0")")")
 
-conda_prefix=$("${basedir}/bin/conda-prefix.sh")
+conda_prefix=$("${basedir}/bin/conda-prefix.py")
 
 message=$(conda run --no-capture-output --prefix "${conda_prefix}" python -c "
 from maap.maap import MAAP

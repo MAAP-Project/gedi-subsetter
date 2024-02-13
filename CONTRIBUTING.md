@@ -51,27 +51,17 @@ script `bin/build.sh`, as instructed below, which is a script that serves
 double-duty as the script that also builds the DPS environment for executing the
 algorithm, by ensuring that all necessary Python packages are installed.
 
-**IMPORTANT:** If you're working in the ADE, the default location for conda
-environments is ephemeral, meaning that whenever your ADE workspace is
-restarted, all of the conda environments in the default location are lost.  This
-requires you to recreate any such conda environments that you wish to use after
-a workspace restart.  To prevent this from occurring, you must provide a
-location that persists across restarts via the `--prefix` option with the
-`bin/build.sh` script, as described below.  _However_, taking this approach
-means that creation of the conda environment may take significantly more time
-(possibly 10s of minutes) because the persistent location is an AWS S3 bucket.
-
-If you're not working in the ADE, or you are, but aren't bothered by having to
-rerun the following command every time you want to use the `gedi_subset` after
-a workspace restart, you may create the conda environment simply as follows:
+You may create the conda environment simply as follows:
 
 ```bash
 bin/build.sh
 ```
 
-_Alternatively_, if you _are_ using the ADE, and you _do_ want the `gedi_subset`
-conda environment to persist across workspace restarts, use the following
-command instead:
+**IMPORTANT:** If you're working in the ADE, to persist your conda environment
+across restarts use the `--prefix` option with the `bin/build.sh` script.  See
+also the [MAAP documentation on custom environments].  _However_, taking this
+approach takes significantly more time (possibly ~20 minutes), but is required
+only once:
 
 ```bash
 bin/build.sh --prefix "${HOME}/envs/gedi_subset"
@@ -303,13 +293,15 @@ After one or more Pull Requests have landed on the `main` branch to constitute
 a new release:
 
 1. Checkout the latest changes to the `main` branch.
-1. Create a new branch named `release/VERSION`, where `VERSION` is an
-   appropriate version number, according to [Semantic Versioning].
+1. Create a new branch named `release-VERSION`, where `VERSION` is an
+   appropriate version number for the changes being made, according to
+   [Semantic Versioning].
 1. In `algorithm_config.yaml` change the value of `algorithm_version` to the
    same value as `VERSION` from the previous step.
-1. In the [Changelog](./CHANGELOG.md), change the `Unreleased` heading to the
-   same value as `VERSION` from the previous step, and then, above the new
-   version heading, add a new `Unreleased` section, for future changes.
+1. In the [Changelog](./CHANGELOG.md), immediately below the `Unreleased`
+   heading add a new heading (at the same level) using the format
+   `VERSION (YYYY-MM-DD)`, where `VERSION` is as above, and `YYYY-MM-DD` is the
+   expected release date.
 1. Commit the changes, and open a Pull Request to `main`.
 1. Once the PR is approved and merged, go to
    <https://github.com/MAAP-Project/gedi-subsetter/releases/new>
@@ -321,7 +313,7 @@ a new release:
    `VERSION` in the previous step.
 1. In the description text box, copy and paste the content of only the _new
    version section_ you added earlier to the Changelog, **excluding** the new
-   version heading.
+   version heading (since it would be redundant with the release title).
 1. Click the **Publish release** button.
 1. Checkout and pull the `main` branch in order to pull down the new tag created
    by the release process.
@@ -329,12 +321,14 @@ a new release:
    section.
 
 [compatible release operator]:
-   https://peps.python.org/pep-0440/#compatible-release
+  https://peps.python.org/pep-0440/#compatible-release
 [Keep a Changelog]:
   https://keepachangelog.com/en/1.0.0/
+[MAAP documentation on custom environments]:
+  https://docs.maap-project.org/en/develop/system_reference_guide/custom-environments.html#Basic-custom-environment
 [MAAP GEDI Subsetter repository]:
   https://github.com/MAAP-Project/gedi-subsetter.git
 [NASA MAAP]:
   https://maap-project.org/
 [Semantic Versioning]:
-    https://semver.org/spec/v2.0.0.html
+  https://semver.org/spec/v2.0.0.html
