@@ -1,31 +1,69 @@
-description: Subset GEDI L1B, L2A, L2B, or L4A granules within an area of interest (AOI)
-algo_name: gedi-subset
-version: 0.6.0
-environment: ubuntu
-repository_url: https://repo.ops.maap-project.org/data-team/gedi-subsetter.git
-docker_url: mas.dit.maap-project.org/root/maap-workspaces/base_images/r:dit
-queue: maap-dps-worker-32gb
-build_command: gedi-subsetter/build.sh
-run_command: gedi-subsetter/subset.sh
+algorithm_description: Subset GEDI L1B, L2A, L2B, or L4A granules within an area of interest (AOI)
+algorithm_name: gedi-subset
+algorithm_version: 0.6.2
+repository_url: https://github.com/MAAP-Project/gedi-subsetter.git
+docker_container_url: mas.maap-project.org/root/maap-workspaces/base_images/vanilla:v3.1.4
 disk_space: 20GB
+queue: maap-dps-worker-32gb
+build_command: gedi-subsetter/bin/build-dps.sh
+run_command: gedi-subsetter/bin/subset.sh
 inputs:
-  - name: aoi
-    download: True
-  - name: doi
-    download: False
-  - name: temporal
-    download: False
-  - name: lat
-    download: False
-  - name: lon
-    download: False
-  - name: beams
-    download: False
-  - name: columns
-    download: False
-  - name: query
-    download: False
-  - name: limit
-    download: False
-  - name: output
-    download: False
+  config: []
+  file:
+    - name: aoi
+      description: URL of a file representing the Area of Interest (e.g., GeoJSON file)
+      required: true
+      default: ""
+  positional:
+    - name: doi
+      description: "Digital Object Identifier (DOI) of the GEDI collection to subset,
+        or one of these logical names: L1B, L2A, L2B, L4A"
+      required: true
+      default: ""
+    - name: lat
+      description: Name of the dataset containing latitude values
+      required: true
+      default: ""
+    - name: lon
+      description: Name of the dataset containing longitude values
+      required: true
+      default: ""
+    - name: columns
+      description: One or more column names, separated by commas, to include in the
+        output file
+      required: true
+      default: ""
+    - name: query
+      description: Boolean query expression for subsetting the rows in the output file.
+        If not provided, all rows are included.  See
+        https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.query.html.
+      required: false
+      default: ""
+    - name: temporal
+      description: Temporal range to subset, formatted as an ISO 8601 Time Interval.
+        For example, 2021-01-01T00:00:00Z/2021-12-31T23:59:59Z.  See
+        https://en.wikipedia.org/wiki/ISO_8601#Time_intervals.  If not provided,
+        the entire temporal range of the GEDI collection is used.
+      required: false
+      default: ""
+    - name: beams
+      description: "Which beams to include: all, coverage, power, or a comma-separated
+        list of specific beam names, with or without the BEAM prefix (e.g.,
+        BEAM0000,BEAM0001 or 0000,0001)"
+      required: false
+      default: all
+    - name: limit
+      description: Maximum number of GEDI granule data files to download from the CMR,
+        regardless of the number of granules within the AOI.
+      required: false
+      default: "1000"
+    - name: output
+      description: Name of the output file produced by the algorithm.  Defaults to
+        using the AOI file name (without the extension) with the suffix "_subset.gpkg".
+      required: false
+      default: ""
+    - name: scalene_args
+      description: Arguments to pass to Scalene for memory and CPU profiling.  If not
+        provided, Scalene will not be used.
+      required: false
+      default: ""

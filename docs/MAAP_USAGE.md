@@ -31,11 +31,7 @@ At a high level, the GEDI subsetting algorithm does the following:
 
 ## Algorithm Inputs
 
-To run a GEDI subsetting DPS job, you must supply the following inputs.
-
-|**IMPORTANT:**|
-|:---|
-| _When **submitting a job via the ADE's user interface**, to indicate that you do not want to specify a particular value for an **optional** input, you must enter a single dash/hyphen (`-`) in the input text box.  This will indicate that you wish to use the default value indicated for that optional input._ When **submitting a job via code, such as in a notebook**, if you wish to use the default value for an optional input, simply exclude the input name and value from the dictionary of inputs.
+To run a GEDI subsetting DPS job, you must supply the following inputs:
 
 - `aoi` (_required_): URL to a GeoJSON file representing your area of interest
   (see [Specifying an AOI](#specifying-an-aoi)).  This may contain multiple
@@ -86,15 +82,6 @@ To run a GEDI subsetting DPS job, you must supply the following inputs.
   quality_flag == 1 and `geolocation/sensitivity_a2` > 0.95
   ```
 
-  Alternatively, "dot" (`.`) notation may be used in place of using slashes.
-  This eliminates the need to use backticks to surround a path.  Note, however,
-  that the **corresponding columns in the output will still contain slashes in
-  their names**:
-
-  ```plain
-  quality_flag == 1 and geolocation.sensitivity_a2 > 0.95
-  ```
-
 - `limit` (_optional_; default: 1_000): Maximum number of GEDI granule data
   files to download from the CMR, among those that intersect the specified AOI's
   bounding box, and fall within the specified temporal range (if supplied).
@@ -104,8 +91,8 @@ To run a GEDI subsetting DPS job, you must supply the following inputs.
   under 1000 granules for downloading, so a larger default value might only lead
   to longer CMR query times.
 
-- `doi` (_required_): [Digital Object Identifier] (DOI) of the GEDI collection to
-  subset, or a logical name representing such a DOI (see
+- `doi` (_required_): [Digital Object Identifier] (DOI) of the GEDI collection
+  to subset, or a logical name representing such a DOI (see
   [Specifying a DOI](#specifying-a-doi))
 
   _New in version 0.3.0_
@@ -118,17 +105,17 @@ To run a GEDI subsetting DPS job, you must supply the following inputs.
 
   _New in version 0.3.0_
 
-- `beams` (_optional_; default: `"all"`): Which beams to include in the subset.
+- `beams` (_optional_; default: `all`): Which beams to include in the subset.
   If supplied, must be one of logical names `all`, `coverage`, or `power`, _OR_
   a comma-separated list of specific beam names, with or without the `BEAM`
   prefix (e.g., `BEAM0000,BEAM0001` or `0000,0001`)
 
   _New in version 0.4.0_
 
-- `temporal` (_optional_; default: full temporal range available): Temporal range
-  to subset.  You may specify either a closed range, with start and end dates,
-  or a half-open range, with either a start date or an end date.  For full
-  details on the valid formats, see the NASA CMR's documentation on
+- `temporal` (_optional_; default: full temporal range available): Temporal
+  range to subset.  You may specify either a closed range, with start and end
+  dates, or a half-open range, with either a start date or an end date.  For
+  full details on the valid formats, see the NASA CMR's documentation on
   [temporal range searches](https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html#temporal-range-searches).
 
   _New in version 0.6.0_
@@ -145,13 +132,42 @@ To run a GEDI subsetting DPS job, you must supply the following inputs.
   Examples showing how the value specified for `output` is mapped to a final
   output file:
 
-  - Unspecified -> `myaoi.gpkg`, where `myaoi.geojson` is the name of the AOI file
+  - Unspecified -> `myaoi.gpkg`, where `myaoi.geojson` is the name of the AOI
+    file
   - `myoutput` -> `myoutput.gpkg`
   - `myoutput.gpkg` -> `myoutput.gpkg`
   - `myoutput.h5` -> `myoutput.gpkg`
   - `mypath/myoutput` -> `mypath/myoutput.gpkg`
 
   _New in version 0.6.0_
+
+- `scalene_args` (_optional_): Arguments to pass to [Scalene] for performance
+  profiling.  Normal usage should leave this argument blank.
+
+  Fill this in if you want to collect performance metrics (i.e.  CPU and RAM
+  usage).  The recommended value for this input is `--reduced-profile` (see
+  below for more advanced usage).  When used, you will find `profile.html` in
+  your algorithm output folder.
+
+  When this input is supplied, the algorithm will be run via the `scalene`
+  command, and the value of this input will be passed as arguments to the
+  command.  For a list of the available command-line options, see
+  <https://github.com/plasma-umass/scalene?tab=readme-ov-file#scalene>.
+
+  Starting with `--reduced-profile` produces a relatively brief report that may
+  aid in more quickly identifying hotspots than a full profile would.  However,
+  to produce a full profile where you want to use all of Scalene's default
+  values, you must supply _some_ value for this input, so the simplest valid
+  Scalene option is `--on`.  Otherwise, as mentioned above, when no value is
+  supplied for this input, Scalene will not be used at all.
+
+  > **Note:** that since no browser is available in DPS, when any value is
+  > supplied for this input, the `--no-browser` option will be included to
+  > prevent Scalene from attempting to open a browser.  However, the `--web`
+  > option will also be included, which will produce HTML output to a file named
+  > `profile.html`.
+
+  _New in version 0.7.0_
 
 ### Specifying an AOI
 
@@ -169,8 +185,8 @@ form within the ADE (where `path/to/aio.geojson` can be any path and filename
 for your AOI):
 
 ```plain
-~/my-public-bucket/path/to/aoi.geojson
-^^^^^^^^^^^^^^^^^^
+/projects/my-public-bucket/path/to/aoi.geojson
+--------------------------
 ```
 
 You would then supply the following URL as the `aoi` input value when running
@@ -178,8 +194,9 @@ this algorithm as a DPS job, where `<USERNAME>` is your ADE username:
 
 ```plain
 https://maap-ops-workspace.s3.amazonaws.com/shared/<USERNAME>/path/to/aoi.geojson
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      Replace "~/my-public-bucket" with this URL prefix
+-------------------------------------------------------------
+  |
+  +-- Replace "/projects/my-public-bucket" with this URL prefix
 ```
 
 ### Specifying a DOI
@@ -448,3 +465,5 @@ administrative boundaries.  PLoS ONE 15(4): e0231866.
   https://www.geoboundaries.org
 [geoBoundaries API]:
   https://www.geoboundaries.org/api.html
+[Scalene]:
+  https://github.com/plasma-umass/scalene
