@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+conda=${CONDA_EXE:-conda}
+
+# Create the gedi_subset conda environment if it doesn't exist.
+if ! "${conda}" env list | grep -q gedi_subset; then
+    # Initialize the environment with conda and conda-lock so we can use
+    # conda-lock to install the dependencies from the lock file.
+    set -x
+    "${conda}" create --name gedi_subset --solver libmamba --yes \
+        conda~=24.0 conda-lock~=2.0
+fi

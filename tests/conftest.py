@@ -23,6 +23,7 @@ class MockMAAP(MAAP):
             "",
             "",
             "https://host/api/members/self/awsAccess/edcCredentials/foo",
+            "",
             {},
         )
 

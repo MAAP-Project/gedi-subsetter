@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Install dependencies from the conda lock file into the gedi_subset conda
+# environment, and then install gedi-subsetter in editable mode.  If development
+# dependencies were installed, also install the conda environment as a Jupyter
+# kernel.
+
+set -euo pipefail
+
+bin=$(dirname "$(readlink -f "$0")")
+
+"${bin}/create"
+"${bin}/install" "$@"

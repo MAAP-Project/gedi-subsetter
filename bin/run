@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+conda=${CONDA_EXE:-conda}
+
+# All arguments are passed to conda run, except --quiet, which is used to
+# suppress printing commands and arguments as they are executed.
+
+quiet=
+conda_run_args=()
+
+while ((${#})); do
+    case "${1}" in
+    --quiet)
+        quiet=1
+        ;;
+    *)
+        conda_run_args+=("${1}")
+        ;;
+    esac
+    shift
+done
+
+if ! "${conda}" env list | grep -q gedi_subset; then
+    echo 1>&2 "Error: The gedi_subset conda environment does not exist.  Run 'make build' to build it."
+    exit 1
+fi
+
+[[ -n "${quiet}" ]] || set -x
+"${conda}" run --live-stream --name gedi_subset "${conda_run_args[@]}"

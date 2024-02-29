@@ -8,7 +8,7 @@
 # Prompts for confirmation before deleting the algorithm, unless the `-y` or
 # `--yes` option is given:
 #
-#     delete-algorithm.sh [-y|--yes]
+#     bin/algo/delete [-y|--yes]
 
 set -euo pipefail
 
@@ -52,13 +52,9 @@ fi
 
 stderr "Deleting algorithm '${algorithm_id}'..."
 
-# Apply dirname twice to get to the top of the repo, since this script is in the
-# `bin` directory (i.e., first dirname gets to `bin`, second gets to the top).
-basedir=$(dirname "$(dirname "$(readlink -f "$0")")")
+bin=$(dirname "$(dirname "$(readlink -f "$0")")")
 
-conda_prefix=$("${basedir}/bin/conda-prefix.py")
-
-message=$(conda run --no-capture-output --prefix "${conda_prefix}" python -c "
+message=$("${bin}/run" --quiet python -c "
 from maap.maap import MAAP
 
 maap = MAAP('api.maap-project.org')
@@ -67,5 +63,4 @@ if not (r := maap.deleteAlgorithm('${algorithm_id}')):
     print(r.json()['message'])
 ")
 
-echo "${message}"
-[[ -z "${message}" ]] || exit 1
+[[ -z "${message}" ]] || (stderr "Error: ${message}" && exit 1)

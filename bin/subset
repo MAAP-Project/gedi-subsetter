@@ -31,9 +31,9 @@ else
     fi
 
     args=(--verbose --aoi "${aoi}")
-    args+=(--doi "${1}") # doi is required
-    args+=(--lat "${2}") # lat is required
-    args+=(--lon "${3}") # lon is required
+    args+=(--doi "${1}")     # doi is required
+    args+=(--lat "${2}")     # lat is required
+    args+=(--lon "${3}")     # lon is required
     args+=(--columns "${4}") # columns is required
     [[ -n "${5}" ]] && args+=(--query "${5}")
     [[ -n "${6}" ]] && args+=(--temporal "${6}")
@@ -43,27 +43,25 @@ else
     # Split the 10th argument into an array of arguments to pass to scalene.
     IFS=' ' read -ra scalene_args <<<"${10}"
 
-    if [[ ${#scalene_args[@]} -eq 0 ]]; then
-        # There are no scalene arguments, so don't use scalene
-        command=("${subset_py}" "${args[@]}")
-    else
+    command=("${subset_py}" "${args[@]}")
+
+    if [[ ${#scalene_args[@]} -ne 0 ]]; then
         # Force output to be written to the output directory by adding the
         # `--outfile` argument after any user-provided arguments.  If the user
         # provides their own `--outfile` argument, it will be ignored.
         command=(
-            scalene \
-            "${scalene_args[@]}" \
-            --column-width 165 \
-            --html \
-            --no-browser \
-            --outfile "${output_dir}"/profile.html \
-            --- \
-            "${subset_py}" "${args[@]}"
+            scalene
+            "${scalene_args[@]}"
+            --column-width 165
+            --html
+            --no-browser
+            --outfile "${output_dir}/profile.html"
+            ---
+            "${command[@]}"
         )
     fi
 fi
 
 set -x
 mkdir -p "${output_dir}"
-conda_prefix=$("${base_dir}/bin/conda-prefix.py")
-conda run --no-capture-output --prefix "${conda_prefix}" "${command[@]}"
+"${CONDA_EXE:-conda}" run --live-stream --name gedi_subset "${command[@]}"

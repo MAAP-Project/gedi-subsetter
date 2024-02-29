@@ -11,6 +11,7 @@ class AWS:
         requester_pays_endpoint: str,
         s3_signed_url_endpoint: str,
         earthdata_s3_credentials_endpoint: str,
+        workspace_bucket_endpoint: str,
         api_header: Mapping[str, str],
     ): ...
     def earthdata_s3_credentials(self, endpoint_uri: str) -> AWSCredentials: ...

@@ -6,6 +6,7 @@ new functions from other functions, for writing more declarative code.
 Since the functions in this module are curried, there's no need to use
 `functools.partial` for partially binding arguments.
 """
+
 import builtins
 from typing import Any, Callable, Iterable, TypeVar, cast
 
