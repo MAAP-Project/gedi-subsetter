@@ -5,11 +5,11 @@
 # Otherwise, uses the version from the `algorithm_config.yaml` file, if and only
 # if the current commit is tagged with that version.
 #
-# If the algorithm already exists, it is first deleted (`delete-algorithm.sh`).
+# If the algorithm already exists, it is first deleted (`bin/algo/delete`).
 # Prompts for confirmation before deleting the algorithm, unless the `-y` or
 # `--yes` option is given:
 #
-#     register-algorithm.sh [-y|--yes]
+#     bin/algo/register [-y|--yes]
 
 set -euo pipefail
 
@@ -62,24 +62,21 @@ if [[ "${branch}" == "main" ]]; then
     fi
 fi
 
-# Apply dirname twice to get to the top of the repo, since this script is in the
-# `bin` directory (i.e., first dirname gets to `bin`, second gets to the top).
-basedir=$(dirname "$(dirname "$(readlink -f "$0")")")
+bin=$(dirname "$(dirname "$(readlink -f "$0")")")
 
 # If the algorithm already exists, delete it first.
-if "${basedir}/bin/describe-algorithm.sh" >/dev/null 2>&1; then
+if "${bin}/algo/describe" >/dev/null 2>&1; then
     stderr "Algorithm '${algorithm_id}' already exists, so it must be deleted first."
     # ${yes} is intentionally unquoted to allow it to be empty.  Otherwise, the
     # script would receive an empty string as an argument, rather than no argument.
     # shellcheck disable=SC2086
-    if ! message=$("${basedir}/bin/delete-algorithm.sh" ${yes}); then
+    if ! message=$("${bin}/algo/delete" ${yes}); then
         [[ -z "${message}" ]] || stderr "Failed to delete algorithm '${algorithm_id}': ${message}"
         exit 1
     fi
 fi
 
 stderr "Registering algorithm '${algorithm_id}' (${yaml_file})..."
-conda_prefix=$("${basedir}/bin/conda-prefix.py")
 
 script="
 import json
@@ -109,9 +106,9 @@ with tempfile.NamedTemporaryFile('w+') as f:
         sys.exit(1)
 "
 
-if message=$(conda run --no-capture-output --prefix "${conda_prefix}" python -c "${script}" 2>/dev/null); then
+if message=$("${bin}/run" python -c "${script}" 2>/dev/null); then
     echo "${message}"
 else
-    stderr "Failed to register algorithm '${algorithm_id}': ${message}"
+    stderr "Error: ${message}"
     exit 1
 fi

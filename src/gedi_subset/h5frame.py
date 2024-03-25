@@ -282,14 +282,12 @@ class H5DataFrame(pd.DataFrame):
         return self if self.parent is None else self.parent.root
 
     @overload
-    def query(self, expr: str, *, inplace: Literal[True], **kwargs: Any) -> None:
-        ...
+    def query(self, expr: str, *, inplace: Literal[True], **kwargs: Any) -> None: ...
 
     @overload
     def query(
         self, expr: str, *, inplace: Literal[False] = ..., **kwargs: Any
-    ) -> H5DataFrame:
-        ...
+    ) -> H5DataFrame: ...
 
     def query(
         self,

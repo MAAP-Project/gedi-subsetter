@@ -26,8 +26,9 @@ def test_subset_granule(maap: MAAP, h5_path: str, aoi_gdf: gpd.GeoDataFrame):
         },
         awsAccessKey="",
         awsAccessSecret="",
-        apiHeader={},
         cmrFileUrl="",
+        apiHeader={},
+        dps=None,
     )
 
     # Since we have used a fixture to generate an h5 file, when subset_granule attempts

@@ -101,12 +101,14 @@ def find_gedi_collection(
     return flow(
         find_collection(maap, cmr_host, params),
         bind_result(
-            lambda c: Success(c)
-            if is_gedi_collection(c)
-            else Failure(
-                ValueError(
-                    f"Collection {c['Collection']['ShortName']} is not a GEDI"
-                    " collection, or does not contain HDF5 data files."
+            lambda c: (
+                Success(c)
+                if is_gedi_collection(c)
+                else Failure(
+                    ValueError(
+                        f"Collection {c['Collection']['ShortName']} is not a GEDI"
+                        " collection, or does not contain HDF5 data files."
+                    )
                 )
             )
         ),
@@ -155,8 +157,7 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
     GeoParquet file.
     """
 
-    io_result = download_granule(props.maap, str(props.output_dir), props.granule)
-    inpath = unsafe_perform_io(io_result.alt(raise_exception).unwrap())
+    inpath = download_granule(props.maap, str(props.output_dir), props.granule)
 
     logger.debug(f"Subsetting {inpath}")
 
@@ -383,9 +384,11 @@ def main(
             fp.filter(granule_intersects(aoi_gdf.unary_union))(granules),
         )
     ).bind_ioresult(
-        lambda subsets: IOSuccess(subsets)
-        if subsets
-        else IOFailure(ValueError(f"No granules intersect the AOI: {aoi}"))
+        lambda subsets: (
+            IOSuccess(subsets)
+            if subsets
+            else IOFailure(ValueError(f"No granules intersect the AOI: {aoi}"))
+        )
     ).map(
         lambda subsets: logger.info(f"Subset {len(subsets)} granule(s) to {dest}")
     ).alt(

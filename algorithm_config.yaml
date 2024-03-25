@@ -5,8 +5,8 @@ repository_url: https://github.com/MAAP-Project/gedi-subsetter.git
 docker_container_url: mas.maap-project.org/root/maap-workspaces/base_images/vanilla:v3.1.4
 disk_space: 20GB
 queue: maap-dps-worker-32gb
-build_command: gedi-subsetter/bin/build-dps.sh
-run_command: gedi-subsetter/bin/subset.sh
+build_command: gedi-subsetter/bin/build-dps
+run_command: gedi-subsetter/bin/subset
 inputs:
   config: []
   file:

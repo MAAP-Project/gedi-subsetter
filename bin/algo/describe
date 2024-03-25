@@ -5,7 +5,7 @@
 # Otherwise, uses the version from the `algorithm_config.yaml` file, if and only
 # if the current commit is tagged with that version:
 #
-#     describe-algorithm.sh
+#     bin/algo/describe
 #
 # Currently, this script only prints the XML response from the MAAP API, which
 # is not very useful.  It would be better to parse the XML and print a more
@@ -28,13 +28,9 @@ algorithm_version=$(grep "^algorithm_version:" "${yaml_file}" | sed -E 's/algori
 [[ "${branch}" != "main" ]] && algorithm_version=${branch}
 algorithm_id="${algorithm_name}:${algorithm_version}"
 
-# Apply dirname twice to get to the top of the repo, since this script is in the
-# `bin` directory (i.e., first dirname gets to `bin`, second gets to the top).
-basedir=$(dirname "$(dirname "$(readlink -f "$0")")")
+bin=$(dirname "$(dirname "$(readlink -f "$0")")")
 
-conda_prefix=$("${basedir}/bin/conda-prefix.py")
-
-conda run --no-capture-output --prefix "${conda_prefix}" python -c "
+"${bin}/run" 2>/dev/null python -c "
 import json
 import sys
 import tempfile

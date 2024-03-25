@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+bin=$(dirname "$(readlink -f "$0")")
+basedir=$(dirname "${bin}")
+
+"${bin}/run" conda lock --mamba \
+    -f "${basedir}/environment.yml" \
+    -f "${basedir}/environment-dev.yml"
