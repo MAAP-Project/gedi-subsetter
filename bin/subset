@@ -64,4 +64,17 @@ fi
 
 set -x
 mkdir -p "${output_dir}"
-"${CONDA_EXE:-conda}" run --live-stream --name gedi_subset "${command[@]}"
+
+# Capture stderr and write to a log file in the current working directory so
+# that if the job fails, the log file is copied to the triage directory (all
+# "${PWD}/*.log" files are copied to the triage directory by the DPS system).
+# Note that we chose to capture stderr rather than configuring Python logging
+# to write directly to a file because it is a tricky feat to coordinate logging
+# from multiple processes into a single file.
+logfile="${PWD}/gedi-subset.log"
+"${CONDA_EXE:-conda}" run --live-stream --name gedi_subset "${command[@]}" 2>"${logfile}"
+
+# If we get here, the command above succeeded (otherwise this script would have
+# exited with a non-zero status).  We can now move the log file to the output
+# directory so that is included in the final output directory for the user.
+mv "${logfile}" "${output_dir}"

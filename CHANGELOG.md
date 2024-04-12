@@ -12,6 +12,14 @@ The format is based on [Keep a Changelog], and this project adheres to
 - [#57](https://github.com/MAAP-Project/gedi-subsetter/issues/57) Users may
   choose to profile their jobs by specifying command-line options for the
   `scalene` profiling tool. See `docs/MAAP_USAGE.md` for more information.
+- [#44](https://github.com/MAAP-Project/gedi-subsetter/issues/44) Granule
+  download failures are now retried up to 10 times to reduce the likelihood that
+  subsetting will fail due to a download failure.
+- [#56](https://github.com/MAAP-Project/gedi-subsetter/issues/56) The
+  `bin/subset` script now captures output to `stderr` and writes it to the log
+  file named `gedi-subset.log`.  When a job succeeds, the log file will appear
+  in the job's output directory.  Otherwise, it will appear in the jobs triage
+  directory.
 
 ## 0.6.2 (2023-12-05)
 
