@@ -1,0 +1,237 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - application/echo10+xml
+      Accept-Encoding:
+      - gzip, deflate, br
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.31.0
+      proxy-ticket:
+      - PGT-1789-PqPwhL62u-GPb7lR3Z-cDVDj-RZj41lCMMgkOdQ-YQXAYj9n2hQQcvrrFNr0Z3b1xUY-93f206e1209e
+      token:
+      - eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiYnNhdG9yaXUiLCJleHAiOjE1NjE1ODY0Nzl9.0Eq92EaiWYQ5jc_wX9lHu_iEOS8xE88FWlvYbOUlD08
+    method: GET
+    uri: https://api.maap-project.org/api/cmr/collections?doi=10.5067%2FGEDI%2FGEDI01_B.002&page_num=1&page_size=20
+  response:
+    body:
+      string: '"<?xml version=\"1.0\" encoding=\"UTF-8\"?><results><hits>2</hits><took>280</took><result
+        concept-id=\"C2142749196-LPCLOUD\" revision-id=\"28\" format=\"application/echo10+xml\"><Collection><ShortName>GEDI01_B</ShortName><VersionId>002</VersionId><InsertTime>2021-03-15T00:00:00.000Z</InsertTime><LastUpdate>2024-04-16T06:03:01.806Z</LastUpdate><LongName>Not
+        provided</LongName><DataSetId>GEDI L1B Geolocated Waveform Data Global Footprint
+        Level V002</DataSetId><Description>The Global Ecosystem Dynamics Investigation
+        (GEDI) mission aims to characterize ecosystem structure and dynamics to enable
+        radically improved quantification and understanding of the Earth\u2019s carbon
+        cycle and biodiversity. The GEDI instrument produces high resolution laser
+        ranging observations of the 3-dimensional structure of the Earth. GEDI is
+        attached to the International Space Station (ISS) and collects data globally
+        between 51.6\u00b0 N and 51.6\u00b0 S latitudes at the highest resolution
+        and densest sampling of any light detection and ranging (lidar) instrument
+        in orbit to date. Each GEDI Version 2 granule encompasses one-fourth of an
+        ISS orbit and includes georeferenced metadata to allow for spatial querying
+        and subsetting.\r\n\r\n\r\nThe GEDI Level 1B Geolocated Waveforms product
+        (GEDI01_B) provides geolocated corrected and smoothed waveforms, geolocation
+        parameters, and geophysical corrections for each laser shot for all eight
+        GEDI beams. GEDI01_B data are created by geolocating the GEDI01_A raw waveform
+        data. The GEDI01_B product is provided in HDF5 format and has a spatial resolution
+        (average footprint) of 25 meters.  \r\n\r\nThe GEDI01_B data product contains
+        85 layers for each of the eight beams including the geolocated corrected and
+        smoothed waveform datasets and parameters and the accompanying ancillary,
+        geolocation, and geophysical correction. Additional information can be found
+        in the GEDI L1B Product Data Dictionary.\r\n\r\nImprovements for Version 2\r\n*
+        Metadata has been updated to include spatial coordinates.\r\n* Granule size
+        has been reduced from one full ISS orbit (~5.8 GB) to four segments per orbit
+        (~1.5 GB).\r\n* Filename has been updated to include segment number and version
+        number.\r\n* Improved Geolocation.\r\n* Added elevation from the SRTM digital
+        elevation model for comparison.\r\n* Modified the method to predict an optimum
+        algorithm setting group per laser shot.\r\n* Added additional land cover datasets
+        related to phenology, urban infrastructure, and water persistence.\r\n* Added
+        selected_mode_flag dataset to root beam group using selected algorithm.\r\n*
+        Removed shots when the laser is not firing.\r\n* Modified file name.</Description><DOI><DOI>10.5067/GEDI/GEDI01_B.002</DOI><Authority>https://doi.org</Authority></DOI><CollectionDataType>SCIENCE_QUALITY</CollectionDataType><RevisionDate>2024-04-11T15:55:00.000Z</RevisionDate><SuggestedUsage>Science
+        Research</SuggestedUsage><ProcessingCenter>NASA/GSFC/GEDI</ProcessingCenter><ProcessingLevelId>1B</ProcessingLevelId><ProcessingLevelDescription>Level
+        1B data are Level 1A data that have been processed to sensor units (not all
+        instruments will have a Level 1B equivalent).</ProcessingLevelDescription><ArchiveCenter>LP
+        DAAC</ArchiveCenter><VersionDescription>Version 2</VersionDescription><CitationForExternalPublication>The
+        DOI landing page provides citations in APA and Chicago.</CitationForExternalPublication><CollectionState>COMPLETE</CollectionState><RestrictionComment>None</RestrictionComment><DataFormat>HDF5</DataFormat><SpatialKeywords><Keyword>GLOBAL
+        LAND</Keyword></SpatialKeywords><Temporal><PrecisionOfSeconds>4</PrecisionOfSeconds><EndsAtPresentFlag>false</EndsAtPresentFlag><RangeDateTime><BeginningDateTime>2019-04-04T00:00:00.000Z</BeginningDateTime><EndingDateTime>2023-03-16T23:59:59.999Z</EndingDateTime></RangeDateTime></Temporal><Contacts><Contact><Role>ARCHIVER</Role><HoursOfService>M-F,
+        8 a.m. to 4 p.m. Central Time</HoursOfService><Instructions>LP DAAC User Services
+        is the point of contact for answering questions concerning data products,
+        data access, and online applications.</Instructions><OrganizationName>LP DAAC</OrganizationName><OrganizationAddresses><Address><StreetAddress>U.S.
+        Geological Survey, Earth Resources Observation and Science (EROS) Center</StreetAddress><City>Sioux
+        Falls</City><StateProvince>South Dakota</StateProvince><PostalCode>57198</PostalCode><Country>United
+        States</Country></Address></OrganizationAddresses><OrganizationPhones><Phone><Number>605-594-6116</Number><Type>Telephone</Type></Phone><Phone><Number>866-573-3222</Number><Type>U.S.
+        toll free</Type></Phone></OrganizationPhones><OrganizationEmails><Email>lpdaac@usgs.gov</Email></OrganizationEmails></Contact><Contact><Role>PROCESSOR</Role><OrganizationName>NASA/GSFC/GEDI</OrganizationName><OrganizationAddresses><Address><StreetAddress>Not
+        provided</StreetAddress><City>Not provided</City><StateProvince>Not provided</StateProvince><PostalCode>Not
+        provided</PostalCode><Country>United States</Country></Address></OrganizationAddresses></Contact><Contact><Role>TECHNICAL
+        CONTACT</Role><ContactPersons><ContactPerson><FirstName>Ralph</FirstName><LastName>Dubayah</LastName><JobPosition>INVESTIGATOR</JobPosition></ContactPerson></ContactPersons></Contact></Contacts><ScienceKeywords><ScienceKeyword><CategoryKeyword>EARTH
+        SCIENCE</CategoryKeyword><TopicKeyword>LAND SURFACE</TopicKeyword><TermKeyword>TOPOGRAPHY</TermKeyword></ScienceKeyword><ScienceKeyword><CategoryKeyword>EARTH
+        SCIENCE</CategoryKeyword><TopicKeyword>BIOSPHERE</TopicKeyword><TermKeyword>VEGETATION</TermKeyword><VariableLevel1Keyword><Value>CANOPY
+        CHARACTERISTICS</Value></VariableLevel1Keyword></ScienceKeyword><ScienceKeyword><CategoryKeyword>EARTH
+        SCIENCE</CategoryKeyword><TopicKeyword>LAND SURFACE</TopicKeyword><TermKeyword>TOPOGRAPHY</TermKeyword><VariableLevel1Keyword><Value>TERRAIN
+        ELEVATION</Value><VariableLevel2Keyword><Value>DIGITAL ELEVATION/TERRAIN MODEL
+        (DEM)</Value></VariableLevel2Keyword></VariableLevel1Keyword></ScienceKeyword><ScienceKeyword><CategoryKeyword>EARTH
+        SCIENCE</CategoryKeyword><TopicKeyword>SPECTRAL/ENGINEERING</TopicKeyword><TermKeyword>LIDAR</TermKeyword></ScienceKeyword><ScienceKeyword><CategoryKeyword>EARTH
+        SCIENCE</CategoryKeyword><TopicKeyword>SPECTRAL/ENGINEERING</TopicKeyword><TermKeyword>LIDAR</TermKeyword><VariableLevel1Keyword><Value>LIDAR
+        WAVEFORM</Value></VariableLevel1Keyword></ScienceKeyword></ScienceKeywords><Platforms><Platform><ShortName>ISS</ShortName><LongName>International
+        Space Station</LongName><Type>Space Stations/Crewed Spacecraft</Type><Instruments><Instrument><ShortName>GEDI</ShortName><LongName>Global
+        Ecosystem Dynamics Investigation</LongName><Sensors><Sensor><ShortName>LIDAR</ShortName><LongName>Light
+        Detection and Ranging</LongName></Sensor></Sensors></Instrument></Instruments></Platform></Platforms><AdditionalAttributes><AdditionalAttribute><Name>identifier_product_doi</Name><DataType>STRING</DataType><Description>Digital
+        object identifier that uniquely identifies this data product</Description><Value>10.5067/GEDI/GEDI01_B.002</Value></AdditionalAttribute><AdditionalAttribute><Name>identifier_product_doi_authority</Name><DataType>STRING</DataType><Description>URL
+        of the digital object identifier resolving authority</Description><Value>https://doi.org</Value></AdditionalAttribute><AdditionalAttribute><Name>Reference_Ground_Track</Name><DataType>INT</DataType><Description>GEDI
+        reference ground track number</Description></AdditionalAttribute><AdditionalAttribute><Name>SEGMENT_NUMBER</Name><DataType>STRING</DataType><Description>The
+        number of the segment located within the orbit</Description></AdditionalAttribute></AdditionalAttributes><Campaigns><Campaign><ShortName>GEDI</ShortName><LongName>Global
+        Ecosystem Dynamics Investigation</LongName></Campaign></Campaigns><SpatialInfo><SpatialCoverageType>HORIZONTAL</SpatialCoverageType><HorizontalCoordinateSystem><GeodeticModel><HorizontalDatumName>World
+        Geodetic System (WGS84)</HorizontalDatumName></GeodeticModel><GeographicCoordinateSystem><GeographicCoordinateUnits>Meters</GeographicCoordinateUnits><LatitudeResolution>25.0</LatitudeResolution><LongitudeResolution>25.0</LongitudeResolution></GeographicCoordinateSystem></HorizontalCoordinateSystem></SpatialInfo><OnlineAccessURLs><OnlineAccessURL><URL>https://search.earthdata.nasa.gov/search?q=C2142749196-LPCLOUD</URL><URLDescription>Earthdata
+        Search allows users to search, discover, visualize, refine, and access NASA
+        Earth Observation data.</URLDescription><MimeType>application/xhdf5</MimeType></OnlineAccessURL><OnlineAccessURL><URL>https://e4ftl01.cr.usgs.gov/GEDI/GEDI01_B.002/</URL><URLDescription>LP
+        DAAC Data Pool provides direct access to available products via HTTPS.</URLDescription><MimeType>application/xhdf5</MimeType></OnlineAccessURL></OnlineAccessURLs><OnlineResources><OnlineResource><URL>https://lpdaac.usgs.gov/</URL><Description>The
+        LP DAAC website provides detailed information on discovery, distribution,
+        access, and support of land data products.</Description><Type>CollectionURL
+        : PROJECT HOME PAGE</Type></OnlineResource><OnlineResource><URL>https://doi.org/10.5067/GEDI/GEDI01_B.002</URL><Description>The
+        product page provides information on Science Data Set layers and links for
+        user guides, ATBDs, data access, tools, customer support, etc. </Description><Type>CollectionURL
+        : DATA SET LANDING PAGE</Type></OnlineResource><OnlineResource><URL>https://lpdaac.usgs.gov/documents/981/gedi_l1b_dictionary_P003_v2.html</URL><Description>The
+        data dictionary provides additional information on the Science Dataset (SDS)
+        layers.</Description><Type>VIEW RELATED INFORMATION : GENERAL DOCUMENTATION</Type></OnlineResource><OnlineResource><URL>https://doi.org/10.5067/DOC/GEDI/GEDI_WF_ATBD.001</URL><Description>The
+        Waveform Processing ATBD provides physical theory and mathematical procedures
+        for the calculations used to produce the data products.</Description><Type>VIEW
+        RELATED INFORMATION : ALGORITHM THEORETICAL BASIS DOCUMENT (ATBD)</Type></OnlineResource><OnlineResource><URL>https://doi.org/10.5067/DOC/GEDI/GEDI_WFGEO_ATBD.001</URL><Description>The
+        Geolocation ATBD provides physical theory and mathematical procedures for
+        the calculations used to produce the data products.</Description><Type>VIEW
+        RELATED INFORMATION : ALGORITHM THEORETICAL BASIS DOCUMENT (ATBD)</Type></OnlineResource><OnlineResource><URL>https://gedi.umd.edu/</URL><Description>The
+        GEDI website provides detailed information on the GEDI mission, instrument,
+        science, applications, and data.</Description><Type>CollectionURL : PROJECT
+        HOME PAGE</Type></OnlineResource><OnlineResource><URL>https://lpdaac.usgs.gov/documents/997/GEDI01B_User_Guide_V21.pdf</URL><Description>The
+        technical information in the User''s Guide enables users to interpret and
+        use the data products. </Description><Type>VIEW RELATED INFORMATION : USER''S
+        GUIDE</Type></OnlineResource><OnlineResource><URL>https://lpdaac.usgs.gov/resources/e-learning/accessing-and-analyzing-gedi-lidar-data-for-vegetation-studies/</URL><Description>GEDI
+        L1-L2 Data Resources, Access, and Visualization Demonstration</Description><Type>VIEW
+        RELATED INFORMATION : HOW-TO</Type></OnlineResource><OnlineResource><URL>https://git.earthdata.nasa.gov/projects/LPDUR/repos/gedi-subsetter/browse</URL><Description>GEDI
+        Spatial and Band/Layer Subsetting and Export to GeoJSON Script</Description><Type>VIEW
+        RELATED INFORMATION : HOW-TO</Type></OnlineResource><OnlineResource><URL>https://lpdaac.usgs.gov/documents/989/GEDI_Quick_Guide_V2.pdf</URL><Description>GEDI
+        Spatial Querying and Subsetting Quick Guide</Description><Type>VIEW RELATED
+        INFORMATION : HOW-TO</Type></OnlineResource><OnlineResource><URL>https://github.com/nasa/GEDI-Data-Resources</URL><Description>The
+        GEDI Data Resources repository provides guides, short how-tos, and tutorials
+        to help users access and work with data from the GEDI mission.</Description><Type>VIEW
+        RELATED INFORMATION : HOW-TO</Type></OnlineResource><OnlineResource><URL>https://git.earthdata.nasa.gov/projects/LPDUR/repos/gedi-finder-tutorial-python/browse</URL><Description>Spatial
+        Querying of GEDI Version 2 Data in Python</Description><Type>VIEW RELATED
+        INFORMATION : HOW-TO</Type></OnlineResource><OnlineResource><URL>https://git.earthdata.nasa.gov/projects/LPDUR/repos/gedi-finder-tutorial-r/browse</URL><Description>Spatial
+        Querying of GEDI Version 2 Data in R</Description><Type>VIEW RELATED INFORMATION
+        : HOW-TO</Type></OnlineResource></OnlineResources><Spatial><SpatialCoverageType>HORIZONTAL</SpatialCoverageType><HorizontalSpatialDomain><Geometry><CoordinateSystem>CARTESIAN</CoordinateSystem><BoundingRectangle><WestBoundingCoordinate>-180.0</WestBoundingCoordinate><NorthBoundingCoordinate>54.0</NorthBoundingCoordinate><EastBoundingCoordinate>180.0</EastBoundingCoordinate><SouthBoundingCoordinate>-54.0</SouthBoundingCoordinate></BoundingRectangle></Geometry></HorizontalSpatialDomain><GranuleSpatialRepresentation>GEODETIC</GranuleSpatialRepresentation></Spatial><AssociatedBrowseImageUrls><ProviderBrowseUrl><URL>https://cmr.earthdata.nasa.gov/browse-scaler/browse_images/granules/G2755117449-LPCLOUD?h=85&amp;w=85</URL><Description>Browse
+        image for Earthdata Search</Description></ProviderBrowseUrl></AssociatedBrowseImageUrls><DirectDistributionInformation><Region>us-west-2</Region><S3BucketAndObjectPrefixName>s3://lp-prod-protected/GEDI01_B.002</S3BucketAndObjectPrefixName><S3BucketAndObjectPrefixName>s3://lp-prod-public/GEDI01_B.002</S3BucketAndObjectPrefixName><S3CredentialsAPIEndpoint>https://data.lpdaac.earthdatacloud.nasa.gov/s3credentials</S3CredentialsAPIEndpoint><S3CredentialsAPIDocumentationURL>https://data.lpdaac.earthdatacloud.nasa.gov/s3credentialsREADME</S3CredentialsAPIDocumentationURL></DirectDistributionInformation></Collection></result><result
+        concept-id=\"C1908344278-LPDAAC_ECS\" revision-id=\"36\" format=\"application/echo10+xml\"><Collection><ShortName>GEDI01_B</ShortName><VersionId>002</VersionId><InsertTime>2024-04-16T06:03:01.813Z</InsertTime><LastUpdate>2024-04-16T06:03:01.813Z</LastUpdate><LongName>Not
+        provided</LongName><DataSetId>GEDI L1B Geolocated Waveform Data Global Footprint
+        Level V002</DataSetId><Description>The Global Ecosystem Dynamics Investigation
+        (GEDI) mission aims to characterize ecosystem structure and dynamics to enable
+        radically improved quantification and understanding of the Earth\u2019s carbon
+        cycle and biodiversity. The GEDI instrument produces high resolution laser
+        ranging observations of the 3-dimensional structure of the Earth. GEDI is
+        attached to the International Space Station (ISS) and collects data globally
+        between 51.6\u00b0 N and 51.6\u00b0 S latitudes at the highest resolution
+        and densest sampling of any light detection and ranging (lidar) instrument
+        in orbit to date. Each GEDI Version 2 granule encompasses one-fourth of an
+        ISS orbit and includes georeferenced metadata to allow for spatial querying
+        and subsetting.\r\n\r\n\r\nThe GEDI Level 1B Geolocated Waveforms product
+        (GEDI01_B) provides geolocated corrected and smoothed waveforms, geolocation
+        parameters, and geophysical corrections for each laser shot for all eight
+        GEDI beams. GEDI01_B data are created by geolocating the GEDI01_A raw waveform
+        data. The GEDI01_B product is provided in HDF5 format and has a spatial resolution
+        (average footprint) of 25 meters.  \r\n\r\nThe GEDI01_B data product contains
+        85 layers for each of the eight beams including the geolocated corrected and
+        smoothed waveform datasets and parameters and the accompanying ancillary,
+        geolocation, and geophysical correction. Additional information can be found
+        in the GEDI L1B Product Data Dictionary.\r\n\r\nImprovements for Version 2\r\n*
+        Metadata has been updated to include spatial coordinates.\r\n* Granule size
+        has been reduced from one full ISS orbit (~5.8 GB) to four segments per orbit
+        (~1.5 GB).\r\n* Filename has been updated to include segment number and version
+        number.\r\n* Improved Geolocation.\r\n* Added elevation from the SRTM digital
+        elevation model for comparison.\r\n* Modified the method to predict an optimum
+        algorithm setting group per laser shot.\r\n* Added additional land cover datasets
+        related to phenology, urban infrastructure, and water persistence.\r\n* Added
+        selected_mode_flag dataset to root beam group using selected algorithm.\r\n*
+        Removed shots when the laser is not firing.\r\n* Modified file name.</Description><DOI><DOI>10.5067/GEDI/GEDI01_B.002</DOI><Authority>https://doi.org</Authority></DOI><CollectionDataType>SCIENCE_QUALITY</CollectionDataType><RevisionDate>2024-04-11T14:35:00.000Z</RevisionDate><SuggestedUsage>Science
+        Research</SuggestedUsage><ProcessingCenter>NASA/GSFC/GEDI</ProcessingCenter><ProcessingLevelId>1B</ProcessingLevelId><ArchiveCenter>LP
+        DAAC</ArchiveCenter><VersionDescription>Version 2</VersionDescription><CitationForExternalPublication>The
+        DOI landing page provides citations in APA and Chicago styles.</CitationForExternalPublication><CollectionState>COMPLETE</CollectionState><RestrictionComment>None</RestrictionComment><DataFormat>HDF5</DataFormat><SpatialKeywords><Keyword>GLOBAL</Keyword></SpatialKeywords><Temporal><PrecisionOfSeconds>4</PrecisionOfSeconds><EndsAtPresentFlag>false</EndsAtPresentFlag><RangeDateTime><BeginningDateTime>2019-04-04T00:00:00.000Z</BeginningDateTime><EndingDateTime>2023-03-16T23:59:59.999Z</EndingDateTime></RangeDateTime></Temporal><Contacts><Contact><Role>ARCHIVER</Role><HoursOfService>M-F,
+        8 a.m. to 4 p.m. Central Time</HoursOfService><Instructions>LP DAAC User Services
+        is the point of contact for answering questions concerning data products,
+        data access, and online applications.</Instructions><OrganizationName>LP DAAC</OrganizationName><OrganizationAddresses><Address><StreetAddress>U.S.
+        Geological Survey, Earth Resources Observation and Science (EROS) Center</StreetAddress><City>Sioux
+        Falls</City><StateProvince>South Dakota</StateProvince><PostalCode>57198</PostalCode><Country>United
+        States</Country></Address></OrganizationAddresses><OrganizationPhones><Phone><Number>605-594-6116</Number><Type>Telephone</Type></Phone><Phone><Number>866-573-3222</Number><Type>U.S.
+        toll free</Type></Phone></OrganizationPhones><OrganizationEmails><Email>lpdaac@usgs.gov</Email></OrganizationEmails></Contact><Contact><Role>PROCESSOR</Role><OrganizationName>NASA/GSFC/GEDI</OrganizationName></Contact><Contact><Role>TECHNICAL
+        CONTACT</Role><ContactPersons><ContactPerson><FirstName>Ralph</FirstName><LastName>Dubayah</LastName><JobPosition>INVESTIGATOR</JobPosition></ContactPerson></ContactPersons></Contact></Contacts><ScienceKeywords><ScienceKeyword><CategoryKeyword>EARTH
+        SCIENCE</CategoryKeyword><TopicKeyword>LAND SURFACE</TopicKeyword><TermKeyword>TOPOGRAPHY</TermKeyword></ScienceKeyword><ScienceKeyword><CategoryKeyword>EARTH
+        SCIENCE</CategoryKeyword><TopicKeyword>SPECTRAL/ENGINEERING</TopicKeyword><TermKeyword>LIDAR</TermKeyword></ScienceKeyword><ScienceKeyword><CategoryKeyword>EARTH
+        SCIENCE</CategoryKeyword><TopicKeyword>SPECTRAL/ENGINEERING</TopicKeyword><TermKeyword>LIDAR</TermKeyword><VariableLevel1Keyword><Value>LIDAR
+        WAVEFORM</Value></VariableLevel1Keyword></ScienceKeyword></ScienceKeywords><Platforms><Platform><ShortName>ISS</ShortName><LongName>International
+        Space Station</LongName><Type>Space Stations/Crewed Spacecraft</Type><Instruments><Instrument><ShortName>GEDI</ShortName><LongName>Global
+        Ecosystem Dynamics Investigation</LongName><Sensors><Sensor><ShortName>LIDAR</ShortName><LongName>Light
+        Detection and Ranging</LongName></Sensor></Sensors></Instrument></Instruments></Platform></Platforms><AdditionalAttributes><AdditionalAttribute><Name>identifier_product_doi</Name><DataType>STRING</DataType><Description>Digital
+        object identifier that uniquely identifies this data product</Description><Value>10.5067/GEDI/GEDI01_B.002</Value></AdditionalAttribute><AdditionalAttribute><Name>identifier_product_doi_authority</Name><DataType>STRING</DataType><Description>URL
+        of the digital object identifier resolving authority</Description><Value>https://doi.org</Value></AdditionalAttribute><AdditionalAttribute><Name>Reference_Ground_Track</Name><DataType>INT</DataType><Description>GEDI
+        reference ground track number</Description></AdditionalAttribute><AdditionalAttribute><Name>SEGMENT_NUMBER</Name><DataType>STRING</DataType><Description>The
+        number of the segment located within the orbit</Description></AdditionalAttribute></AdditionalAttributes><Campaigns><Campaign><ShortName>GEDI</ShortName><LongName>Global
+        Ecosystem Dynamics Investigation</LongName></Campaign></Campaigns><SpatialInfo><SpatialCoverageType>HORIZONTAL</SpatialCoverageType><HorizontalCoordinateSystem><GeodeticModel><HorizontalDatumName>World
+        Geodetic System (WGS84)</HorizontalDatumName></GeodeticModel><GeographicCoordinateSystem><GeographicCoordinateUnits>Meters</GeographicCoordinateUnits><LatitudeResolution>25.0</LatitudeResolution><LongitudeResolution>25.0</LongitudeResolution></GeographicCoordinateSystem></HorizontalCoordinateSystem></SpatialInfo><OnlineAccessURLs><OnlineAccessURL><URL>https://search.earthdata.nasa.gov/search?q=C1908344278-LPDAAC_ECS</URL><URLDescription>Earthdata
+        Search allows users to search, discover, visualize, refine, and access NASA
+        Earth Observation data.</URLDescription><MimeType>application/xhdf5</MimeType></OnlineAccessURL><OnlineAccessURL><URL>https://e4ftl01.cr.usgs.gov/GEDI/GEDI01_B.002/</URL><URLDescription>LP
+        DAAC Data Pool provides direct access to available products via HTTPS.</URLDescription><MimeType>application/xhdf5</MimeType></OnlineAccessURL></OnlineAccessURLs><OnlineResources><OnlineResource><URL>https://lpdaac.usgs.gov/</URL><Description>The
+        LP DAAC website provides detailed information on discovery, distribution,
+        access, and support of land data products.</Description><Type>CollectionURL
+        : PROJECT HOME PAGE</Type></OnlineResource><OnlineResource><URL>https://doi.org/10.5067/GEDI/GEDI01_B.002</URL><Description>The
+        product page provides information on Science Data Set layers and links for
+        user guides, ATBDs, data access, tools, customer support, etc. </Description><Type>CollectionURL
+        : DATA SET LANDING PAGE</Type></OnlineResource><OnlineResource><URL>https://lpdaac.usgs.gov/documents/981/gedi_l1b_dictionary_P003_v2.html</URL><Description>The
+        data dictionary provides additional information on the Science Dataset (SDS)
+        layers.</Description><Type>VIEW RELATED INFORMATION : GENERAL DOCUMENTATION</Type></OnlineResource><OnlineResource><URL>https://doi.org/10.5067/DOC/GEDI/GEDI_WF_ATBD.001</URL><Description>The
+        Waveform Processing ATBD provides physical theory and mathematical procedures
+        for the calculations used to produce the data products.</Description><Type>VIEW
+        RELATED INFORMATION : ALGORITHM THEORETICAL BASIS DOCUMENT (ATBD)</Type></OnlineResource><OnlineResource><URL>https://doi.org/10.5067/DOC/GEDI/GEDI_WFGEO_ATBD.001</URL><Description>The
+        Geolocation ATBD provides physical theory and mathematical procedures for
+        the calculations used to produce the data products.</Description><Type>VIEW
+        RELATED INFORMATION : ALGORITHM THEORETICAL BASIS DOCUMENT (ATBD)</Type></OnlineResource><OnlineResource><URL>https://gedi.umd.edu/</URL><Description>The
+        GEDI website provides detailed information on the GEDI mission, instrument,
+        science, applications, and data.</Description><Type>CollectionURL : PROJECT
+        HOME PAGE</Type></OnlineResource><OnlineResource><URL>https://lpdaac.usgs.gov/documents/997/GEDI01B_User_Guide_V21.pdf</URL><Description>The
+        technical information in the User''s Guide enables users to interpret and
+        use the data products. </Description><Type>VIEW RELATED INFORMATION : USER''S
+        GUIDE</Type></OnlineResource><OnlineResource><URL>https://git.earthdata.nasa.gov/projects/LPDUR/repos/gedi-subsetter/browse</URL><Description>GEDI
+        Spatial and Band/Layer Subsetting and Export to GeoJSON Script</Description><Type>VIEW
+        RELATED INFORMATION : HOW-TO</Type></OnlineResource><OnlineResource><URL>https://lpdaac.usgs.gov/resources/e-learning/accessing-and-analyzing-gedi-lidar-data-for-vegetation-studies/</URL><Description>GEDI
+        L1-L2 Data Resources, Access, and Visualization Demonstration</Description><Type>VIEW
+        RELATED INFORMATION : HOW-TO</Type></OnlineResource><OnlineResource><URL>https://lpdaac.usgs.gov/documents/989/GEDI_Quick_Guide_V2.pdf</URL><Description>GEDI
+        Spatial Querying and Subsetting Quick Guide</Description><Type>VIEW RELATED
+        INFORMATION : HOW-TO</Type></OnlineResource><OnlineResource><URL>https://lpdaac.usgs.gov/resources/e-learning/getting-started-gedi-l1b-version-2-data-python/</URL><Description>Getting
+        Started with GEDI L1B Version 2 Data in Python</Description><Type>VIEW RELATED
+        INFORMATION : HOW-TO</Type></OnlineResource><OnlineResource><URL>https://git.earthdata.nasa.gov/projects/LPDUR/repos/gedi-finder-tutorial-python/browse</URL><Description>Spatial
+        Querying of GEDI Version 2 Data in Python</Description><Type>VIEW RELATED
+        INFORMATION : HOW-TO</Type></OnlineResource><OnlineResource><URL>https://git.earthdata.nasa.gov/projects/LPDUR/repos/gedi-finder-tutorial-r/browse</URL><Description>Spatial
+        Querying of GEDI Version 2 Data in R</Description><Type>VIEW RELATED INFORMATION
+        : HOW-TO</Type></OnlineResource></OnlineResources><Spatial><SpatialCoverageType>HORIZONTAL</SpatialCoverageType><HorizontalSpatialDomain><Geometry><CoordinateSystem>CARTESIAN</CoordinateSystem><BoundingRectangle><WestBoundingCoordinate>-180.0</WestBoundingCoordinate><NorthBoundingCoordinate>54.0</NorthBoundingCoordinate><EastBoundingCoordinate>180.0</EastBoundingCoordinate><SouthBoundingCoordinate>-54.0</SouthBoundingCoordinate></BoundingRectangle></Geometry></HorizontalSpatialDomain><GranuleSpatialRepresentation>GEODETIC</GranuleSpatialRepresentation></Spatial><AssociatedBrowseImageUrls><ProviderBrowseUrl><URL>https://e4ftl01.cr.usgs.gov/WORKING/BRWS/Browse.001/2021.04.11/GEDI01_B_2020106212107_O07604_03_T02729_02_005_01_V002.png</URL><Description>Browse
+        image for Earthdata Search</Description></ProviderBrowseUrl></AssociatedBrowseImageUrls></Collection></result></results>"
+
+        '
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '26117'
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 16 Apr 2024 13:48:50 GMT
+      Keep-Alive:
+      - timeout=5, max=100
+      Server:
+      - gunicorn
+      Strict-Transport-Security:
+      - max-age=63072000; includeSubdomains;
+    status:
+      code: 200
+      message: OK
+version: 1

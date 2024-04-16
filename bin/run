@@ -28,4 +28,9 @@ if ! "${conda}" env list | grep -q gedi_subset; then
 fi
 
 [[ -n "${quiet}" ]] || set -x
-"${conda}" run --live-stream --name gedi_subset "${conda_run_args[@]}"
+
+if [[ "${CI:-}" == "true" ]]; then
+    "${conda_run_args[@]}"
+else
+    "${conda}" run --no-capture-output --name gedi_subset "${conda_run_args[@]}"
+fi

@@ -2,7 +2,11 @@
 
 - [Development Setup](#development-setup)
 - [Managing Dependencies](#managing-dependencies)
-- [Development Process](#development-process)
+- [Testing](#testing)
+  - [Testing CMR Queries](#testing-cmr-queries)
+  - [Linting and Running Unit Tests](#linting-and-running-unit-tests)
+  - [Locally Running GitHub Actions Workflows](#locally-running-github-actions-workflows)
+- [Submitting a Pull Request](#submitting-a-pull-request)
 - [Registering a Version of the Algorithm](#registering-a-version-of-the-algorithm)
 - [Creating a Release](#creating-a-release)
 
@@ -74,7 +78,59 @@ updated dependencies into the `gedi_subset` conda environment on your
 development workstation.  This is done automatically by running `make build`,
 which will also update the `gedi_subset` environment as necessary.
 
-## Development Process
+## Testing
+
+Successfully running linting and testing locally should ensure that the GitHub
+Actions workflow triggered by your PR will succeed.
+
+### Testing CMR Queries
+
+We leverage the `vcrpy` library to record responses to HTTP/S requests.  When
+running _existing_ tests, these recordings (_cassettes_ in `vcrp` parlance) are
+replayed so that repeated test executions do _not_ make repeated requests.
+Therefore, if you are not adding or modifying such tests, there is no need to
+have a network connection, nor any need to run the tests within the ADE.
+
+However, since we currently use the `maap-py` library for CMR queries, adding
+new tests that make CMR queries (or modifying existing ones) will not only
+require a network connection in order to record live responses, but will also
+require that you obtain such recordings by running the new/modified tests within
+the ADE in order to have the necessary auth in play.  Otherwise, the CMR queries
+will either fail, or produce incorrect responses.
+
+### Linting and Running Unit Tests
+
+Linting runs a number of checks on various files, such as making sure your code
+adheres to coding conventions and that the conda lock file is in sync with the
+conda environment files, among other things.  To "lint" the files in the repo,
+as well as run unit tests, run the following:
+
+```plain
+make lint typecheck test
+```
+
+If you see any errors, address them and repeat the process until there are no
+errors.
+
+### Locally Running GitHub Actions Workflows
+
+Optionally, you may wish to locally test that the build for your future PR will
+succeed.  To do so, you can use [act](https://nektosact.com/) to locally run
+GitHub Actions workflows.  After installing `act`, run the following command
+from the root of the repo:
+
+```plain
+act pull_request
+```
+
+**NOTE:** `act` uses a Docker container, so this will _NOT_ work within the ADE.
+You must use `act` in an environment where Docker is installed.
+
+The command above will initially take several minutes, but subsequent runs will
+execute more quickly because only the first run must pull the `act` Docker
+image.
+
+## Submitting a Pull Request
 
 To work on a feature or bug fix, you'll generally want to follow these steps:
 

@@ -45,7 +45,7 @@ clean:
 
 ## test: run unit tests
 test:
-	@bin/run pytest -v -s
+	@bin/run pytest -v --record-mode=once
 
 ## lint: run file/code linters
 lint:

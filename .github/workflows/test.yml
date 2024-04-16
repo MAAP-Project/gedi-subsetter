@@ -1,0 +1,56 @@
+name: Unit Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - edited
+      - opened
+      - reopened
+      - synchronize
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+defaults:
+  run:
+    # See https://github.com/marketplace/actions/setup-micromamba#about-login-shells
+    shell: bash -leo pipefail {0}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: Checkout source files
+        uses: actions/checkout@v4
+
+      - name: Setup micromamba and install/cache dependencies
+        env:
+          # Prevent timeouts with micromamba (libmamba) during dependency installation
+          MAMBA_NO_LOW_SPEED_LIMIT: 1
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          cache-environment: true
+          create-args: --category main dev
+          environment-file: conda-lock.yml
+          environment-name: gedi_subset
+          micromamba-version: latest
+
+      - name: Install GEDI Subsetter
+        run: python -m pip install --no-deps -e .
+
+      - name: Run unit tests
+        run: |
+          make test
+
+      - name: Run type checks
+        if: always()
+        run: |
+          make typecheck

@@ -11,7 +11,7 @@ from maap.maap import MAAP
 from maap.Result import Granule
 from mypy_boto3_s3.client import S3Client
 
-from gedi_subset.maapx import download_granule
+from gedi_subset.maapx import download_granule, find_collection
 
 EDC_CREDENTIALS_URL_PATTERN = re.compile(
     "https://.+/api/members/self/awsAccess/edcCredentials/.+"
@@ -182,3 +182,28 @@ def test_download_granule_https_failure(
         with responses.RequestsMock() as mock:
             mock.get(url="https://host/file.txt", status=404)
             download_granule(maap, str(tmp_path), granule, max_tries=1)
+
+
+@pytest.mark.vcr
+def test_find_collection_no_results(maap: MAAP):
+    with pytest.raises(ValueError, match="No collection found"):
+        find_collection(maap, {"doi": "no/such/doi"})
+
+
+@pytest.mark.vcr
+def test_find_collection_multiple_results(maap: MAAP):
+    # This DOI is known to have multiple collections: one cloud-hosted and one not.
+    with pytest.raises(ValueError, match="Multiple collections found"):
+        find_collection(maap, {"doi": "10.5067/GEDI/GEDI01_B.002"})
+
+
+@pytest.mark.vcr
+def test_find_collection_cloud_hosted(maap: MAAP):
+    gedi_l1b = find_collection(
+        maap,
+        {
+            "doi": "10.5067/GEDI/GEDI01_B.002",
+            "cloud_hosted": "true",
+        },
+    )
+    assert "LPCLOUD" in gedi_l1b["concept-id"]

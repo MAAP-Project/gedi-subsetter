@@ -19,8 +19,7 @@ from returns.io import IOFailure, IOResult, IOResultE, IOSuccess, impure_safe
 from returns.iterables import Fold
 from returns.maybe import Maybe, Nothing, Some
 from returns.pipeline import flow, is_successful, pipe
-from returns.pointfree import bind, bind_ioresult, bind_result, lash, map_
-from returns.result import Failure, Success
+from returns.pointfree import bind, bind_ioresult, lash, map_
 from returns.unsafe import unsafe_perform_io
 
 import gedi_subset.fp as fp
@@ -87,9 +86,7 @@ def is_gedi_collection(c: Collection) -> bool:
 
 
 def find_gedi_collection(
-    maap: MAAP,
-    cmr_host: str,
-    params: Mapping[str, str],
+    maap: MAAP, params: Mapping[str, str]
 ) -> IOResultE[Collection]:
     """Find a GEDI collection matching the given parameters.
 
@@ -98,20 +95,15 @@ def find_gedi_collection(
     failure, which is a `ValueError` when there is no matching collection or
     the collection is _not_ a GEDI collection.
     """
-    return flow(
-        find_collection(maap, cmr_host, params),
-        bind_result(
-            lambda c: (
-                Success(c)
-                if is_gedi_collection(c)
-                else Failure(
-                    ValueError(
-                        f"Collection {c['Collection']['ShortName']} is not a GEDI"
-                        " collection, or does not contain HDF5 data files."
-                    )
-                )
+    return (
+        IOSuccess(c)
+        if is_gedi_collection(c := find_collection(maap, params))
+        else IOFailure(
+            ValueError(
+                f"Collection {c['Collection']['ShortName']} is not a GEDI"
+                " collection, or does not contain HDF5 data files."
             )
-        ),
+        )
     )
 
 
@@ -362,7 +354,9 @@ def main(
         # Use wildcards around DOI value because some collections have incorrect
         # DOI values. For example, the L2B collection has the full DOI URL as
         # the DOI value (i.e., https://doi.org/<DOI> rather than just <DOI>).
-        for collection in find_gedi_collection(maap, cmr_host, {"doi": f"*{doi}*"})
+        for collection in find_gedi_collection(
+            maap, dict(cmr_host=cmr_host, doi=f"*{doi}*", cloud_hosted="true")
+        )
         for granules in impure_safe(maap.searchGranule)(
             cmr_host=cmr_host,
             collection_concept_id=collection["concept-id"],

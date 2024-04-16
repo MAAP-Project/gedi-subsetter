@@ -1,5 +1,10 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
+# See https://pre-commit.ci/ for CI configuration
+
+ci:
+  autofix_prs: false
+
 default_language_version:
   python: python3.11
 repos:
@@ -7,20 +12,18 @@ repos:
     hooks:
       # Make sure the conda-lock.yml file is up to date if the conda environment
       # files have been changed.  We don't want to commit an outdated lock file.
+      # Since `conda` is not installed on the pre-commit.ci, this will simply
+      # fail the CI build if the lock file is outdated.
       - id: conda-lock
         name: update conda-lock.yml file
         language: system
         entry: make lock
         pass_filenames: false
-        files: "environment.*.yml"
-      # The ShellCheck hook uses a Docker container to run the shellcheck
-      # command, which won't work in the ADE.  Instead, we use the shellcheck
-      # installed in the conda environment.
+        files: "^(environment.*.yml|bin/lock)$"
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
       - id: shellcheck
-        name: check shell scripts
-        language: system
-        entry: bin/shellcheck
-        types: [shell]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
@@ -34,6 +37,7 @@ repos:
       - id: check-toml
       - id: check-yaml
       - id: detect-aws-credentials
+        args: [--allow-missing-credentials]
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: trailing-whitespace

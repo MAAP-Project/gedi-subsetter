@@ -53,8 +53,6 @@ from shapely.geometry import Point
 
 # Make sure pip install worked
 from maap.maap import MAAP
-# Make sure MAAP can be instantiated
-maap = MAAP()
 
 warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 

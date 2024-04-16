@@ -10,9 +10,8 @@ Granule functions:
 """
 
 import logging
-import operator
 import random
-from typing import Callable, Mapping, Never, Optional, ParamSpec, TypedDict, TypeVar
+from typing import Callable, Mapping, Optional, ParamSpec, TypedDict, TypeVar
 
 import backoff
 import boto3
@@ -22,12 +21,6 @@ import requests
 from cachetools import FIFOCache, TTLCache, cached
 from maap.maap import MAAP
 from maap.Result import Collection, Granule
-from returns.io import IOResultE, impure_safe
-from returns.pipeline import flow, pipe
-from returns.pointfree import bind_result, lash
-from returns.result import Failure, safe
-
-from gedi_subset import fp
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +81,7 @@ def _s3_credentials_endpoint(granule: Granule) -> Optional[str]:
 
 
 @cached(cache=TTLCache(maxsize=1, ttl=55 * 60), key=lambda _, endpoint: endpoint)
-def _s3_credentials(maap: MAAP, endpoint: str) -> AWSCredentials | Never:
+def _s3_credentials(maap: MAAP, endpoint: str) -> AWSCredentials:
     """Obtain short-term AWS credentials from an S3 credentials endpoint."""
 
     logger.debug(f"Obtaining S3 credentials from {endpoint}")
@@ -145,7 +138,7 @@ def download_granule(
     granule: Granule,
     *,
     max_tries=10,
-) -> str | Never:
+) -> str:
     """Download a granule's data file.
 
     Automatically fetch S3 credentials appropriate for `granule`, based upon
@@ -186,25 +179,41 @@ def download_granule(
     raise ValueError(f"granule {granule_ur} is not configured with a download URL")
 
 
-def find_collection(
-    maap: MAAP,
-    cmr_host: str,
-    params: Mapping[str, str],
-) -> IOResultE[Collection]:
+def find_collection(maap: MAAP, params: Mapping[str, str]) -> Collection:
     """Find a collection matching search parameters.
 
-    Return `IOSuccess[Collection]` containing the collection upon successful
-    search; otherwise return `IOFailure[Exception]` containing the reason for
-    failure, which is a `ValueError` when there is no matching collection.
-    """
-    not_found_error = ValueError(f"No collection found at {cmr_host}: {params}")
+    Parameters
+    ----------
+    maap
+        The MAAP client to use for searching for the collection.
+    params
+        The search parameters to use when searching for the collection.  For
+        available search parameters, see the
+        [CMR Search API documentation](https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html). # noqa: E501
 
-    return flow(
-        impure_safe(maap.searchCollection)(cmr_host=cmr_host, limit=1, **params),
-        bind_result(
-            pipe(
-                safe(operator.itemgetter(0)),
-                lash(fp.always(Failure(not_found_error))),
-            )
-        ),
-    )
+    Returns
+    -------
+    collection
+        The first collection that matches the search parameters.
+
+    Raises
+    ------
+    ValueError
+        If the query failed, no collection was found, or multiple collections were
+        found.
+
+    Examples
+    --------
+    >>> maap = MAAP("api.maap-project.org")
+    >>> find_collection(maap, {"cloud_hosted": "true", "doi": "10.3334/ORNLDAAC/2056"})  # doctest: +SKIP # noqa: E501
+    {'concept-id': 'C2237824918-ORNL_CLOUD', 'revision-id': '28',
+     'format': 'application/echo10+xml',
+     'Collection': {'ShortName': 'GEDI_L4A_AGB_Density_V2_1_2056', ...}}
+    """
+    # Set limit=2 simply to catch the case where multiple collections are found, but
+    # without having to fetch a larger response.
+    if not (collections := maap.searchCollection(limit=2, **params)):
+        raise ValueError(f"No collection found for: {params}")
+    if len(collections) > 1:
+        raise ValueError(f"Multiple collections found for: {params}")
+    return collections[0]
