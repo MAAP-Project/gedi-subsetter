@@ -72,7 +72,7 @@ mkdir -p "${output_dir}"
 # to write directly to a file because it is a tricky feat to coordinate logging
 # from multiple processes into a single file.
 logfile="${PWD}/gedi-subset.log"
-"${CONDA_EXE:-conda}" run --live-stream --name gedi_subset "${command[@]}" 2>"${logfile}"
+"${CONDA_EXE:-conda}" run --no-capture-output --name gedi_subset "${command[@]}" 2>"${logfile}"
 
 # If we get here, the command above succeeded (otherwise this script would have
 # exited with a non-zero status).  We can now move the log file to the output

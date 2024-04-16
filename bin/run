@@ -32,5 +32,5 @@ fi
 if [[ "${CI:-}" == "true" ]]; then
     "${conda_run_args[@]}"
 else
-    "${conda}" run --live-stream --name gedi_subset "${conda_run_args[@]}"
+    "${conda}" run --no-capture-output --name gedi_subset "${conda_run_args[@]}"
 fi
