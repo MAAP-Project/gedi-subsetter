@@ -20,6 +20,8 @@ dependencies:
   - pandas-stubs~=2.0
   - pre-commit~=3.3
   - pytest~=7.3
+  - pytest-recording~=0.13
+  - vcrpy~=6.0
   - shellcheck~=0.9
   - types-cachetools~=5.3
   - types-requests~=2.30

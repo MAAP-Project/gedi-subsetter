@@ -29,7 +29,7 @@ dependencies:
   - typer~=0.9  # CLI
 
   - pip:
-    - git+https://github.com/MAAP-Project/maap-py.git@develop
+    - git+https://github.com/MAAP-Project/maap-py.git@v3.1.5
 
 platforms:
   - linux-64

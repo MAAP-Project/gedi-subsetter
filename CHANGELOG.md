@@ -20,6 +20,9 @@ The format is based on [Keep a Changelog], and this project adheres to
   file named `gedi-subset.log`.  When a job succeeds, the log file will appear
   in the job's output directory.  Otherwise, it will appear in the jobs triage
   directory.
+- [#65](https://github.com/MAAP-Project/gedi-subsetter/issues/65) All supported
+  GEDI collections are now cloud-hosted, and granules are now downloaded from
+  the cloud rather than from DAAC servers.
 
 ## 0.6.2 (2023-12-05)
 
