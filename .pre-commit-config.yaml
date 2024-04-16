@@ -17,7 +17,7 @@ repos:
       - id: conda-lock
         name: update conda-lock.yml file
         language: system
-        entry: make lock
+        entry: make printenv
         pass_filenames: false
         always_run: true
         files: "^(environment.*.yml|bin/lock)$"
