@@ -19,7 +19,7 @@ repos:
         language: system
         entry: make lock
         pass_filenames: false
-        files: "environment.*.yml"
+        files: "environment.*.yml|bin/lock"
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.10.0.1
     hooks:
