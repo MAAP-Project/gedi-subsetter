@@ -20,17 +20,20 @@ class MockMAAP(MAAP):
     """Mock MAAP class to avoid the need for a maap.cfg file for testing."""
 
     def __init__(self):
-        self._MAAP_HOST = "api.maap-project.org"
-        self._SEARCH_COLLECTION_URL = f"https://{self._MAAP_HOST}/api/cmr/collections"
-        self._CMR = CMR([], 20, {})
-        self.aws = AWS(
-            "",
-            "",
-            f"https://{self._MAAP_HOST}"
-            + "/api/members/self/awsAccess/edcCredentials/{endpoint_uri}",
-            "",
-            {},
-        )
+        if "MAAP_PGT" in os.environ:
+            super().__init__()
+        else:
+            self._MAAP_HOST = "api.maap-project.org"
+            self._SEARCH_COLLECTION_URL = f"https://{self._MAAP_HOST}/api/cmr/collections"
+            self._CMR = CMR([], 20, {})
+            self.aws = AWS(
+                "",
+                "",
+                f"https://{self._MAAP_HOST}"
+                + "/api/members/self/awsAccess/edcCredentials/{endpoint_uri}",
+                "",
+                {},
+            )
 
 
 @pytest.fixture(scope="function")

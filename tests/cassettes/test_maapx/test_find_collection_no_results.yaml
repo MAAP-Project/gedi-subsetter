@@ -11,14 +11,14 @@ interactions:
       User-Agent:
       - python-requests/2.31.0
       proxy-ticket:
-      - PGT-1736-kTAIDXv7GztyqK4nqsqfaC05z3VlWofHNOPT3Bl2jXb4cBX7YevDYmWiSlvq3ZfjRQw-93f206e1209e
+      - PGT-1789-PqPwhL62u-GPb7lR3Z-cDVDj-RZj41lCMMgkOdQ-YQXAYj9n2hQQcvrrFNr0Z3b1xUY-93f206e1209e
       token:
       - eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiYnNhdG9yaXUiLCJleHAiOjE1NjE1ODY0Nzl9.0Eq92EaiWYQ5jc_wX9lHu_iEOS8xE88FWlvYbOUlD08
     method: GET
     uri: https://api.maap-project.org/api/cmr/collections?doi=no%2Fsuch%2Fdoi&page_num=1&page_size=20
   response:
     body:
-      string: '"<?xml version=\"1.0\" encoding=\"UTF-8\"?><results><hits>0</hits><took>166</took></results>"
+      string: '"<?xml version=\"1.0\" encoding=\"UTF-8\"?><results><hits>0</hits><took>1174</took></results>"
 
         '
     headers:
@@ -27,11 +27,11 @@ interactions:
       Connection:
       - Keep-Alive
       Content-Length:
-      - '94'
+      - '95'
       Content-Type:
       - application/json
       Date:
-      - Mon, 15 Apr 2024 16:50:05 GMT
+      - Tue, 16 Apr 2024 13:48:50 GMT
       Keep-Alive:
       - timeout=5, max=100
       Server:

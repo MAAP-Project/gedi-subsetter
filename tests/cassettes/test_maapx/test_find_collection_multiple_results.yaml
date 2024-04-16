@@ -11,15 +11,15 @@ interactions:
       User-Agent:
       - python-requests/2.31.0
       proxy-ticket:
-      - PGT-1736-kTAIDXv7GztyqK4nqsqfaC05z3VlWofHNOPT3Bl2jXb4cBX7YevDYmWiSlvq3ZfjRQw-93f206e1209e
+      - PGT-1789-PqPwhL62u-GPb7lR3Z-cDVDj-RZj41lCMMgkOdQ-YQXAYj9n2hQQcvrrFNr0Z3b1xUY-93f206e1209e
       token:
       - eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiYnNhdG9yaXUiLCJleHAiOjE1NjE1ODY0Nzl9.0Eq92EaiWYQ5jc_wX9lHu_iEOS8xE88FWlvYbOUlD08
     method: GET
     uri: https://api.maap-project.org/api/cmr/collections?doi=10.5067%2FGEDI%2FGEDI01_B.002&page_num=1&page_size=20
   response:
     body:
-      string: '"<?xml version=\"1.0\" encoding=\"UTF-8\"?><results><hits>2</hits><took>116</took><result
-        concept-id=\"C2142749196-LPCLOUD\" revision-id=\"27\" format=\"application/echo10+xml\"><Collection><ShortName>GEDI01_B</ShortName><VersionId>002</VersionId><InsertTime>2021-03-15T00:00:00.000Z</InsertTime><LastUpdate>2024-04-15T06:03:46.717Z</LastUpdate><LongName>Not
+      string: '"<?xml version=\"1.0\" encoding=\"UTF-8\"?><results><hits>2</hits><took>280</took><result
+        concept-id=\"C2142749196-LPCLOUD\" revision-id=\"28\" format=\"application/echo10+xml\"><Collection><ShortName>GEDI01_B</ShortName><VersionId>002</VersionId><InsertTime>2021-03-15T00:00:00.000Z</InsertTime><LastUpdate>2024-04-16T06:03:01.806Z</LastUpdate><LongName>Not
         provided</LongName><DataSetId>GEDI L1B Geolocated Waveform Data Global Footprint
         Level V002</DataSetId><Description>The Global Ecosystem Dynamics Investigation
         (GEDI) mission aims to characterize ecosystem structure and dynamics to enable
@@ -50,11 +50,11 @@ interactions:
         related to phenology, urban infrastructure, and water persistence.\r\n* Added
         selected_mode_flag dataset to root beam group using selected algorithm.\r\n*
         Removed shots when the laser is not firing.\r\n* Modified file name.</Description><DOI><DOI>10.5067/GEDI/GEDI01_B.002</DOI><Authority>https://doi.org</Authority></DOI><CollectionDataType>SCIENCE_QUALITY</CollectionDataType><RevisionDate>2024-04-11T15:55:00.000Z</RevisionDate><SuggestedUsage>Science
-        Research</SuggestedUsage><ProcessingCenter>NASA/GSFC/GEDI</ProcessingCenter><ProcessingLevelId>1B</ProcessingLevelId><ProcessingLevelDescription>L1B
-        data are L1A data that have been processed to sensor units (not all instruments
-        have L1B source data).</ProcessingLevelDescription><ArchiveCenter>LP DAAC</ArchiveCenter><VersionDescription>Version
-        2</VersionDescription><CitationForExternalPublication>The DOI landing page
-        provides citations in APA and Chicago.</CitationForExternalPublication><CollectionState>COMPLETE</CollectionState><RestrictionComment>None</RestrictionComment><DataFormat>HDF5</DataFormat><SpatialKeywords><Keyword>GLOBAL
+        Research</SuggestedUsage><ProcessingCenter>NASA/GSFC/GEDI</ProcessingCenter><ProcessingLevelId>1B</ProcessingLevelId><ProcessingLevelDescription>Level
+        1B data are Level 1A data that have been processed to sensor units (not all
+        instruments will have a Level 1B equivalent).</ProcessingLevelDescription><ArchiveCenter>LP
+        DAAC</ArchiveCenter><VersionDescription>Version 2</VersionDescription><CitationForExternalPublication>The
+        DOI landing page provides citations in APA and Chicago.</CitationForExternalPublication><CollectionState>COMPLETE</CollectionState><RestrictionComment>None</RestrictionComment><DataFormat>HDF5</DataFormat><SpatialKeywords><Keyword>GLOBAL
         LAND</Keyword></SpatialKeywords><Temporal><PrecisionOfSeconds>4</PrecisionOfSeconds><EndsAtPresentFlag>false</EndsAtPresentFlag><RangeDateTime><BeginningDateTime>2019-04-04T00:00:00.000Z</BeginningDateTime><EndingDateTime>2023-03-16T23:59:59.999Z</EndingDateTime></RangeDateTime></Temporal><Contacts><Contact><Role>ARCHIVER</Role><HoursOfService>M-F,
         8 a.m. to 4 p.m. Central Time</HoursOfService><Instructions>LP DAAC User Services
         is the point of contact for answering questions concerning data products,
@@ -121,7 +121,7 @@ interactions:
         Querying of GEDI Version 2 Data in R</Description><Type>VIEW RELATED INFORMATION
         : HOW-TO</Type></OnlineResource></OnlineResources><Spatial><SpatialCoverageType>HORIZONTAL</SpatialCoverageType><HorizontalSpatialDomain><Geometry><CoordinateSystem>CARTESIAN</CoordinateSystem><BoundingRectangle><WestBoundingCoordinate>-180.0</WestBoundingCoordinate><NorthBoundingCoordinate>54.0</NorthBoundingCoordinate><EastBoundingCoordinate>180.0</EastBoundingCoordinate><SouthBoundingCoordinate>-54.0</SouthBoundingCoordinate></BoundingRectangle></Geometry></HorizontalSpatialDomain><GranuleSpatialRepresentation>GEODETIC</GranuleSpatialRepresentation></Spatial><AssociatedBrowseImageUrls><ProviderBrowseUrl><URL>https://cmr.earthdata.nasa.gov/browse-scaler/browse_images/granules/G2755117449-LPCLOUD?h=85&amp;w=85</URL><Description>Browse
         image for Earthdata Search</Description></ProviderBrowseUrl></AssociatedBrowseImageUrls><DirectDistributionInformation><Region>us-west-2</Region><S3BucketAndObjectPrefixName>s3://lp-prod-protected/GEDI01_B.002</S3BucketAndObjectPrefixName><S3BucketAndObjectPrefixName>s3://lp-prod-public/GEDI01_B.002</S3BucketAndObjectPrefixName><S3CredentialsAPIEndpoint>https://data.lpdaac.earthdatacloud.nasa.gov/s3credentials</S3CredentialsAPIEndpoint><S3CredentialsAPIDocumentationURL>https://data.lpdaac.earthdatacloud.nasa.gov/s3credentialsREADME</S3CredentialsAPIDocumentationURL></DirectDistributionInformation></Collection></result><result
-        concept-id=\"C1908344278-LPDAAC_ECS\" revision-id=\"36\" format=\"application/echo10+xml\"><Collection><ShortName>GEDI01_B</ShortName><VersionId>002</VersionId><InsertTime>2024-04-15T06:03:46.722Z</InsertTime><LastUpdate>2024-04-15T06:03:46.722Z</LastUpdate><LongName>Not
+        concept-id=\"C1908344278-LPDAAC_ECS\" revision-id=\"36\" format=\"application/echo10+xml\"><Collection><ShortName>GEDI01_B</ShortName><VersionId>002</VersionId><InsertTime>2024-04-16T06:03:01.813Z</InsertTime><LastUpdate>2024-04-16T06:03:01.813Z</LastUpdate><LongName>Not
         provided</LongName><DataSetId>GEDI L1B Geolocated Waveform Data Global Footprint
         Level V002</DataSetId><Description>The Global Ecosystem Dynamics Investigation
         (GEDI) mission aims to characterize ecosystem structure and dynamics to enable
@@ -220,11 +220,11 @@ interactions:
       Connection:
       - Keep-Alive
       Content-Length:
-      - '26096'
+      - '26117'
       Content-Type:
       - application/json
       Date:
-      - Mon, 15 Apr 2024 16:50:05 GMT
+      - Tue, 16 Apr 2024 13:48:50 GMT
       Keep-Alive:
       - timeout=5, max=100
       Server:
