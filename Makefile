@@ -20,10 +20,6 @@ help: Makefile
 	@sed -n 's/^##//p' $< | column -t -s ':' | sed -e 's/^/ /'
 	@echo
 
-printenv:
-	printenv | sort
-	exit 1
-
 # NOTE: This will fail if the conda environment does not exist.  Run `make build`.
 conda-lock.yml: environment.yml environment-dev.yml bin/lock
 	@bin/lock
