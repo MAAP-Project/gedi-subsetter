@@ -1,5 +1,10 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
+# See https://pre-commit.ci/ for CI configuration
+
+ci:
+  autofix_prs: false
+
 default_language_version:
   python: python3.11
 repos:
@@ -34,6 +39,7 @@ repos:
       - id: check-toml
       - id: check-yaml
       - id: detect-aws-credentials
+        args: [--allow-missing-credentials]
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: trailing-whitespace
