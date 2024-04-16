@@ -24,7 +24,9 @@ class MockMAAP(MAAP):
             super().__init__()
         else:
             self._MAAP_HOST = "api.maap-project.org"
-            self._SEARCH_COLLECTION_URL = f"https://{self._MAAP_HOST}/api/cmr/collections"
+            self._SEARCH_COLLECTION_URL = (
+                f"https://{self._MAAP_HOST}/api/cmr/collections"
+            )
             self._CMR = CMR([], 20, {})
             self.aws = AWS(
                 "",
