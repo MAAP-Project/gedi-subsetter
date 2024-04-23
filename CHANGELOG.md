@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## Unreleased
 
+### 0.7.0 (2024-04-23)
+
 ### Added
 
 - [#57](https://github.com/MAAP-Project/gedi-subsetter/issues/57) Users may
