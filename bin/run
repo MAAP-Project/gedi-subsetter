@@ -27,6 +27,13 @@ if ! "${conda}" env list | grep -q gedi_subset; then
     exit 1
 fi
 
+# We must set the MAAP_CONF environment variable to point to the preinstalled
+# maap-py package.  This is necessary because MAAP_CONF is no longer set
+# automatically in the Docker container (as it was in the past), and the changes
+# I had previously made to maap-py to read maap.cfg as a bundled resource file
+# were reverted.
+export MAAP_CONF=/maap-py/
+
 [[ -n "${quiet}" ]] || set -x
 
 if [[ "${CI:-}" == "true" ]]; then

@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## Unreleased
 
+### 0.7.0 (2024-04-23)
+
 ### Added
 
 - [#57](https://github.com/MAAP-Project/gedi-subsetter/issues/57) Users may
@@ -16,10 +18,10 @@ The format is based on [Keep a Changelog], and this project adheres to
   download failures are now retried up to 10 times to reduce the likelihood that
   subsetting will fail due to a download failure.
 - [#56](https://github.com/MAAP-Project/gedi-subsetter/issues/56) The
-  `bin/subset` script now captures output to `stderr` and writes it to the log
-  file named `gedi-subset.log`.  When a job succeeds, the log file will appear
-  in the job's output directory.  Otherwise, it will appear in the jobs triage
-  directory.
+  `bin/subset.sh` script now captures output to `stderr` and writes it to the
+  log file named `gedi-subset.log`.  When a job succeeds, the log file will
+  appear in the job's output directory.  Otherwise, it will appear in the job's
+  triage directory.
 - [#65](https://github.com/MAAP-Project/gedi-subsetter/issues/65) All supported
   GEDI collections are now cloud-hosted, and granules are now downloaded from
   the cloud rather than from DAAC servers.

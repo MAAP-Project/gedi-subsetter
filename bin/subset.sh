@@ -2,9 +2,9 @@
 
 set -euo pipefail
 
-# Apply dirname twice to get to the top of the repo, since this script is in the
-# `bin` directory (i.e., first dirname gets to `bin`, second gets to the top).
-base_dir=$(dirname "$(dirname "$(readlink -f "$0")")")
+bin=$(dirname "$(readlink -f "$0")")
+base_dir=$(dirname "${bin}")
+run="${bin}/run"
 
 input_dir="${PWD}/input"
 output_dir="${PWD}/output"
@@ -18,6 +18,10 @@ if ! test -d "${input_dir}"; then
     # within it.
     command=("${subset_py}" --verbose "$@")
 else
+    echo "--- >>> ${input_dir} ---" >&2
+    ls -l "${input_dir}" >&2
+    echo "--- <<< ${input_dir} ---" >&2
+
     # There is an `input` sub-directory of the current working directory, so
     # assume the AOI file is the sole file within the `input` sub-directory.
     aoi="$(ls "${input_dir}"/*)"
@@ -72,7 +76,8 @@ mkdir -p "${output_dir}"
 # to write directly to a file because it is a tricky feat to coordinate logging
 # from multiple processes into a single file.
 logfile="${PWD}/gedi-subset.log"
-"${CONDA_EXE:-conda}" run --no-capture-output --name gedi_subset "${command[@]}" 2>"${logfile}"
+
+"${run}" "${command[@]}" 2>"${logfile}"
 
 # If we get here, the command above succeeded (otherwise this script would have
 # exited with a non-zero status).  We can now move the log file to the output
