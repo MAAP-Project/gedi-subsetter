@@ -33,7 +33,6 @@ fi
 # I had previously made to maap-py to read maap.cfg as a bundled resource file
 # were reverted.
 export MAAP_CONF=/maap-py/
-export AWS_PROFILE=maap-data-reader
 
 [[ -n "${quiet}" ]] || set -x
 
