@@ -1,6 +1,4 @@
-import json
 import pathlib
-import re
 from typing import Any, Mapping
 
 import botocore.exceptions
@@ -12,10 +10,6 @@ from maap.Result import Granule
 from mypy_boto3_s3.client import S3Client
 
 from gedi_subset.maapx import download_granule, find_collection
-
-EDC_CREDENTIALS_URL_PATTERN = re.compile(
-    "https://.+/api/members/self/awsAccess/edcCredentials/.+"
-)
 
 
 def make_granule(metadata: Mapping[str, Any]) -> Granule:
@@ -30,7 +24,6 @@ def make_granule(metadata: Mapping[str, Any]) -> Granule:
 
 
 def test_download_granule_no_s3credentials_success(
-    maap: MAAP,
     s3: S3Client,
     tmp_path: pathlib.Path,
 ):
@@ -51,15 +44,14 @@ def test_download_granule_no_s3credentials_success(
     # We expect to be able to download the file from S3 without needing to
     # obtain temporary credentials.  This test is to ensure that the function
     # does not fail when no S3 credentials are required.
-    filename = download_granule(maap, str(tmp_path), granule, max_tries=1)
+    filename = download_granule(granule, str(tmp_path))
 
     with open(filename) as f:
         assert f.read() == "s3 contents"
 
 
 def test_download_granule_aws_error(
-    maap: MAAP,
-    s3: S3Client,
+    s3: S3Client,  # Not used directly, but needed to ensure the fixture is set up
     tmp_path: pathlib.Path,
 ):
     granule = make_granule(
@@ -74,22 +66,16 @@ def test_download_granule_aws_error(
     )
 
     with pytest.raises(botocore.exceptions.ClientError, match="NoSuchBucket"):
-        download_granule(maap, str(tmp_path), granule, max_tries=1)
+        download_granule(granule, str(tmp_path))
 
 
-def test_download_granule_s3credentials_success(
-    maap: MAAP,
+def test_download_granule_s3_success(
     s3: S3Client,
     tmp_path: pathlib.Path,
 ):
     s3.create_bucket(Bucket="mybucket")
     s3.put_object(Bucket="mybucket", Key="file.txt", Body="s3 contents")
 
-    creds = {
-        "sessionToken": "mytoken",
-        "accessKeyId": "mykeyid",
-        "secretAccessKey": "myaccesskey",
-    }
     granule = make_granule(
         {
             "Granule": {
@@ -104,46 +90,13 @@ def test_download_granule_s3credentials_success(
         }
     )
 
-    with responses.RequestsMock() as mock:
-        mock.get(url=EDC_CREDENTIALS_URL_PATTERN, status=200, body=json.dumps(creds))
-        filename = download_granule(maap, str(tmp_path), granule, max_tries=1)
+    filename = download_granule(granule, str(tmp_path))
 
     with open(filename) as f:
         assert f.read() == "s3 contents"
 
 
-def test_download_granule_s3credentials_failure(
-    maap: MAAP,
-    s3: S3Client,
-    tmp_path: pathlib.Path,
-):
-    s3.create_bucket(Bucket="mybucket")
-    s3.put_object(Bucket="mybucket", Key="file.txt", Body="s3 contents")
-
-    granule = make_granule(
-        {
-            "Granule": {
-                "GranuleUR": "foo",
-                "OnlineAccessURLs": {
-                    "OnlineAccessURL": {"URL": "s3://mybucket/file.txt"}
-                },
-                "OnlineResources": {
-                    "OnlineResource": {"URL": "https://failure/s3credentials"}
-                },
-            }
-        }
-    )
-
-    with pytest.raises(requests.exceptions.HTTPError, match="500"):
-        with responses.RequestsMock() as mock:
-            mock.get(url=EDC_CREDENTIALS_URL_PATTERN, status=500)
-            download_granule(maap, str(tmp_path), granule, max_tries=1)
-
-
-def test_download_granule_https_success(
-    maap: MAAP,
-    tmp_path: pathlib.Path,
-):
+def test_download_granule_https_success(tmp_path: pathlib.Path):
     granule = make_granule(
         {
             "Granule": {
@@ -157,16 +110,13 @@ def test_download_granule_https_success(
 
     with responses.RequestsMock() as mock:
         mock.get(url="https://host/file.txt", status=200, body="https contents")
-        filename = download_granule(maap, str(tmp_path), granule, max_tries=1)
+        filename = download_granule(granule, str(tmp_path))
 
     with open(filename) as f:
         assert f.read() == "https contents"
 
 
-def test_download_granule_https_failure(
-    maap: MAAP,
-    tmp_path: pathlib.Path,
-):
+def test_download_granule_https_failure(tmp_path: pathlib.Path):
     granule = make_granule(
         {
             "Granule": {
@@ -181,7 +131,7 @@ def test_download_granule_https_failure(
     with pytest.raises(requests.exceptions.HTTPError, match="404"):
         with responses.RequestsMock() as mock:
             mock.get(url="https://host/file.txt", status=404)
-            download_granule(maap, str(tmp_path), granule, max_tries=1)
+            download_granule(granule, str(tmp_path))
 
 
 @pytest.mark.vcr

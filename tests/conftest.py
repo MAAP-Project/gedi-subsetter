@@ -1,4 +1,8 @@
 import os
+
+if "AWS_PROFILE" in os.environ:
+    del os.environ["AWS_PROFILE"]
+
 import warnings
 from typing import Iterable
 

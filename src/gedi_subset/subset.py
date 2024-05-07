@@ -149,7 +149,7 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
     GeoParquet file.
     """
 
-    inpath = download_granule(props.maap, str(props.output_dir), props.granule)
+    inpath = download_granule(props.granule, str(props.output_dir))
 
     logger.debug(f"Subsetting {inpath}")
 

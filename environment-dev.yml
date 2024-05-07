@@ -5,6 +5,7 @@ channels:
 # Non-standard, but recognized by conda-lock
 category: dev
 dependencies:
+  - backoff~=2.2
   - black~=24.0
   # boto*-stubs constraints should align with boto3 constraint in environment.yml
   - boto3-stubs~=1.33
