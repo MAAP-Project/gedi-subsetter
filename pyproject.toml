@@ -40,6 +40,7 @@ module = [
   "geopandas",
   "h5py",
   "moto",
+  "s3fs",
   "shapely.*"
 ]
 ignore_missing_imports = true

@@ -23,6 +23,7 @@ dependencies:
   - pyarrow~=14.0  # parquet support in pandas
   - pydantic~=2.0
   - returns~=0.20
+  - s3fs~=2024.3
   - scalene~=1.5  # CPU+mem profiling
   - shapely~=2.0
   - typer~=0.9  # CLI

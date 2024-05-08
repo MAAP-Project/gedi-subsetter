@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog], and this project adheres to
   are obtained via a role using the EC2 instance metadata.
 - [#72](https://github.com/MAAP-Project/gedi-subsetter/issues/72) Log messages
   now use ISO 8601 UTC combined date and time representations with milliseconds.
+- [#54](https://github.com/MAAP-Project/gedi-subsetter/issues/54) Granule files
+  are no longer downloaded.  Instead, they are read directly from AWS S3.
 
 ## 0.7.0 (2024-04-23)
 
