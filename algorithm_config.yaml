@@ -6,7 +6,7 @@ docker_container_url: mas.maap-project.org/root/maap-workspaces/base_images/vani
 disk_space: 20GB
 queue: maap-dps-worker-32gb
 build_command: gedi-subsetter/bin/build-dps
-run_command: AWS_PROFILE=maap-data-reader gedi-subsetter/bin/subset.sh
+run_command: gedi-subsetter/bin/subset.sh
 inputs:
   config: []
   file:
