@@ -4,6 +4,7 @@ import logging
 import multiprocessing
 import os
 import os.path
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping, NoReturn, Optional, Sequence, Tuple
@@ -49,6 +50,10 @@ DEFAULT_LIMIT = 1_000
 LOGGING_FORMAT = "%(asctime)s [%(processName)s:%(name)s] [%(levelname)s] %(message)s"
 
 logging.basicConfig(level=logging.INFO, format=LOGGING_FORMAT)
+logging.Formatter.converter = time.gmtime
+logging.Formatter.default_time_format = "%Y-%m-%dT%H:%M:%S"
+logging.Formatter.default_msec_format = "%s,%03dZ"
+
 logger = logging.getLogger("gedi_subset")
 
 
