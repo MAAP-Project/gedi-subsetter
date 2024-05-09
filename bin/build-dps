@@ -17,4 +17,4 @@ set -euo pipefail
 
 basedir=$(dirname "$(readlink -f "$0")")
 
-AWS_PROFILE=maap-data-reader "${basedir}/build" --no-dev
+"${basedir}/build" --no-dev

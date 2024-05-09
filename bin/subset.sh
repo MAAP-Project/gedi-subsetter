@@ -77,7 +77,7 @@ mkdir -p "${output_dir}"
 # from multiple processes into a single file.
 logfile="${PWD}/gedi-subset.log"
 
-AWS_PROFILE=maap-data-reader "${run}" "${command[@]}" 2>"${logfile}"
+"${run}" "${command[@]}" 2>"${logfile}"
 
 # If we get here, the command above succeeded (otherwise this script would have
 # exited with a non-zero status).  We can now move the log file to the output
