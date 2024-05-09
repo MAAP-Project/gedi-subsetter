@@ -7,7 +7,13 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## Unreleased
 
-### 0.7.0 (2024-04-23)
+### Changed
+
+- [#14](https://github.com/MAAP-Project/gedi-subsetter/issues/14) AWS S3
+  credentials are no longer obtained via the `maap-py` library.  Instead, they
+  are obtained via a role using the EC2 instance metadata.
+
+## 0.7.0 (2024-04-23)
 
 ### Added
 

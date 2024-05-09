@@ -28,7 +28,7 @@ $(CONDA_PREFIX): bin/create
 	@bin/create
 
 $(MAAP): $(CONDA_PREFIX) conda-lock.yml bin/install
-	@bin/install
+	@bin/install --dev
 
 ## lock: generate the lock file (conda-lock.yml) for the gedi_subset environment
 # Simply a convenience target to generate the lock file since typing `make lock`
