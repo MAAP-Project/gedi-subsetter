@@ -1,26 +1,66 @@
 import os
 from pathlib import Path
+from typing import cast
 
 import geopandas as gpd
 import pytest
+import requests
+from botocore.session import Session
 from maap.maap import MAAP
 from maap.Result import Granule
+from moto.moto_server.threaded_moto_server import ThreadedMotoServer
+from mypy_boto3_s3.client import S3Client
 from returns.io import IOSuccess
 from returns.maybe import Some
+from s3fs import S3FileSystem
 from typer import BadParameter
 
 from gedi_subset.subset import SubsetGranuleProps, check_beams_option, subset_granule
 
+# The following fixtures are simplifications of those found in the tests for s3fs at
+# https://github.com/fsspec/s3fs/blob/main/s3fs/tests/test_s3fs.py.
+# They are used to work around this issue: https://github.com/getmoto/moto/issues/6836
 
-def test_subset_granule(maap: MAAP, h5_path: str, aoi_gdf: gpd.GeoDataFrame):
-    output_dir = os.path.dirname(h5_path)
-    filename = os.path.basename(h5_path)
+ip_address = "127.0.0.1"
+port = 5555
+endpoint_uri = f"http://{ip_address}:{port}/"
+
+
+@pytest.fixture(scope="module")
+def moto_server(aws_credentials):
+    server = ThreadedMotoServer(ip_address=ip_address, port=port)
+    server.start()
+    yield
+    server.stop()
+
+
+@pytest.fixture(autouse=True)
+def reset_s3_fixture():
+    requests.post(f"{endpoint_uri}/moto-api/reset")
+
+
+@pytest.fixture()
+def fs(moto_server, h5_path: str):
+    client = cast(S3Client, Session().create_client("s3", endpoint_url=endpoint_uri))
+    client.create_bucket(Bucket="mybucket")
+    client.put_object(Bucket="mybucket", Key="temp.h5", Body=Path(h5_path).read_bytes())
+
+    S3FileSystem.clear_instance_cache()
+    fs = S3FileSystem(client_kwargs={"endpoint_url": endpoint_uri})
+    fs.invalidate_cache()
+
+    yield fs
+
+
+def test_subset_granule(
+    fs: S3FileSystem, maap: MAAP, aoi_gdf: gpd.GeoDataFrame, tmp_path: Path
+):
     granule = Granule(
         {
             "Granule": {
                 "GranuleUR": "foo",
                 "OnlineAccessURLs": {
-                    "OnlineAccessURL": {"URL": f"s3://mybucket/{filename}"}
+                    "OnlineAccessURL": {"URL": "s3://mybucket/temp.h5"}
                 },
             }
         },
@@ -37,10 +77,10 @@ def test_subset_granule(maap: MAAP, h5_path: str, aoi_gdf: gpd.GeoDataFrame):
     # we get should simply match the path of the h5 fixture file, except with a .gpq
     # extension, rather than an .h5 extension.
 
-    root, _ = os.path.splitext(h5_path)
-    expected_path = f"{root}.gpq"
+    expected_path = os.path.join(tmp_path, "temp.gpq")
     io_result = subset_granule(
         SubsetGranuleProps(
+            fs,
             granule,
             maap,
             aoi_gdf,
@@ -49,7 +89,7 @@ def test_subset_granule(maap: MAAP, h5_path: str, aoi_gdf: gpd.GeoDataFrame):
             "all",
             ["agbd"],
             "l2_quality_flag == 1",
-            Path(output_dir),
+            tmp_path,
         )
     )
 

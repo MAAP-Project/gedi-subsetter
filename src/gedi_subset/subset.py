@@ -68,6 +68,7 @@ class SubsetGranuleProps:
     single argument.
     """
 
+    fs: s3fs.S3FileSystem
     granule: Granule
     maap: MAAP
     aoi_gdf: gpd.GeoDataFrame
@@ -163,10 +164,8 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
     logger.debug(f"Subsetting {inpath}")
 
     try:
-        fs = s3fs.S3FileSystem()
-
         with (
-            fs.open(inpath, block_size=4 * 1024 * 1024, cache_type="all") as f,
+            props.fs.open(inpath, block_size=4 * 1024 * 1024, cache_type="all") as f,
             h5py.File(f) as hdf5,
         ):
             gdf = subset_hdf5(
@@ -181,6 +180,7 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
     except Exception as e:
         granule_ur = props.granule["Granule"]["GranuleUR"]
         logger.warning(f"Skipping granule {granule_ur} [failed to read {inpath}: {e}]")
+        logger.exception(e)
         return IOSuccess(Nothing)
 
     if gdf.empty:
@@ -249,9 +249,10 @@ def subset_granules(
     logger.info(f"Found {len(found_granules)} in the CMR")
     logger.info(f"Total downloadable granules: {len(downloadable_granules)}")
 
+    fs = s3fs.S3FileSystem()
     payloads = (
         SubsetGranuleProps(
-            granule, maap, aoi_gdf, lat, lon, beams, columns, query, output_dir
+            fs, granule, maap, aoi_gdf, lat, lon, beams, columns, query, output_dir
         )
         for granule in downloadable_granules
     )
