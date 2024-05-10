@@ -58,7 +58,7 @@ logging.Formatter.default_msec_format = "%s,%03dZ"
 logger = logging.getLogger("gedi_subset")
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class SubsetGranuleProps:
     """Properties for calling `subset_granule` with a single argument.
 
@@ -68,7 +68,7 @@ class SubsetGranuleProps:
     single argument.
     """
 
-    fs: s3fs.S3FileSystem
+    fs: s3fs.S3FileSystem | None = None
     granule: Granule
     maap: MAAP
     aoi_gdf: gpd.GeoDataFrame
@@ -162,10 +162,11 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
         return IOSuccess(Nothing)
 
     logger.debug(f"Subsetting {inpath}")
+    fs = props.fs or s3fs.S3FileSystem()
 
     try:
         with (
-            props.fs.open(inpath, block_size=4 * 1024 * 1024, cache_type="all") as f,
+            fs.open(inpath, block_size=4 * 1024 * 1024, cache_type="all") as f,
             h5py.File(f) as hdf5,
         ):
             gdf = subset_hdf5(
@@ -249,10 +250,17 @@ def subset_granules(
     logger.info(f"Found {len(found_granules)} in the CMR")
     logger.info(f"Total downloadable granules: {len(downloadable_granules)}")
 
-    fs = s3fs.S3FileSystem()
     payloads = (
         SubsetGranuleProps(
-            fs, granule, maap, aoi_gdf, lat, lon, beams, columns, query, output_dir
+            granule=granule,
+            maap=maap,
+            aoi_gdf=aoi_gdf,
+            lat_col=lat,
+            lon_col=lon,
+            beams=beams,
+            columns=columns,
+            query=query,
+            output_dir=output_dir,
         )
         for granule in downloadable_granules
     )

@@ -80,16 +80,16 @@ def test_subset_granule(
     expected_path = os.path.join(tmp_path, "temp.gpq")
     io_result = subset_granule(
         SubsetGranuleProps(
-            fs,
-            granule,
-            maap,
-            aoi_gdf,
-            "lat_lowestmode",
-            "lon_lowestmode",
-            "all",
-            ["agbd"],
-            "l2_quality_flag == 1",
-            tmp_path,
+            fs=fs,
+            granule=granule,
+            maap=maap,
+            aoi_gdf=aoi_gdf,
+            lat_col="lat_lowestmode",
+            lon_col="lon_lowestmode",
+            beams="all",
+            columns=["agbd"],
+            query="l2_quality_flag == 1",
+            output_dir=tmp_path,
         )
     )
 
