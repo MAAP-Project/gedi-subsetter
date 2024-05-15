@@ -11,6 +11,7 @@ from typing import Any, Callable, Iterable, Mapping, NoReturn, Optional, Sequenc
 
 import geopandas as gpd
 import h5py
+import s3fs
 import typer
 from maap.maap import MAAP
 from maap.Result import Collection, Granule
@@ -36,7 +37,7 @@ from gedi_subset.gedi_utils import (
     is_power_beam,
     subset_hdf5,
 )
-from gedi_subset.maapx import download_granule, find_collection
+from gedi_subset.maapx import find_collection
 
 logical_dois = {
     "L1B": "10.5067/GEDI/GEDI01_B.002",
@@ -57,7 +58,7 @@ logging.Formatter.default_msec_format = "%s,%03dZ"
 logger = logging.getLogger("gedi_subset")
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class SubsetGranuleProps:
     """Properties for calling `subset_granule` with a single argument.
 
@@ -67,6 +68,7 @@ class SubsetGranuleProps:
     single argument.
     """
 
+    fs: s3fs.S3FileSystem | None = None
     granule: Granule
     maap: MAAP
     aoi_gdf: gpd.GeoDataFrame
@@ -154,37 +156,39 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
     GeoParquet file.
     """
 
-    inpath = download_granule(props.granule, str(props.output_dir))
+    if not (inpath := props.granule.getDownloadUrl()):
+        granule_ur = props.granule["Granule"]["GranuleUR"]
+        logger.warning(f"Skipping granule {granule_ur} [no download URL]")
+        return IOSuccess(Nothing)
 
     logger.debug(f"Subsetting {inpath}")
+    fs = props.fs or s3fs.S3FileSystem()
 
     try:
-        hdf5 = h5py.File(inpath)
+        with (
+            fs.open(inpath, block_size=4 * 1024 * 1024, cache_type="all") as f,
+            h5py.File(f) as hdf5,
+        ):
+            gdf = subset_hdf5(
+                hdf5,
+                aoi=props.aoi_gdf,
+                lat_col=props.lat_col,
+                lon_col=props.lon_col,
+                beam_filter=beam_filter(props.beams),
+                columns=props.columns,
+                query=props.query,
+            )
     except Exception as e:
         granule_ur = props.granule["Granule"]["GranuleUR"]
         logger.warning(f"Skipping granule {granule_ur} [failed to read {inpath}: {e}]")
+        logger.exception(e)
         return IOSuccess(Nothing)
-
-    try:
-        gdf = subset_hdf5(
-            hdf5,
-            aoi=props.aoi_gdf,
-            lat_col=props.lat_col,
-            lon_col=props.lon_col,
-            beam_filter=beam_filter(props.beams),
-            columns=props.columns,
-            query=props.query,
-        )
-    finally:
-        hdf5.close()
-
-    osx.remove(inpath)
 
     if gdf.empty:
         logger.debug(f"Empty subset produced from {inpath}; not writing")
         return IOSuccess(Nothing)
 
-    outpath = chext(".gpq", inpath)
+    outpath = chext(".gpq", os.path.join(props.output_dir, inpath.split("/")[-1]))
     logger.debug(f"Writing subset to {outpath}")
 
     return gdf_to_parquet(outpath, gdf).map(fp.always(Some(outpath)))
@@ -248,7 +252,15 @@ def subset_granules(
 
     payloads = (
         SubsetGranuleProps(
-            granule, maap, aoi_gdf, lat, lon, beams, columns, query, output_dir
+            granule=granule,
+            maap=maap,
+            aoi_gdf=aoi_gdf,
+            lat_col=lat,
+            lon_col=lon,
+            beams=beams,
+            columns=columns,
+            query=query,
+            output_dir=output_dir,
         )
         for granule in downloadable_granules
     )

@@ -161,7 +161,7 @@ To run a GEDI subsetting DPS job, you must supply the following inputs:
   Scalene option is `--on`.  Otherwise, as mentioned above, when no value is
   supplied for this input, Scalene will not be used at all.
 
-  > **Note:** that since no browser is available in DPS, when any value is
+  > **Note:** Since no browser is available in DPS, when any value is
   > supplied for this input, the `--no-browser` option will be included to
   > prevent Scalene from attempting to open a browser.  However, the `--web`
   > option will also be included, which will produce HTML output to a file named
@@ -242,7 +242,6 @@ inputs = dict(
    beams="all",
    columns=...,
    query=...,
-   limit=0,
 )
 ```
 
@@ -257,7 +256,6 @@ inputs = dict(
    beams="all",
    columns="rh50,rh98",
    query="quality_flag == 1 and sensitivity > 0.95",
-   limit=0,
 )
 ```
 
@@ -272,7 +270,6 @@ inputs = dict(
    beams="all",
    columns="rh100",
    query="l2a_quality_flag == 1 and l2b_quality_flag == 1 and sensitivity > 0.95",
-   limit=0,
 )
 ```
 
@@ -287,7 +284,6 @@ inputs = dict(
    beams="all",
    columns="agbd, agbd_se, sensitivity, geolocation/sensitivity_a2",
    query="l2_quality_flag == 1 and l4_quality_flag == 1 and sensitivity > 0.95 and `geolocation/sensitivity_a2` > 0.95",
-   limit=0,
 )
 ```
 

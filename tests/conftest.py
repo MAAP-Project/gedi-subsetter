@@ -38,7 +38,7 @@ class MockMAAP(MAAP):
             )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module")
 def aws_credentials() -> None:
     """Mocked AWS Credentials for moto."""
     os.environ["AWS_ACCESS_KEY_ID"] = "testing"
