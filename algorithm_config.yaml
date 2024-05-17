@@ -56,7 +56,7 @@ inputs:
       description: Maximum number of GEDI granule data files to download from the CMR,
         regardless of the number of granules within the AOI.
       required: false
-      default: "1000"
+      default: "100_000"
     - name: output
       description: Name of the output file produced by the algorithm.  Defaults to
         using the AOI file name (without the extension) with the suffix "_subset.gpkg".
@@ -67,3 +67,9 @@ inputs:
         provided, Scalene will not be used.
       required: false
       default: ""
+    - name: s3fs_open_kwargs
+      description: 'Python literal dict to pass as keyword arguments to s3fs.open when
+        reading files from S3.  For example: {"block_size": 4194304, "cache_type": "all"}.
+        See https://filesystem-spec.readthedocs.io/en/latest/api.html#s3fs.S3FileSystem.open.'
+      required: false
+      default: '{"block_size": 4194304, "cache_type": "all"}'

@@ -27,7 +27,7 @@ else
     aoi="$(ls "${input_dir}"/*)"
 
     n_actual=${#}
-    n_expected=10
+    n_expected=11
 
     if test ${n_actual} -ne ${n_expected}; then
         echo "Expected ${n_expected} inputs, but got ${n_actual}:$(printf " '%b'" "$@")" >&2
@@ -46,6 +46,7 @@ else
     [[ -n "${9}" ]] && args+=(--output "${9}")
     # Split the 10th argument into an array of arguments to pass to scalene.
     IFS=' ' read -ra scalene_args <<<"${10}"
+    [[ -n "${11}" ]] && args+=(--s3fs-open-kwargs "${11}")
 
     command=("${subset_py}" "${args[@]}")
 
