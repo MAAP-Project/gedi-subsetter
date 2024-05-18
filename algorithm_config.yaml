@@ -62,14 +62,19 @@ inputs:
         using the AOI file name (without the extension) with the suffix "_subset.gpkg".
       required: false
       default: ""
-    - name: scalene_args
-      description: Arguments to pass to Scalene for memory and CPU profiling.  If not
-        provided, Scalene will not be used.
-      required: false
-      default: ""
     - name: s3fs_open_kwargs
       description: 'Python literal dict to pass as keyword arguments to s3fs.open when
         reading files from S3.  For example: {"block_size": 4194304, "cache_type": "all"}.
         See https://filesystem-spec.readthedocs.io/en/latest/api.html#s3fs.S3FileSystem.open.'
       required: false
-      default: '{"block_size": 4194304, "cache_type": "all"}'
+      default: ""
+    - name: cpus
+      description: Number of CPUs to use for parallel processing.  If not provided,
+        all available CPUs are used.
+      required: false
+      default: ""
+    - name: scalene_args
+      description: Arguments to pass to Scalene for memory and CPU profiling.  If not
+        provided, Scalene will not be used.
+      required: false
+      default: ""

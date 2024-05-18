@@ -229,7 +229,8 @@ def subset_granules(
     dest: Path,
     init_args: Tuple[Any, ...],
     granules: Iterable[Granule],
-    s3fs_open_kwargs: Mapping[str, Any] = {},
+    s3fs_open_kwargs: Optional[Mapping[str, Any]] = None,
+    cpus: Optional[int] = None,
 ) -> IOResultE[Tuple[str, ...]]:
     def subset_saved(path: IOResultE[Maybe[str]]) -> bool:
         """Return `True` if `path`'s value is a `Some`, otherwise `False` if it
@@ -249,11 +250,7 @@ def subset_granules(
             map_(fp.always(src)),
         )
 
-    # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool.imap
-    # We're dealing with relatively small numbers of granules (dozens, perhaps
-    # hundreds, at most), so we can stick with a chunksize of 1.
-    chunksize = 1
-    processes = min(8, os.cpu_count() or 32)
+    processes = cpus or os.cpu_count()
     found_granules = list(granules)
     # On occasion, a granule is missing a download URL, so the _downloadname
     # attribute is set to None, and attempting to download it throws an
@@ -261,13 +258,16 @@ def subset_granules(
     downloadable_granules = [
         granule for granule in found_granules if granule._downloadname
     ]
+    # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool.imap
+    # If we have at least 10 granules per process, use a chunksize of 10.
+    chunksize = 10 if processes and len(downloadable_granules) >= 10 * processes else 1
 
     logger.info(f"Found {len(found_granules)} in the CMR")
     logger.info(f"Total downloadable granules: {len(downloadable_granules)}")
 
     payloads = (
         SubsetGranuleProps(
-            s3fs_open_kwargs=s3fs_open_kwargs,
+            s3fs_open_kwargs=s3fs_open_kwargs or {},
             granule=granule,
             maap=maap,
             aoi_gdf=aoi_gdf,
@@ -281,7 +281,7 @@ def subset_granules(
         for granule in downloadable_granules
     )
 
-    logger.info(f"Subsetting on {processes} processes (chunksize={chunksize})")
+    logger.info(f"Subsetting on {processes} CPUs (chunksize={chunksize})")
 
     with multiprocessing.Pool(processes, init_process, init_args) as pool:
         return flow(
@@ -294,81 +294,100 @@ def subset_granules(
 
 
 def main(
-    aoi: Path = typer.Option(
-        ...,
-        show_default=False,
-        help="Area of Interest (path to GeoJSON file)",
-        exists=True,
-        file_okay=True,
-        dir_okay=False,
-        writable=False,
-        readable=True,
-        resolve_path=True,
-    ),
-    doi=typer.Option(
-        ...,
-        show_default=False,
-        callback=lambda value: logical_dois.get(value.upper(), value),
-        help=(
-            "Digital Object Identifier (DOI) of collection to subset"
-            " (https://www.doi.org/), or one of these logical, case-insensitive"
-            f" names: {', '.join(logical_dois)}"
+    aoi: Annotated[
+        Path,
+        typer.Option(
+            show_default=False,
+            help="Area of Interest (path to GeoJSON file)",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
         ),
-    ),
-    lat: str = typer.Option(
-        ...,
-        show_default=False,
-        help=("Latitude dataset used in the geometry of the dataframe"),
-    ),
-    lon: str = typer.Option(
-        ...,
-        show_default=False,
-        help=("Longitude dataset used in the geometry of the dataframe"),
-    ),
-    beams: str = typer.Option(
-        "all",
-        callback=check_beams_option,
-        help=(
-            "Which beams to include in the subset. Must be 'all', 'coverage', 'power',"
-            " OR a comma-separated list of beam names, with or without the 'BEAM'"
-            " prefix (e.g., 'BEAM0000,BEAM0001' or '0000,0001')"
+    ],
+    doi: Annotated[
+        str,
+        typer.Option(
+            show_default=False,
+            callback=lambda value: logical_dois.get(value.upper(), value),
+            help=(
+                "Digital Object Identifier (DOI) of collection to subset"
+                " (https://www.doi.org/), or one of these logical, case-insensitive"
+                f" names: {', '.join(logical_dois)}"
+            ),
         ),
-    ),
-    columns: str = typer.Option(
-        ...,
-        show_default=False,
-        help="Comma-separated list of columns to select",
-    ),
-    query: str = typer.Option(
-        None,
-        help="Boolean query expression to select rows",
-    ),
-    limit: int = typer.Option(
-        DEFAULT_LIMIT,
-        callback=lambda value: DEFAULT_LIMIT if value < 1 else value,
-        help="Maximum number of granules to subset",
-    ),
-    temporal: str = typer.Option(
-        None,
-        help=(
-            "Temporal range to subset"
-            " (e.g., '2019-01-01T00:00:00Z,2020-01-01T00:00:00Z')"
+    ],
+    lat: Annotated[
+        str,
+        typer.Option(
+            show_default=False,
+            help=("Latitude dataset used in the geometry of the dataframe"),
         ),
-    ),
-    output: Path = typer.Option(
-        None,
-        "-o",
-        "--output",
-        help="Output file path for generated subset file",
-        exists=False,
-        file_okay=True,
-        dir_okay=False,
-        writable=True,
-        readable=True,
-    ),
-    verbose: bool = typer.Option(False, help="Provide verbose output"),
+    ],
+    lon: Annotated[
+        str,
+        typer.Option(
+            show_default=False,
+            help=("Longitude dataset used in the geometry of the dataframe"),
+        ),
+    ],
+    columns: Annotated[
+        str,
+        typer.Option(
+            show_default=False,
+            help="Comma-separated list of columns to select",
+        ),
+    ],
+    beams: Annotated[
+        str,
+        typer.Option(
+            callback=check_beams_option,
+            help=(
+                "Which beams to include in the subset.  Must be 'all', 'coverage',"
+                " 'power', OR a comma-separated list of beam names, with or without the"
+                " 'BEAM' prefix (e.g., 'BEAM0000,BEAM0001' or '0000,0001')"
+            ),
+        ),
+    ] = "all",
+    query: Annotated[
+        Optional[str],
+        typer.Option(help="Boolean query expression to select rows"),
+    ] = None,
+    limit: Annotated[
+        int,
+        typer.Option(
+            callback=lambda value: DEFAULT_LIMIT if value < 1 else value,
+            help="Maximum number of granules to subset",
+        ),
+    ] = DEFAULT_LIMIT,
+    temporal: Annotated[
+        Optional[str],
+        typer.Option(
+            help=(
+                "Temporal range to subset"
+                " (e.g., '2019-01-01T00:00:00Z,2020-01-01T00:00:00Z')"
+            ),
+        ),
+    ] = None,
+    output: Annotated[
+        Optional[Path],
+        typer.Option(
+            ...,
+            "-o",
+            "--output",
+            help="Output file path for generated subset file",
+            exists=False,
+            file_okay=True,
+            dir_okay=False,
+            writable=True,
+            readable=True,
+        ),
+    ] = None,
+    verbose: Annotated[bool, typer.Option(help="Provide verbose output")] = False,
     s3fs_open_kwargs: Annotated[
-        dict[str, Any],
+        Optional[dict[str, Any]],
         typer.Option(
             parser=lambda value: json.loads(value) if isinstance(value, str) else value,
             metavar="JSON",
@@ -377,7 +396,10 @@ def main(
                 " for reading HDF5 files"
             ),
         ),
-    ] = {"block_size": 4 * 1024 * 1024, "cache_type": "all"},
+    ] = None,
+    cpus: Annotated[
+        int, typer.Option(help="Number of CPUs to use for parallel processing")
+    ] = (os.cpu_count() or 1),
 ) -> None:
     logging_level = logging.DEBUG if verbose else logging.INFO
     set_logging_level(logging_level)
@@ -428,6 +450,7 @@ def main(
             (logging_level,),
             fp.filter(granule_intersects(aoi_gdf.unary_union))(granules),
             s3fs_open_kwargs,
+            cpus,
         )
     ).bind_ioresult(
         lambda subsets: (
