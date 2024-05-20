@@ -57,17 +57,20 @@ else
         for arg in "${scalene_args[@]}"; do
             if [[ "${arg}" == "--json" ]]; then
                 ext="json"
+            elif [[ "${arg}" == "--cli" ]]; then
+                ext="txt"
             fi
         done
 
         # Force output to be written to the output directory by adding the
         # `--outfile` argument after any user-provided arguments.  If the user
         # provides their own `--outfile` argument, it will be ignored.  Also,
-        # add `--cli` to ensure that scalene does not attempt to open a browser.
+        # add `--no-browser` to ensure that scalene does not attempt to open a
+        # browser.
         command=(
             scalene
             "${scalene_args[@]}"
-            --cli
+            --no-browser
             --outfile "${output_dir}/profile.${ext}"
             ---
             "${command[@]}"
