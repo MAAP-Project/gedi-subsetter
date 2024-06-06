@@ -295,11 +295,15 @@ inputs = dict(
 
 ### Submitting a DPS Job
 
-The GEDI Subsetting DPS Job is named `gedi-subset`, and may be executed
-from your ADE Workspace by opening the **Jobs** menu, choosing
-the **View & Submit Jobs** menu option, and selecting `gedi-subset:<VERSION>`
-from the dropdown.  You will be prompted for the inputs as described in the
-previous section.
+The GEDI Subsetting DPS Job is named `gedi-subset`, and may be executed from
+your ADE Workspace by opening the **Jobs** menu, choosing the **View & Submit
+Jobs** menu option, and selecting `gedi-subset:<VERSION>` from the dropdown.
+You will be prompted for the inputs as described in the previous section.
+
+This algorithm is configured with a default job queue that provides 32 CPUs for
+fast performance.  It is recommended that you do _not_ specify a queue value so
+that the default queue will be used, unless you have a specific reason to use
+and alternative job queue.
 
 Alternatively, for greater control of your job configuration, you may use the
 MAAP API from a Notebook (or a Python script), as follows:
@@ -327,7 +331,6 @@ result = maap.submitJob(
     identifier="<DESCRIPTION>",
     algo_id="gedi-subset",
     version="<VERSION>",
-    queue="maap-dps-worker-32gb",
     username="<USERNAME>",  # Your Earthdata Login username
     **inputs
 )

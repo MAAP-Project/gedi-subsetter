@@ -229,7 +229,7 @@ def subset_granules(
     # We're dealing with relatively small numbers of granules (dozens, perhaps
     # hundreds, at most), so we can stick with a chunksize of 1.
     chunksize = 1
-    processes = min(8, os.cpu_count() or 32)
+    processes = os.cpu_count()
     found_granules = list(granules)
     # On occasion, a granule is missing a download URL, so the _downloadname
     # attribute is set to None, and attempting to download it throws an

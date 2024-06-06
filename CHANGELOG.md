@@ -5,9 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog], and this project adheres to
 [Semantic Versioning].
 
-## Unreleased
+## 0.7.1 (2024-06-06)
 
-### 0.7.0 (2024-04-23)
+### Changed
+
+- Use all available CPUs, rather than limiting to a maximum of 8
+  ([#78](https://github.com/MAAP-Project/gedi-subsetter/issues/78))
+- Make `maap-dps-worker-32vcpu-64gb` the default job queue, providing 32 CPUs
+  and 64GB of RAM, as the name implies
+  ([#78](https://github.com/MAAP-Project/gedi-subsetter/issues/78))
+
+## 0.7.0 (2024-04-23)
 
 ### Added
 

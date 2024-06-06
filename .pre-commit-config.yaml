@@ -3,7 +3,9 @@
 # See https://pre-commit.ci/ for CI configuration
 
 ci:
-  autofix_prs: false
+  autoupdate_schedule: "monthly" # Like dependabot
+  autoupdate_commit_msg: "Update pre-commit hooks"
+  autofix_prs: false # Comment "pre-commit.ci autofix" on a PR to trigger
 
 default_language_version:
   python: python3.11
