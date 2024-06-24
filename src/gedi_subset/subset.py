@@ -175,14 +175,19 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
 
     logger.debug(f"Subsetting {inpath}")
     fs = props.fs or s3fs.S3FileSystem()
+    s3fs_open_kwargs = {
+        "cache_type": "all",
+        "block_size": 8 * 1024 * 1024,
+        "fill": True,
+        # Allow the caller to override the default values above.
+        **props.s3fs_open_kwargs,
+        # Force the use of the "rb" mode.  We don't want to allow the mode
+        # to be set by user input.
+        "mode": "rb",
+    }
 
     try:
-        with (
-            # Force the use of the "rb" mode.  We don't want to allow the mode
-            # to be set by user input.
-            fs.open(inpath, **{**props.s3fs_open_kwargs, "mode": "rb"}) as f,
-            h5py.File(f) as hdf5,
-        ):
+        with fs.open(inpath, **s3fs_open_kwargs) as f, h5py.File(f) as hdf5:
             gdf = subset_hdf5(
                 hdf5,
                 aoi=props.aoi_gdf,
