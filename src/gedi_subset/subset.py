@@ -235,7 +235,7 @@ def subset_granules(
     init_args: Tuple[Any, ...],
     granules: Iterable[Granule],
     s3fs_open_kwargs: Optional[Mapping[str, Any]] = None,
-    cpus: Optional[int] = None,
+    processes: Optional[int] = None,
 ) -> IOResultE[Tuple[str, ...]]:
     def subset_saved(path: IOResultE[Maybe[str]]) -> bool:
         """Return `True` if `path`'s value is a `Some`, otherwise `False` if it
@@ -255,7 +255,6 @@ def subset_granules(
             map_(fp.always(src)),
         )
 
-    processes = cpus or os.cpu_count()
     found_granules = list(granules)
     # On occasion, a granule is missing a download URL, so the _downloadname
     # attribute is set to None, and attempting to download it throws an
@@ -402,8 +401,8 @@ def main(
             ),
         ),
     ] = None,
-    cpus: Annotated[
-        int, typer.Option(help="Number of CPUs to use for parallel processing")
+    processes: Annotated[
+        int, typer.Option(help="Number of processes to use for parallel processing")
     ] = (os.cpu_count() or 1),
 ) -> None:
     logging_level = logging.DEBUG if verbose else logging.INFO
@@ -455,7 +454,7 @@ def main(
             (logging_level,),
             fp.filter(granule_intersects(aoi_gdf.unary_union))(granules),
             s3fs_open_kwargs,
-            cpus,
+            processes,
         )
     ).bind_ioresult(
         lambda subsets: (

@@ -45,7 +45,7 @@ else
     [[ -n "${8}" ]] && args+=(--limit "${8}")
     [[ -n "${9}" ]] && args+=(--output "${9}")
     [[ -n "${10}" ]] && args+=(--s3fs-open-kwargs "${10}")
-    [[ -n "${11}" ]] && args+=(--cpus "${11}")
+    [[ -n "${11}" ]] && args+=(--processes "${11}")
     # Split the last argument into an array of arguments to pass to scalene.
     IFS=' ' read -ra scalene_args <<<"${12}"
 

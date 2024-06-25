@@ -68,9 +68,9 @@ inputs:
         See https://filesystem-spec.readthedocs.io/en/latest/api.html#s3fs.S3FileSystem.open.'
       required: false
       default: ""
-    - name: cpus
-      description: Number of CPUs to use for parallel processing.  If not provided,
-        all available CPUs are used.
+    - name: processes
+      description: Number of processes to use for parallel processing.  If not provided,
+        defaults to the number of available CPUs.
       required: false
       default: ""
     - name: scalene_args
