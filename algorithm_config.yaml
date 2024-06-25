@@ -4,7 +4,7 @@ algorithm_version: 0.7.0
 repository_url: https://github.com/MAAP-Project/gedi-subsetter.git
 docker_container_url: mas.maap-project.org/root/maap-workspaces/base_images/vanilla:v3.1.5
 disk_space: 20GB
-queue: maap-dps-worker-32gb
+queue: maap-dps-worker-32vcpu-64gb
 build_command: gedi-subsetter/bin/build-dps
 run_command: gedi-subsetter/bin/subset.sh
 inputs:
@@ -53,8 +53,8 @@ inputs:
       required: false
       default: all
     - name: limit
-      description: Maximum number of GEDI granule data files to download from the CMR,
-        regardless of the number of granules within the AOI.
+      description: Maximum number of GEDI granules to subset, regardless of the number
+        of granules within the spatio-temporal range.
       required: false
       default: "100_000"
     - name: output
@@ -63,11 +63,11 @@ inputs:
       required: false
       default: ""
     - name: s3fs_open_kwargs
-      description: 'Python literal dict to pass as keyword arguments to s3fs.open when
-        reading files from S3.  For example: {"block_size": 4194304, "cache_type": "all"}.
-        See https://filesystem-spec.readthedocs.io/en/latest/api.html#s3fs.S3FileSystem.open.'
+      description: JSON object representing keyword arguments to pass to
+        s3fs.S3FileSystem.open when reading files from S3.  See
+        https://filesystem-spec.readthedocs.io/en/latest/api.html#s3fs.S3FileSystem.open.
       required: false
-      default: ""
+      default: '{"cache_type": "all", "block_size": 8388608, "fill": true}'
     - name: processes
       description: Number of processes to use for parallel processing.  If not provided,
         defaults to the number of available CPUs.
