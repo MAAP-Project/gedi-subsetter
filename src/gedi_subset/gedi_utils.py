@@ -10,7 +10,6 @@ import pandas as pd
 import requests
 import shapely
 from maap.Result import Granule
-from returns.curry import curry
 from returns.io import IOResultE, impure_safe
 
 import gedi_subset.fp as fp
@@ -32,13 +31,11 @@ def pprint(value: Any) -> None:
     print(json.dumps(value, indent=2))
 
 
-# str -> str -> str
 def chext(ext: str, path: str) -> str:
     """Changes the extension of a path."""
     return f"{os.path.splitext(path)[0]}{ext}"
 
 
-@curry
 def gdf_to_file(
     file: Union[str, os.PathLike], props: Mapping[str, Any], gdf: gpd.GeoDataFrame
 ) -> IOResultE[None]:
@@ -51,7 +48,6 @@ def gdf_to_file(
     return impure_safe(gdf.to_file)(file, **props)
 
 
-@curry
 def gdf_to_parquet(
     path: Union[str, os.PathLike], gdf: gpd.GeoDataFrame
 ) -> IOResultE[None]:
@@ -108,7 +104,6 @@ def granule_geometry(granule: Granule) -> shapely.Geometry:
     return shapely.union_all(polygons)
 
 
-@curry
 def granule_intersects(aoi: shapely.Geometry, granule: Granule):
     """Determines whether or not a granule intersects an Area of Interest
 

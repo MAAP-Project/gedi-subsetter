@@ -289,7 +289,7 @@ def subset_granules(
 
     # Create an empty GeoPackage file to append subsets to, so that even if
     # all subsets are empty, the output file will still exist.
-    gdf_to_file(dest, gpd.GeoDataFrame(), driver="GPKG")
+    gdf_to_file(dest, dict(index=False, mode="a", driver="GPKG"), gpd.GeoDataFrame())
 
     with multiprocessing.Pool(processes, init_process, init_args) as pool:
         return flow(
@@ -459,7 +459,7 @@ def main(
                 output_dir,
                 dest,
                 (logging_level,),
-                fp.filter(granule_intersects(aoi_gdf.unary_union))(granules),
+                fp.filter(partial(granule_intersects, aoi_gdf.unary_union))(granules),
                 s3fs_open_kwargs,
                 processes,
             )
