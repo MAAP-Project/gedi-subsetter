@@ -286,6 +286,10 @@ def subset_granules(
 
     logger.info(f"Subsetting on {processes} CPUs (chunksize={chunksize})")
 
+    # Create an empty GeoPackage file to append subsets to, so that even if
+    # all subsets are empty, the output file will still exist.
+    gdf_to_file(dest, gpd.GeoDataFrame(), driver="GPKG")
+
     with multiprocessing.Pool(processes, init_process, init_args) as pool:
         return flow(
             pool.imap_unordered(subset_granule, payloads, chunksize),
