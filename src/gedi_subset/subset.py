@@ -424,48 +424,46 @@ def main(
     maap = MAAP("api.maap-project.org")
     cmr_host = "cmr.earthdata.nasa.gov"
 
-    IOResult.do(
-        subsets
-        for aoi_gdf in impure_safe(gpd.read_file)(aoi)
-        # Use wildcards around DOI value because some collections have incorrect
-        # DOI values. For example, the L2B collection has the full DOI URL as
-        # the DOI value (i.e., https://doi.org/<DOI> rather than just <DOI>).
-        for collection in find_gedi_collection(
-            maap, dict(cmr_host=cmr_host, doi=f"*{doi}*", cloud_hosted="true")
+    gpq_paths = unsafe_perform_io(
+        IOResult.do(
+            subsets
+            for aoi_gdf in impure_safe(gpd.read_file)(aoi)
+            # Use wildcards around DOI value because some collections have incorrect
+            # DOI values. For example, the L2B collection has the full DOI URL as
+            # the DOI value (i.e., https://doi.org/<DOI> rather than just <DOI>).
+            for collection in find_gedi_collection(
+                maap, dict(cmr_host=cmr_host, doi=f"*{doi}*", cloud_hosted="true")
+            )
+            for granules in impure_safe(maap.searchGranule)(
+                cmr_host=cmr_host,
+                collection_concept_id=collection["concept-id"],
+                bounding_box=",".join(
+                    fp.map(str)(aoi_gdf.total_bounds)
+                ),  # pyright: ignore
+                limit=limit,
+                **(dict(temporal=temporal) if temporal else {}),
+            )
+            for subsets in subset_granules(
+                maap,
+                aoi_gdf,
+                lat,
+                lon,
+                beams,
+                [c.strip() for c in columns.split(",")],
+                query,
+                output_dir,
+                dest,
+                (logging_level,),
+                fp.filter(granule_intersects(aoi_gdf.unary_union))(granules),
+                fsspec_kwargs,
+                processes,
+            )
         )
-        for granules in impure_safe(maap.searchGranule)(
-            cmr_host=cmr_host,
-            collection_concept_id=collection["concept-id"],
-            bounding_box=",".join(fp.map(str)(aoi_gdf.total_bounds)),  # pyright: ignore
-            limit=limit,
-            **(dict(temporal=temporal) if temporal else {}),
-        )
-        for subsets in subset_granules(
-            maap,
-            aoi_gdf,
-            lat,
-            lon,
-            beams,
-            [c.strip() for c in columns.split(",")],
-            query,
-            output_dir,
-            dest,
-            (logging_level,),
-            fp.filter(granule_intersects(aoi_gdf.unary_union))(granules),
-            fsspec_kwargs,
-            processes,
-        )
-    ).bind_ioresult(
-        lambda subsets: (
-            IOSuccess(subsets)
-            if subsets
-            else IOFailure(ValueError(f"No granules intersect the AOI: {aoi}"))
-        )
-    ).map(
-        lambda subsets: logger.info(f"Subset {len(subsets)} granule(s) to {dest}")
-    ).alt(
-        raise_exception
+        .alt(raise_exception)
+        .unwrap()
     )
+
+    logger.info(f"Subset {len(gpq_paths)} granule(s) to {dest}.")
 
 
 if __name__ == "__main__":
