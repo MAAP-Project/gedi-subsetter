@@ -20,9 +20,9 @@ from typing import (
     Tuple,
 )
 
+import fsspec
 import geopandas as gpd
 import h5py
-import s3fs
 import typer
 from maap.maap import MAAP
 from maap.Result import Collection, Granule
@@ -79,7 +79,7 @@ class SubsetGranuleProps:
     single argument.
     """
 
-    fs: s3fs.S3FileSystem | None = None
+    fs: fsspec.AbstractFileSystem | None = None
     s3fs_open_kwargs: Mapping[str, Any] = field(default_factory=dict)
     granule: Granule
     maap: MAAP
@@ -174,7 +174,7 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
         return IOSuccess(Nothing)
 
     logger.debug(f"Subsetting {inpath}")
-    fs = props.fs or s3fs.S3FileSystem()
+    fs = props.fs or fsspec
     s3fs_open_kwargs = {
         "cache_type": "all",
         "block_size": 8 * 1024 * 1024,
@@ -197,6 +197,9 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
                 columns=props.columns,
                 query=props.query,
             )
+
+            if isinstance(f, fsspec.spec.AbstractBufferedFile):
+                logger.debug(f"{f.cache!r}")
     except Exception as e:
         granule_ur = props.granule["Granule"]["GranuleUR"]
         logger.warning(f"Skipping granule {granule_ur} [failed to read {inpath}: {e}]")
