@@ -265,8 +265,10 @@ def subset_granules(
     # If we have at least 10 granules per process, use a chunksize of 10.
     chunksize = 10 if processes and len(downloadable_granules) >= 10 * processes else 1
 
-    logger.info(f"Found {len(found_granules)} in the CMR")
-    logger.info(f"Total downloadable granules: {len(downloadable_granules)}")
+    logger.info(
+        f"Granules found in the CMR: {len(found_granules)}"
+        f" (downloadable: {len(downloadable_granules)})"
+    )
 
     payloads = (
         SubsetGranuleProps(
@@ -285,10 +287,6 @@ def subset_granules(
     )
 
     logger.info(f"Subsetting on {processes} CPUs (chunksize={chunksize})")
-
-    # Create an empty GeoPackage file to append subsets to, so that even if
-    # all subsets are empty, the output file will still exist.
-    gdf_to_file(dest, dict(index=False, mode="a", driver="GPKG"), gpd.GeoDataFrame())
 
     with multiprocessing.Pool(processes, init_process, init_args) as pool:
         return flow(
@@ -467,7 +465,10 @@ def main(
         .unwrap()
     )
 
-    logger.info(f"Subset {len(gpq_paths)} granule(s) to {dest}.")
+    if gpq_paths:
+        logger.info(f"Subset {len(gpq_paths)} granule(s) to {dest}.")
+    else:
+        logger.info(f"Empty subset: {dest} was not created.")
 
 
 if __name__ == "__main__":
