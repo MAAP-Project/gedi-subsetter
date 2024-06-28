@@ -9,13 +9,34 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ### Changed
 
-- [#14](https://github.com/MAAP-Project/gedi-subsetter/issues/14) AWS S3
-  credentials are no longer obtained via the `maap-py` library.  Instead, they
-  are obtained via a role using the EC2 instance metadata.
-- [#72](https://github.com/MAAP-Project/gedi-subsetter/issues/72) Log messages
-  now use ISO 8601 UTC combined date and time representations with milliseconds.
-- [#54](https://github.com/MAAP-Project/gedi-subsetter/issues/54) Granule files
-  are no longer downloaded.  Instead, they are read directly from AWS S3.
+- Obtain AWS S3 credentials via a role using the EC2 instance metadata rather
+  than via the `maap-py` library
+  ([#14](https://github.com/MAAP-Project/gedi-subsetter/issues/14))
+- Log messages with timestamps in ISO 8601 UTC combined date and time
+  representations with milliseconds
+  ([#72](https://github.com/MAAP-Project/gedi-subsetter/issues/72))
+- Read granule files directly from AWS S3 instead of downloading them
+  ([#54](https://github.com/MAAP-Project/gedi-subsetter/issues/54))
+- Optimize AWS S3 read performance to provide ~10% speed improvement (on
+  average) over downloading files by tuning the `cache_type`, `block_size`, and
+  `fill` keyword arguments to the `s3fs.S3FileSystem.open` method
+  ([#77](https://github.com/MAAP-Project/gedi-subsetter/issues/77))
+- Set default granule `limit` to 100000.  Although this is not unlimited, it
+  effectively behaves as such because all of the supported GEDI collections have
+  fewer granules than this limit.
+  ([#69](https://github.com/MAAP-Project/gedi-subsetter/issues/69))
+- Set default job queue to `maap-dps-worker-32vcpu-64gb` to improve performance
+  by running on 32 CPUs
+  ([#78](https://github.com/MAAP-Project/gedi-subsetter/issues/78))
+
+### Added
+
+- Add `s3fs_open_kwargs` input to allow user to specify keyword arguments to the
+  `s3fs.S3FileSystem.open` method; see [MAAP_USAGE.md] for details.
+  ([#77](https://github.com/MAAP-Project/gedi-subsetter/issues/77))
+- Add `processes` input to allow user to specify the number of processes to use,
+  defaulting to the number of available CPUs
+  ([#77](https://github.com/MAAP-Project/gedi-subsetter/issues/77))
 
 ## 0.7.0 (2024-04-23)
 
@@ -144,8 +165,10 @@ The format is based on [Keep a Changelog], and this project adheres to
 [fine-grained error locations in tracebacks]:
   https://docs.python.org/3/whatsnew/3.11.html#whatsnew311-pep657
 [Keep a Changelog]:
-    https://keepachangelog.com/en/1.0.0/
+  https://keepachangelog.com/en/1.0.0/
 [Semantic Versioning]:
-    https://semver.org/spec/v2.0.0.html
+  https://semver.org/spec/v2.0.0.html
 [MAAP-Project/maap-documentation-examples]:
-    https://github.com/MAAP-Project/maap-documentation-examples
+  https://github.com/MAAP-Project/maap-documentation-examples
+[MAAP_USAGE.md]:
+  docs/MAAP_USAGE.md
