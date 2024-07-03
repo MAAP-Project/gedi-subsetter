@@ -5,9 +5,9 @@
 # available, unless you explicitly update the lock file.
 #
 # Install this environment as "YOURENV" with:
-#     conda-lock install -n YOURENV conda-lock.yml
+#     conda-lock install -n YOURENV --file conda-lock.yml
 # This lock contains optional development dependencies. Include them in the installed environment with:
-#     conda-lock install --dev-dependencies -n YOURENV conda-lock.yml
+#     conda-lock install --dev-dependencies -n YOURENV --file conda-lock.yml
 # To update a single package to the latest version compatible with the version constraints in the source:
 #     conda-lock lock  --lockfile conda-lock.yml --update PACKAGE
 # To re-solve the entire environment, e.g. after changing a version constraint in the source file:
@@ -1740,53 +1740,53 @@ package:
   category: main
   optional: false
 - name: boto3-stubs
-  version: 1.34.135
+  version: 1.34.136
   manager: conda
   platform: linux-64
   dependencies:
     boto3: ''
     python: ''
     typing_extensions: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-1.34.135-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-1.34.136-pyhd8ed1ab_0.conda
   hash:
-    md5: e8668d449763f1e91f400e654ccac114
-    sha256: 2e455588d6358dbc8b83fae092edc18541e14398876ed92a8bb9bd52169f4fc4
+    md5: 26d6ab84e689a1f9009829361c84fff5
+    sha256: e888390282d6f5334e1dbe77500c10d4bfa7d9cc8c85081dd12d6f7c6faa967b
   category: dev
   optional: true
 - name: boto3-stubs
-  version: 1.34.135
+  version: 1.34.136
   manager: conda
   platform: osx-64
   dependencies:
     boto3: ''
     python: ''
     typing_extensions: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-1.34.135-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-1.34.136-pyhd8ed1ab_0.conda
   hash:
-    md5: e8668d449763f1e91f400e654ccac114
-    sha256: 2e455588d6358dbc8b83fae092edc18541e14398876ed92a8bb9bd52169f4fc4
+    md5: 26d6ab84e689a1f9009829361c84fff5
+    sha256: e888390282d6f5334e1dbe77500c10d4bfa7d9cc8c85081dd12d6f7c6faa967b
   category: dev
   optional: true
 - name: boto3-stubs
-  version: 1.34.135
+  version: 1.34.136
   manager: conda
   platform: osx-arm64
   dependencies:
     boto3: ''
     python: ''
     typing_extensions: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-1.34.135-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-1.34.136-pyhd8ed1ab_0.conda
   hash:
-    md5: e8668d449763f1e91f400e654ccac114
-    sha256: 2e455588d6358dbc8b83fae092edc18541e14398876ed92a8bb9bd52169f4fc4
+    md5: 26d6ab84e689a1f9009829361c84fff5
+    sha256: e888390282d6f5334e1dbe77500c10d4bfa7d9cc8c85081dd12d6f7c6faa967b
   category: dev
   optional: true
 - name: boto3-stubs-essential
-  version: 1.34.135
+  version: 1.34.136
   manager: conda
   platform: linux-64
   dependencies:
-    boto3-stubs: 1.34.135
+    boto3-stubs: 1.34.136
     mypy-boto3-s3: ''
     mypy_boto3_cloudformation: ''
     mypy_boto3_dynamodb: ''
@@ -1794,18 +1794,18 @@ package:
     mypy_boto3_lambda: ''
     mypy_boto3_rds: ''
     mypy_boto3_sqs: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-essential-1.34.135-hd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-essential-1.34.136-hd8ed1ab_0.conda
   hash:
-    md5: 7252c9f0819769faea98b88d08ad5313
-    sha256: e70791c81cc48980a3db1f264beda9238b8eda3c651f40c89750dde153dfd537
+    md5: 78f5a7c53b27388e150dff4d23c74806
+    sha256: 4c6629b759ed226b817b6f319b3d85506fad601da50d1675a037257110e74042
   category: dev
   optional: true
 - name: boto3-stubs-essential
-  version: 1.34.135
+  version: 1.34.136
   manager: conda
   platform: osx-64
   dependencies:
-    boto3-stubs: 1.34.135
+    boto3-stubs: 1.34.136
     mypy-boto3-s3: ''
     mypy_boto3_cloudformation: ''
     mypy_boto3_dynamodb: ''
@@ -1813,18 +1813,18 @@ package:
     mypy_boto3_lambda: ''
     mypy_boto3_rds: ''
     mypy_boto3_sqs: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-essential-1.34.135-hd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-essential-1.34.136-hd8ed1ab_0.conda
   hash:
-    md5: 7252c9f0819769faea98b88d08ad5313
-    sha256: e70791c81cc48980a3db1f264beda9238b8eda3c651f40c89750dde153dfd537
+    md5: 78f5a7c53b27388e150dff4d23c74806
+    sha256: 4c6629b759ed226b817b6f319b3d85506fad601da50d1675a037257110e74042
   category: dev
   optional: true
 - name: boto3-stubs-essential
-  version: 1.34.135
+  version: 1.34.136
   manager: conda
   platform: osx-arm64
   dependencies:
-    boto3-stubs: 1.34.135
+    boto3-stubs: 1.34.136
     mypy-boto3-s3: ''
     mypy_boto3_cloudformation: ''
     mypy_boto3_dynamodb: ''
@@ -1832,10 +1832,10 @@ package:
     mypy_boto3_lambda: ''
     mypy_boto3_rds: ''
     mypy_boto3_sqs: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-essential-1.34.135-hd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-essential-1.34.136-hd8ed1ab_0.conda
   hash:
-    md5: 7252c9f0819769faea98b88d08ad5313
-    sha256: e70791c81cc48980a3db1f264beda9238b8eda3c651f40c89750dde153dfd537
+    md5: 78f5a7c53b27388e150dff4d23c74806
+    sha256: 4c6629b759ed226b817b6f319b3d85506fad601da50d1675a037257110e74042
   category: dev
   optional: true
 - name: botocore
@@ -1884,45 +1884,45 @@ package:
   category: main
   optional: false
 - name: botocore-stubs
-  version: 1.34.135
+  version: 1.34.136
   manager: conda
   platform: linux-64
   dependencies:
     python: '>=3.8,<4.0'
     types-awscrt: ''
     typing_extensions: '>=4.1.0'
-  url: https://conda.anaconda.org/conda-forge/noarch/botocore-stubs-1.34.135-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/botocore-stubs-1.34.136-pyhd8ed1ab_0.conda
   hash:
-    md5: 6ac67bb969054466e4047fa630a53f47
-    sha256: 77a71f86e2cb7cb42007aa58ec8a8f1b3a7279e1212b16a50a9cf63ce4646bfb
+    md5: e799bd0a8d9b687e60f7ab9ba6248144
+    sha256: 68ec2fc18144aa58520e8f59a29a8137f1d4c0c445fcac95763e5dd4fffa15de
   category: dev
   optional: true
 - name: botocore-stubs
-  version: 1.34.135
+  version: 1.34.136
   manager: conda
   platform: osx-64
   dependencies:
     python: '>=3.8,<4.0'
     types-awscrt: ''
     typing_extensions: '>=4.1.0'
-  url: https://conda.anaconda.org/conda-forge/noarch/botocore-stubs-1.34.135-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/botocore-stubs-1.34.136-pyhd8ed1ab_0.conda
   hash:
-    md5: 6ac67bb969054466e4047fa630a53f47
-    sha256: 77a71f86e2cb7cb42007aa58ec8a8f1b3a7279e1212b16a50a9cf63ce4646bfb
+    md5: e799bd0a8d9b687e60f7ab9ba6248144
+    sha256: 68ec2fc18144aa58520e8f59a29a8137f1d4c0c445fcac95763e5dd4fffa15de
   category: dev
   optional: true
 - name: botocore-stubs
-  version: 1.34.135
+  version: 1.34.136
   manager: conda
   platform: osx-arm64
   dependencies:
     python: '>=3.8,<4.0'
     types-awscrt: ''
     typing_extensions: '>=4.1.0'
-  url: https://conda.anaconda.org/conda-forge/noarch/botocore-stubs-1.34.135-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/botocore-stubs-1.34.136-pyhd8ed1ab_0.conda
   hash:
-    md5: 6ac67bb969054466e4047fa630a53f47
-    sha256: 77a71f86e2cb7cb42007aa58ec8a8f1b3a7279e1212b16a50a9cf63ce4646bfb
+    md5: e799bd0a8d9b687e60f7ab9ba6248144
+    sha256: 68ec2fc18144aa58520e8f59a29a8137f1d4c0c445fcac95763e5dd4fffa15de
   category: dev
   optional: true
 - name: bottleneck

@@ -153,23 +153,26 @@ optional inputs:
 
   > _Added in version 0.6.0_
 
-- `s3fs_open_kwargs` (_optional_; default:
-  `'{"cache_type": "all", "block_size": 8388608, "fill": true}'`): JSON string
-  to pass as keyword arguments to [s3fs.S3FileSystem.open] when reading granule
-  files from S3.  The default value was chosen to provide optimal speed, after
-  conducting performance profiling for various combinations of possible values,
-  so it should be unnecessary to supply this input.
+- `fsspec_kwargs` (_optional_; default:
+  `'{"default_cache_type": "all", "default_block_size": 8388608`): JSON object
+  representing keyword arguments to pass to the [fsspec.url_to_fs] function when
+  reading granule files.  **ADVANCED:** Normal usage should leave this input
+  blank, meaning that the default value will be used, which prioritizes
+  algorithm speed over minimizing data transfer volume.
 
   > _Added in version 0.8.0_
 
 - `processes` (_optional_; default: number of available CPUs): Number of
-  processes to use for parallel processing.
+  processes to use for parallel processing.  **ADVANCED:** Normal usage should
+  leave this input blank, meaning that the algorithm will use all available
+  CPUs.  This input is intended only for performance profiling purposes.
 
   > _Added in version 0.8.0_
 
 - `scalene_args` (_optional_; default: none): Arguments to pass to [Scalene] for
-  performance profiling.  Normal usage should leave this argument blank, meaning
-  that Scalene will _not_ be used.
+  performance profiling.  **ADVANCED:** Normal usage should leave this argument
+  blank, meaning that Scalene will _not_ be used.  This input is intended only
+  for performance profiling purposes.
 
   When this input is supplied, the algorithm will be run via the `scalene`
   command for collecting performance metrics (i.e.  CPU and RAM usage), and the
@@ -485,11 +488,11 @@ administrative boundaries.  PLoS ONE 15(4): e0231866.
 
 [Digital Object Identifier]:
    https://doi.org
+[fsspec.url_to_fs]:
+  https://filesystem-spec.readthedocs.io/en/latest/api.html#fsspec.core.url_to_fs."
 [geoBoundaries]:
   https://www.geoboundaries.org
 [geoBoundaries API]:
   https://www.geoboundaries.org/api.html
 [Scalene]:
   https://github.com/plasma-umass/scalene
-[s3fs.S3FileSystem.open]:
-  https://filesystem-spec.readthedocs.io/en/latest/api.html#s3fs.S3FileSystem.open

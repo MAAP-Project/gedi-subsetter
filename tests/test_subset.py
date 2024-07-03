@@ -12,7 +12,6 @@ from moto.moto_server.threaded_moto_server import ThreadedMotoServer
 from mypy_boto3_s3.client import S3Client
 from returns.io import IOSuccess
 from returns.maybe import Some
-from s3fs import S3FileSystem
 from typer import BadParameter
 
 from gedi_subset.subset import SubsetGranuleProps, check_beams_option, subset_granule
@@ -39,22 +38,17 @@ def reset_s3_fixture():
     requests.post(f"{endpoint_uri}/moto-api/reset")
 
 
-@pytest.fixture()
-def fs(moto_server, h5_path: str):
+def test_subset_granule(
+    moto_server,
+    h5_path: str,
+    maap: MAAP,
+    aoi_gdf: gpd.GeoDataFrame,
+    tmp_path: Path,
+):
     client = cast(S3Client, Session().create_client("s3", endpoint_url=endpoint_uri))
     client.create_bucket(Bucket="mybucket")
     client.put_object(Bucket="mybucket", Key="temp.h5", Body=Path(h5_path).read_bytes())
 
-    S3FileSystem.clear_instance_cache()
-    fs = S3FileSystem(client_kwargs={"endpoint_url": endpoint_uri})
-    fs.invalidate_cache()
-
-    yield fs
-
-
-def test_subset_granule(
-    fs: S3FileSystem, maap: MAAP, aoi_gdf: gpd.GeoDataFrame, tmp_path: Path
-):
     granule = Granule(
         {
             "Granule": {
@@ -80,7 +74,7 @@ def test_subset_granule(
     expected_path = os.path.join(tmp_path, "temp.gpq")
     io_result = subset_granule(
         SubsetGranuleProps(
-            fs=fs,
+            fsspec_kwargs={"endpoint_url": endpoint_uri, "skip_instance_cache": True},
             granule=granule,
             maap=maap,
             aoi_gdf=aoi_gdf,

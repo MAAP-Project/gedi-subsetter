@@ -79,8 +79,7 @@ class SubsetGranuleProps:
     single argument.
     """
 
-    fs: fsspec.AbstractFileSystem | None = None
-    s3fs_open_kwargs: Mapping[str, Any] = field(default_factory=dict)
+    fsspec_kwargs: Mapping[str, Any] = field(default_factory=dict)
     granule: Granule
     maap: MAAP
     aoi_gdf: gpd.GeoDataFrame
@@ -174,20 +173,17 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
         return IOSuccess(Nothing)
 
     logger.debug(f"Subsetting {inpath}")
-    fs = props.fs or fsspec
-    s3fs_open_kwargs = {
-        "cache_type": "all",
-        "block_size": 8 * 1024 * 1024,
-        "fill": True,
+    fsspec_kwargs = {
+        "default_cache_type": "all",
+        "default_block_size": 8 * 1024 * 1024,
+        "default_fill_cache": True,
         # Allow the caller to override the default values above.
-        **props.s3fs_open_kwargs,
-        # Force the use of the "rb" mode.  We don't want to allow the mode
-        # to be set by user input.
-        "mode": "rb",
+        **props.fsspec_kwargs,
     }
+    fs, urlpath = fsspec.url_to_fs(inpath, **fsspec_kwargs)
 
     try:
-        with fs.open(inpath, **s3fs_open_kwargs) as f, h5py.File(f) as hdf5:
+        with fs.open(urlpath, mode="rb") as f, h5py.File(f) as hdf5:
             gdf = subset_hdf5(
                 hdf5,
                 aoi=props.aoi_gdf,
@@ -237,7 +233,7 @@ def subset_granules(
     dest: Path,
     init_args: Tuple[Any, ...],
     granules: Iterable[Granule],
-    s3fs_open_kwargs: Optional[Mapping[str, Any]] = None,
+    fsspec_kwargs: Optional[Mapping[str, Any]] = None,
     processes: Optional[int] = None,
 ) -> IOResultE[Tuple[str, ...]]:
     def subset_saved(path: IOResultE[Maybe[str]]) -> bool:
@@ -274,7 +270,7 @@ def subset_granules(
 
     payloads = (
         SubsetGranuleProps(
-            s3fs_open_kwargs=s3fs_open_kwargs or {},
+            fsspec_kwargs=fsspec_kwargs or {},
             granule=granule,
             maap=maap,
             aoi_gdf=aoi_gdf,
@@ -393,13 +389,13 @@ def main(
         ),
     ] = None,
     verbose: Annotated[bool, typer.Option(help="Provide verbose output")] = False,
-    s3fs_open_kwargs: Annotated[
+    fsspec_kwargs: Annotated[
         Optional[dict[str, Any]],
         typer.Option(
             parser=lambda value: json.loads(value) if isinstance(value, str) else value,
             metavar="JSON",
             help=(
-                "Keyword arguments (as JSON) to pass to S3FileSystem.open"
+                "Keyword arguments (as JSON object) to pass to fsspec.url_to_fs"
                 " for reading HDF5 files"
             ),
         ),
@@ -456,7 +452,7 @@ def main(
             dest,
             (logging_level,),
             fp.filter(granule_intersects(aoi_gdf.unary_union))(granules),
-            s3fs_open_kwargs,
+            fsspec_kwargs,
             processes,
         )
     ).bind_ioresult(

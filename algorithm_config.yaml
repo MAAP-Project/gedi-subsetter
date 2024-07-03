@@ -62,12 +62,12 @@ inputs:
         using the AOI file name (without the extension) with the suffix "_subset.gpkg".
       required: false
       default: ""
-    - name: s3fs_open_kwargs
-      description: JSON object representing keyword arguments to pass to
-        s3fs.S3FileSystem.open when reading files from S3.  See
-        https://filesystem-spec.readthedocs.io/en/latest/api.html#s3fs.S3FileSystem.open.
+    - name: fsspec_kwargs
+      description: "JSON object representing keyword arguments to pass to the
+        fsspec.core.url_to_fs function when reading granule data files.  See
+        https://filesystem-spec.readthedocs.io/en/latest/api.html#fsspec.core.url_to_fs."
       required: false
-      default: '{"cache_type": "all", "block_size": 8388608, "fill": true}'
+      default: '{"default_cache_type": "all", "default_block_size": 8388608}'
     - name: processes
       description: Number of processes to use for parallel processing.  If not provided,
         defaults to the number of available CPUs.

@@ -18,8 +18,9 @@ The format is based on [Keep a Changelog], and this project adheres to
 - Read granule files directly from AWS S3 instead of downloading them
   ([#54](https://github.com/MAAP-Project/gedi-subsetter/issues/54))
 - Optimize AWS S3 read performance to provide ~10% speed improvement (on
-  average) over downloading files by tuning the `cache_type`, `block_size`, and
-  `fill` keyword arguments to the `s3fs.S3FileSystem.open` method
+  average) over downloading files by tuning the `default_cache_type`,
+  `default_block_size`, and `default_fill_cache` keyword arguments to the
+  `fsspec.url_to_fs` function
   ([#77](https://github.com/MAAP-Project/gedi-subsetter/issues/77))
 - Set default granule `limit` to 100000.  Although this is not unlimited, it
   effectively behaves as such because all of the supported GEDI collections have
@@ -31,8 +32,8 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ### Added
 
-- Add `s3fs_open_kwargs` input to allow user to specify keyword arguments to the
-  `s3fs.S3FileSystem.open` method; see [MAAP_USAGE.md] for details.
+- Add `fsspec_kwargs` input to allow user to specify keyword arguments to the
+  `fsspec.url_to_fs` method; see [MAAP_USAGE.md] for details.
   ([#77](https://github.com/MAAP-Project/gedi-subsetter/issues/77))
 - Add `processes` input to allow user to specify the number of processes to use,
   defaulting to the number of available CPUs
