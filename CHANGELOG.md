@@ -29,6 +29,8 @@ The format is based on [Keep a Changelog], and this project adheres to
 - Set default job queue to `maap-dps-worker-32vcpu-64gb` to improve performance
   by running on 32 CPUs
   ([#78](https://github.com/MAAP-Project/gedi-subsetter/issues/78))
+- Succeed even when the result is an empty subset
+  ([#79](https://github.com/MAAP-Project/gedi-subsetter/issues/79))
 
 ### Added
 
