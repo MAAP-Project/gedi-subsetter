@@ -31,7 +31,8 @@ At a high level, the GEDI subsetting algorithm does the following:
 
 ## Algorithm Inputs
 
-To run a GEDI subsetting DPS job, you must supply the following inputs:
+To run a GEDI subsetting DPS job, there are a few required inputs and several
+optional inputs:
 
 - `aoi` (_required_): URL to a GeoJSON file representing your area of interest
   (see [Specifying an AOI](#specifying-an-aoi)).  This may contain multiple
@@ -41,15 +42,12 @@ To run a GEDI subsetting DPS job, you must supply the following inputs:
   include in the output file.  These names correspond to the _datasets_ (which
   might also be referred to as _variables_ or _layers_ in the DOI documentation)
   within the data files, and vary from collection to collection.  Consult the
-  documentation for a list of datasets available per collection (see
-  [Specifying a DOI](#specifying-a-doi) for documentation links).
+  documentation for each collection for a list of datasets available per
+  collection (see [Specifying a DOI](#specifying-a-doi) for documentation
+  links).
 
   In addition to the specified columns, the output file will also include a
   `filename` (`str`) column that includes the name of the original `h5` file.
-
-  _Changed in version 0.6.0_: The `beam` column is no longer automatically
-  included.  If you wish to include the `beam` column, you must specify it
-  explicitly in this `columns` value.
 
   **IMPORTANT:** To specify nested datasets (i.e., datasets _not_ at the top of
   a BEAM), you may use a path containing forward slashes (`/`) that is relative
@@ -57,6 +55,10 @@ To run a GEDI subsetting DPS job, you must supply the following inputs:
   `geolocation` group, and within that group is a dataset named
   `sensitivity_a2`, then you would refer to that nested dataset as
   `geolocation/sensitivity_a2`.
+
+  > _Changed in version 0.6.0_: The `beam` column is no longer automatically
+  > included.  If you wish to include the `beam` column, you must specify it
+  > explicitly in this `columns` value.
 
 - `query` (_optional_; default: no query, select all rows): Query expression for
   subsetting the rows in the output file.  This expression selects rows of data
@@ -82,35 +84,45 @@ To run a GEDI subsetting DPS job, you must supply the following inputs:
   quality_flag == 1 and `geolocation/sensitivity_a2` > 0.95
   ```
 
-- `limit` (_optional_; default: 1_000): Maximum number of GEDI granule data
-  files to download from the CMR, among those that intersect the specified AOI's
-  bounding box, and fall within the specified temporal range (if supplied).
+- `limit` (_optional_; default: 100000): Maximum number of GEDI granule data
+  files to subset, among those that intersect the specified AOI's bounding box,
+  and fall within the specified temporal range (if supplied).  If there are more
+  granules within the spatio-temporal range, only the first `limit` number of
+  granules obtained from the corresponding CMR search are used.
 
-  _Changed in version 0.6.0_: The default value was reduced from 10000 to 1000.
-  The AOI for most subsetting operations are likely to incur a request for well
-  under 1000 granules for downloading, so a larger default value might only lead
-  to longer CMR query times.
+  > _Changed in version 0.6.0_: The default value was reduced from 10000 to 1000.
+  > The AOI for most subsetting operations are likely to incur a request for well
+  > under 1000 granules for downloading, so a larger default value might only lead
+  > to longer CMR query times.
+
+  > _Changed in version 0.8.0_: The default value was increased from 1000 to
+  > 100000 to avoid confusion in cases where a user does _not_ specify a limit,
+  > expecting to subset _all_ granules within the specified spatio-temporal
+  > range, but instead subsetting no more than the default limit of 1000, thus
+  > obtaining an unexpectedly incomplete result.  This new limit should
+  > effectively behave as if it were unlimited because all supported GEDI
+  > collections have fewer granules than this default limit.
 
 - `doi` (_required_): [Digital Object Identifier] (DOI) of the GEDI collection
   to subset, or a logical name representing such a DOI (see
   [Specifying a DOI](#specifying-a-doi))
 
-  _New in version 0.3.0_
+  > _Added in version 0.3.0_
 
-- `lat` (_required_): _Name_ of the dataset used for latitude.
+- `lat` (_required_): _Name_ of the dataset used for latitude values.
 
-  _New in version 0.3.0_
+  > _Added in version 0.3.0_
 
-- `lon` (_required_): _Name_ of the dataset used for longitude.
+- `lon` (_required_): _Name_ of the dataset used for longitude values.
 
-  _New in version 0.3.0_
+  > _Added in version 0.3.0_
 
 - `beams` (_optional_; default: `all`): Which beams to include in the subset.
   If supplied, must be one of logical names `all`, `coverage`, or `power`, _OR_
   a comma-separated list of specific beam names, with or without the `BEAM`
   prefix (e.g., `BEAM0000,BEAM0001` or `0000,0001`)
 
-  _New in version 0.4.0_
+  > _Added in version 0.4.0_
 
 - `temporal` (_optional_; default: full temporal range available): Temporal
   range to subset.  You may specify either a closed range, with start and end
@@ -118,7 +130,7 @@ To run a GEDI subsetting DPS job, you must supply the following inputs:
   full details on the valid formats, see the NASA CMR's documentation on
   [temporal range searches](https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html#temporal-range-searches).
 
-  _New in version 0.6.0_
+  > _Added in version 0.6.0_
 
 - `output` (_optional_): Name to use for the output file.  This can also include
   a path, which will be relative to the standard DPS output directory for a job.
@@ -139,35 +151,54 @@ To run a GEDI subsetting DPS job, you must supply the following inputs:
   - `myoutput.h5` -> `myoutput.gpkg`
   - `mypath/myoutput` -> `mypath/myoutput.gpkg`
 
-  _New in version 0.6.0_
+  > _Added in version 0.6.0_
 
-- `scalene_args` (_optional_): Arguments to pass to [Scalene] for performance
-  profiling.  Normal usage should leave this argument blank.
+- `fsspec_kwargs` (_optional_; default:
+  `'{"default_cache_type": "all", "default_block_size": 8388608`): JSON object
+  representing keyword arguments to pass to the [fsspec.url_to_fs] function when
+  reading granule files.  **ADVANCED:** Normal usage should leave this input
+  blank, meaning that the default value will be used, which prioritizes
+  algorithm speed over minimizing data transfer volume.
 
-  Fill this in if you want to collect performance metrics (i.e.  CPU and RAM
-  usage).  The recommended value for this input is `--reduced-profile` (see
-  below for more advanced usage).  When used, you will find `profile.html` in
-  your algorithm output folder.
+  > _Added in version 0.8.0_
+
+- `processes` (_optional_; default: number of available CPUs): Number of
+  processes to use for parallel processing.  **ADVANCED:** Normal usage should
+  leave this input blank, meaning that the algorithm will use all available
+  CPUs.  This input is intended only for performance profiling purposes.
+
+  > _Added in version 0.8.0_
+
+- `scalene_args` (_optional_; default: none): Arguments to pass to [Scalene] for
+  performance profiling.  **ADVANCED:** Normal usage should leave this argument
+  blank, meaning that Scalene will _not_ be used.  This input is intended only
+  for performance profiling purposes.
 
   When this input is supplied, the algorithm will be run via the `scalene`
-  command, and the value of this input will be passed as arguments to the
-  command.  For a list of the available command-line options, see
+  command for collecting performance metrics (i.e.  CPU and RAM usage), and the
+  value of this input will be passed as arguments to the command.  For a list of
+  available command-line options, see
   <https://github.com/plasma-umass/scalene?tab=readme-ov-file#scalene>.
 
-  Starting with `--reduced-profile` produces a relatively brief report that may
-  aid in more quickly identifying hotspots than a full profile would.  However,
-  to produce a full profile where you want to use all of Scalene's default
-  values, you must supply _some_ value for this input, so the simplest valid
-  Scalene option is `--on`.  Otherwise, as mentioned above, when no value is
-  supplied for this input, Scalene will not be used at all.
+  By default, the name of the profile output file is `profile.html` (placed in
+  your job's output folder).  If you specify the `--json` flag, it will be named
+  `profile.json`.  If you specify the `--cli` flag, it will be named
+  `profile.txt`.
 
-  > **Note:** Since no browser is available in DPS, when any value is
-  > supplied for this input, the `--no-browser` option will be included to
-  > prevent Scalene from attempting to open a browser.  However, the `--web`
-  > option will also be included, which will produce HTML output to a file named
-  > `profile.html`.
+  If you want to use all of Scalene's default values (i.e.  not specify any
+  override values), you cannot leave this input blank, otherwise Scalene will
+  not be used at all (as mentioned above).  In this case, you must supply _some_
+  value for this input, so the simplest valid Scalene option is `--on`.
 
-  _New in version 0.7.0_
+  **Note:** Since no browser is available in DPS, when any value is supplied for
+  this input, the `--no-browser` option will be included to prevent Scalene from
+  attempting to open a browser.
+
+  > _Added in version 0.7.0_
+
+  > _Changed in version 0.8.0_: Specifying the `--json` flag changes the name of
+  > the profile output file to `profile.json` and specifying `--cli` changes it
+  > to `profile.txt`.
 
 ### Specifying an AOI
 
@@ -457,6 +488,8 @@ administrative boundaries.  PLoS ONE 15(4): e0231866.
 
 [Digital Object Identifier]:
    https://doi.org
+[fsspec.url_to_fs]:
+  https://filesystem-spec.readthedocs.io/en/latest/api.html#fsspec.core.url_to_fs."
 [geoBoundaries]:
   https://www.geoboundaries.org
 [geoBoundaries API]:

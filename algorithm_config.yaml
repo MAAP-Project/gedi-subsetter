@@ -4,7 +4,7 @@ algorithm_version: 0.7.0
 repository_url: https://github.com/MAAP-Project/gedi-subsetter.git
 docker_container_url: mas.maap-project.org/root/maap-workspaces/base_images/vanilla:v3.1.5
 disk_space: 20GB
-queue: maap-dps-worker-32gb
+queue: maap-dps-worker-32vcpu-64gb
 build_command: gedi-subsetter/bin/build-dps
 run_command: gedi-subsetter/bin/subset.sh
 inputs:
@@ -53,13 +53,24 @@ inputs:
       required: false
       default: all
     - name: limit
-      description: Maximum number of GEDI granule data files to download from the CMR,
-        regardless of the number of granules within the AOI.
+      description: Maximum number of GEDI granules to subset, regardless of the number
+        of granules within the spatio-temporal range.
       required: false
-      default: "1000"
+      default: "100_000"
     - name: output
       description: Name of the output file produced by the algorithm.  Defaults to
         using the AOI file name (without the extension) with the suffix "_subset.gpkg".
+      required: false
+      default: ""
+    - name: fsspec_kwargs
+      description: "JSON object representing keyword arguments to pass to the
+        fsspec.core.url_to_fs function when reading granule data files.  See
+        https://filesystem-spec.readthedocs.io/en/latest/api.html#fsspec.core.url_to_fs."
+      required: false
+      default: '{"default_cache_type": "all", "default_block_size": 8388608}'
+    - name: processes
+      description: Number of processes to use for parallel processing.  If not provided,
+        defaults to the number of available CPUs.
       required: false
       default: ""
     - name: scalene_args

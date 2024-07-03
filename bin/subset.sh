@@ -27,7 +27,7 @@ else
     aoi="$(ls "${input_dir}"/*)"
 
     n_actual=${#}
-    n_expected=10
+    n_expected=12
 
     if test ${n_actual} -ne ${n_expected}; then
         echo "Expected ${n_expected} inputs, but got ${n_actual}:$(printf " '%b'" "$@")" >&2
@@ -44,22 +44,34 @@ else
     [[ -n "${7}" ]] && args+=(--beams "${7}")
     [[ -n "${8}" ]] && args+=(--limit "${8}")
     [[ -n "${9}" ]] && args+=(--output "${9}")
-    # Split the 10th argument into an array of arguments to pass to scalene.
-    IFS=' ' read -ra scalene_args <<<"${10}"
+    [[ -n "${10}" ]] && args+=(--fsspec-kwargs "${10}")
+    [[ -n "${11}" ]] && args+=(--processes "${11}")
+    # Split the last argument into an array of arguments to pass to scalene.
+    IFS=' ' read -ra scalene_args <<<"${12}"
 
     command=("${subset_py}" "${args[@]}")
 
     if [[ ${#scalene_args[@]} -ne 0 ]]; then
+        ext="html"
+
+        for arg in "${scalene_args[@]}"; do
+            if [[ "${arg}" == "--json" ]]; then
+                ext="json"
+            elif [[ "${arg}" == "--cli" ]]; then
+                ext="txt"
+            fi
+        done
+
         # Force output to be written to the output directory by adding the
         # `--outfile` argument after any user-provided arguments.  If the user
-        # provides their own `--outfile` argument, it will be ignored.
+        # provides their own `--outfile` argument, it will be ignored.  Also,
+        # add `--no-browser` to ensure that scalene does not attempt to open a
+        # browser.
         command=(
             scalene
             "${scalene_args[@]}"
-            --column-width 165
-            --html
             --no-browser
-            --outfile "${output_dir}/profile.html"
+            --outfile "${output_dir}/profile.${ext}"
             ---
             "${command[@]}"
         )

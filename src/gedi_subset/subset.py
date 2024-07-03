@@ -1,17 +1,28 @@
 #!/usr/bin/env -S python -W ignore::FutureWarning -W ignore::UserWarning
 
+import json
 import logging
 import multiprocessing
 import os
 import os.path
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Iterable, Mapping, NoReturn, Optional, Sequence, Tuple
+from typing import (
+    Annotated,
+    Any,
+    Callable,
+    Iterable,
+    Mapping,
+    NoReturn,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
+import fsspec
 import geopandas as gpd
 import h5py
-import s3fs
 import typer
 from maap.maap import MAAP
 from maap.Result import Collection, Granule
@@ -46,7 +57,7 @@ logical_dois = {
     "L4A": "10.3334/ORNLDAAC/2056",
 }
 
-DEFAULT_LIMIT = 1_000
+DEFAULT_LIMIT = 100_000
 
 LOGGING_FORMAT = "%(asctime)s [%(processName)s:%(name)s] [%(levelname)s] %(message)s"
 
@@ -68,7 +79,7 @@ class SubsetGranuleProps:
     single argument.
     """
 
-    fs: s3fs.S3FileSystem | None = None
+    fsspec_kwargs: Mapping[str, Any] = field(default_factory=dict)
     granule: Granule
     maap: MAAP
     aoi_gdf: gpd.GeoDataFrame
@@ -162,13 +173,17 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
         return IOSuccess(Nothing)
 
     logger.debug(f"Subsetting {inpath}")
-    fs = props.fs or s3fs.S3FileSystem()
+    fsspec_kwargs = {
+        "default_cache_type": "all",
+        "default_block_size": 8 * 1024 * 1024,
+        "default_fill_cache": True,
+        # Allow the caller to override the default values above.
+        **props.fsspec_kwargs,
+    }
+    fs, urlpath = fsspec.url_to_fs(inpath, **fsspec_kwargs)
 
     try:
-        with (
-            fs.open(inpath, block_size=4 * 1024 * 1024, cache_type="all") as f,
-            h5py.File(f) as hdf5,
-        ):
+        with fs.open(urlpath, mode="rb") as f, h5py.File(f) as hdf5:
             gdf = subset_hdf5(
                 hdf5,
                 aoi=props.aoi_gdf,
@@ -178,6 +193,9 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
                 columns=props.columns,
                 query=props.query,
             )
+
+            if isinstance(f, fsspec.spec.AbstractBufferedFile):
+                logger.debug(f"{f.cache!r}")
     except Exception as e:
         granule_ur = props.granule["Granule"]["GranuleUR"]
         logger.warning(f"Skipping granule {granule_ur} [failed to read {inpath}: {e}]")
@@ -215,6 +233,8 @@ def subset_granules(
     dest: Path,
     init_args: Tuple[Any, ...],
     granules: Iterable[Granule],
+    fsspec_kwargs: Optional[Mapping[str, Any]] = None,
+    processes: Optional[int] = None,
 ) -> IOResultE[Tuple[str, ...]]:
     def subset_saved(path: IOResultE[Maybe[str]]) -> bool:
         """Return `True` if `path`'s value is a `Some`, otherwise `False` if it
@@ -234,11 +254,6 @@ def subset_granules(
             map_(fp.always(src)),
         )
 
-    # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool.imap
-    # We're dealing with relatively small numbers of granules (dozens, perhaps
-    # hundreds, at most), so we can stick with a chunksize of 1.
-    chunksize = 1
-    processes = min(8, os.cpu_count() or 32)
     found_granules = list(granules)
     # On occasion, a granule is missing a download URL, so the _downloadname
     # attribute is set to None, and attempting to download it throws an
@@ -246,12 +261,16 @@ def subset_granules(
     downloadable_granules = [
         granule for granule in found_granules if granule._downloadname
     ]
+    # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool.imap
+    # If we have at least 10 granules per process, use a chunksize of 10.
+    chunksize = 10 if processes and len(downloadable_granules) >= 10 * processes else 1
 
     logger.info(f"Found {len(found_granules)} in the CMR")
     logger.info(f"Total downloadable granules: {len(downloadable_granules)}")
 
     payloads = (
         SubsetGranuleProps(
+            fsspec_kwargs=fsspec_kwargs or {},
             granule=granule,
             maap=maap,
             aoi_gdf=aoi_gdf,
@@ -265,7 +284,7 @@ def subset_granules(
         for granule in downloadable_granules
     )
 
-    logger.info(f"Subsetting on {processes} processes (chunksize={chunksize})")
+    logger.info(f"Subsetting on {processes} CPUs (chunksize={chunksize})")
 
     with multiprocessing.Pool(processes, init_process, init_args) as pool:
         return flow(
@@ -278,72 +297,112 @@ def subset_granules(
 
 
 def main(
-    aoi: Path = typer.Option(
-        ...,
-        help="Area of Interest (path to GeoJSON file)",
-        exists=True,
-        file_okay=True,
-        dir_okay=False,
-        writable=False,
-        readable=True,
-        resolve_path=True,
-    ),
-    doi=typer.Option(
-        ...,
-        callback=lambda value: logical_dois.get(value.upper(), value),
-        help=(
-            "Digital Object Identifier (DOI) of collection to subset"
-            " (https://www.doi.org/), or one of these logical, case-insensitive"
-            f" names: {', '.join(logical_dois)}"
+    aoi: Annotated[
+        Path,
+        typer.Option(
+            show_default=False,
+            help="Area of Interest (path to GeoJSON file)",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
         ),
-    ),
-    lat: str = typer.Option(
-        ..., help=("Latitude dataset used in the geometry of the dataframe")
-    ),
-    lon: str = typer.Option(
-        ..., help=("Longitude dataset used in the geometry of the dataframe")
-    ),
-    beams: str = typer.Option(
-        "all",
-        callback=check_beams_option,
-        help=(
-            "Which beams to include in the subset. Must be 'all', 'coverage', 'power',"
-            " OR a comma-separated list of beam names, with or without the 'BEAM'"
-            " prefix (e.g., 'BEAM0000,BEAM0001' or '0000,0001')"
+    ],
+    doi: Annotated[
+        str,
+        typer.Option(
+            show_default=False,
+            callback=lambda value: logical_dois.get(value.upper(), value),
+            help=(
+                "Digital Object Identifier (DOI) of collection to subset"
+                " (https://www.doi.org/), or one of these logical, case-insensitive"
+                f" names: {', '.join(logical_dois)}"
+            ),
         ),
-    ),
-    columns: str = typer.Option(
-        ...,
-        help="Comma-separated list of columns to select",
-    ),
-    query: str = typer.Option(
-        None,
-        help="Boolean query expression to select rows",
-    ),
-    limit: int = typer.Option(
-        DEFAULT_LIMIT,
-        callback=lambda value: DEFAULT_LIMIT if value < 1 else value,
-        help="Maximum number of granules to subset",
-    ),
-    temporal: str = typer.Option(
-        None,
-        help=(
-            "Temporal range to subset"
-            " (e.g., '2019-01-01T00:00:00Z,2020-01-01T00:00:00Z')"
+    ],
+    lat: Annotated[
+        str,
+        typer.Option(
+            show_default=False,
+            help=("Latitude dataset used in the geometry of the dataframe"),
         ),
-    ),
-    output: Path = typer.Option(
-        None,
-        "-o",
-        "--output",
-        help="Output file path for generated subset file",
-        exists=False,
-        file_okay=True,
-        dir_okay=False,
-        writable=True,
-        readable=True,
-    ),
-    verbose: bool = typer.Option(False, help="Provide verbose output"),
+    ],
+    lon: Annotated[
+        str,
+        typer.Option(
+            show_default=False,
+            help=("Longitude dataset used in the geometry of the dataframe"),
+        ),
+    ],
+    columns: Annotated[
+        str,
+        typer.Option(
+            show_default=False,
+            help="Comma-separated list of columns to select",
+        ),
+    ],
+    beams: Annotated[
+        str,
+        typer.Option(
+            callback=check_beams_option,
+            help=(
+                "Which beams to include in the subset.  Must be 'all', 'coverage',"
+                " 'power', OR a comma-separated list of beam names, with or without the"
+                " 'BEAM' prefix (e.g., 'BEAM0000,BEAM0001' or '0000,0001')"
+            ),
+        ),
+    ] = "all",
+    query: Annotated[
+        Optional[str],
+        typer.Option(help="Boolean query expression to select rows"),
+    ] = None,
+    limit: Annotated[
+        int,
+        typer.Option(
+            callback=lambda value: DEFAULT_LIMIT if value < 1 else value,
+            help="Maximum number of granules to subset",
+        ),
+    ] = DEFAULT_LIMIT,
+    temporal: Annotated[
+        Optional[str],
+        typer.Option(
+            help=(
+                "Temporal range to subset"
+                " (e.g., '2019-01-01T00:00:00Z,2020-01-01T00:00:00Z')"
+            ),
+        ),
+    ] = None,
+    output: Annotated[
+        Optional[Path],
+        typer.Option(
+            ...,
+            "-o",
+            "--output",
+            help="Output file path for generated subset file",
+            exists=False,
+            file_okay=True,
+            dir_okay=False,
+            writable=True,
+            readable=True,
+        ),
+    ] = None,
+    verbose: Annotated[bool, typer.Option(help="Provide verbose output")] = False,
+    fsspec_kwargs: Annotated[
+        Optional[dict[str, Any]],
+        typer.Option(
+            parser=lambda value: json.loads(value) if isinstance(value, str) else value,
+            metavar="JSON",
+            help=(
+                "Keyword arguments (as JSON object) to pass to fsspec.url_to_fs"
+                " for reading HDF5 files"
+            ),
+        ),
+    ] = None,
+    processes: Annotated[
+        int, typer.Option(help="Number of processes to use for parallel processing")
+    ] = (os.cpu_count() or 1),
 ) -> None:
     logging_level = logging.DEBUG if verbose else logging.INFO
     set_logging_level(logging_level)
@@ -393,6 +452,8 @@ def main(
             dest,
             (logging_level,),
             fp.filter(granule_intersects(aoi_gdf.unary_union))(granules),
+            fsspec_kwargs,
+            processes,
         )
     ).bind_ioresult(
         lambda subsets: (
