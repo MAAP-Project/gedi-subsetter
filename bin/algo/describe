@@ -38,7 +38,7 @@ import tempfile
 import yaml
 from maap.maap import MAAP
 
-maap = MAAP('api.maap-project.org')
+maap = MAAP('${MAAP_API_HOST}')
 
 if r := maap.describeAlgorithm('${algorithm_id}'):
     # This response is XML, not JSON, unfortunately, so the output is not

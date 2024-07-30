@@ -86,7 +86,7 @@ import tempfile
 import yaml
 from maap.maap import MAAP
 
-maap = MAAP('api.maap-project.org')
+maap = MAAP('${MAAP_API_HOST}')
 
 with open('${yaml_file}') as f:
     algorithm_config = yaml.safe_load(f)

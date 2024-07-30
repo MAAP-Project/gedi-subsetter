@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## Unreleased
 
+### Fixed
+
+- Replace hard-coded MAAP API host value in the scripts `bin/algo/describe`,
+  `bin/algo/delete`, and `bin/algo/register` with use of `MAAP_API_HOST`
+  environment variable
+  ([#85](https://github.com/MAAP-Project/gedi-subsetter/issues/85))
+
 ### Changed
 
 - Obtain AWS S3 credentials via a role using the EC2 instance metadata rather

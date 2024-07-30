@@ -57,7 +57,7 @@ bin=$(dirname "$(dirname "$(readlink -f "$0")")")
 message=$("${bin}/run" --quiet python -c "
 from maap.maap import MAAP
 
-maap = MAAP('api.maap-project.org')
+maap = MAAP('${MAAP_API_HOST}')
 
 if not (r := maap.deleteAlgorithm('${algorithm_id}')):
     print(r.json()['message'])
