@@ -1,41 +1,13 @@
 import os
-import warnings
 from typing import Iterable
 
 import boto3
+import geopandas as gpd
 import h5py
 import pytest
-from maap.AWS import AWS
 from maap.maap import MAAP
-from maap.utils.CMR import CMR  # type: ignore
 from moto import mock_s3
 from mypy_boto3_s3.client import S3Client
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import geopandas as gpd
-
-
-class MockMAAP(MAAP):
-    """Mock MAAP class to avoid the need for a maap.cfg file for testing."""
-
-    def __init__(self):
-        if "MAAP_PGT" in os.environ:
-            super().__init__()
-        else:
-            self._MAAP_HOST = "api.maap-project.org"
-            self._SEARCH_COLLECTION_URL = (
-                f"https://{self._MAAP_HOST}/api/cmr/collections"
-            )
-            self._CMR = CMR([], 20, {})
-            self.aws = AWS(
-                "",
-                "",
-                f"https://{self._MAAP_HOST}"
-                + "/api/members/self/awsAccess/edcCredentials/{endpoint_uri}",
-                "",
-                {},
-            )
 
 
 @pytest.fixture(scope="module")
@@ -54,9 +26,9 @@ def s3(aws_credentials) -> Iterable[S3Client]:
         yield boto3.client("s3", region_name="us-east-1")
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def maap() -> MAAP:
-    return MockMAAP()
+    return MAAP()
 
 
 @pytest.fixture(scope="session")

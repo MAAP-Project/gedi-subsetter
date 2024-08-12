@@ -54,6 +54,9 @@ from shapely.geometry import Point
 # Make sure pip install worked
 from maap.maap import MAAP
 
+# Make sure instantiation works
+maap = MAAP()
+
 warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
 d = {"col1": ["name1", "name2"], "geometry": [Point(1, 2), Point(2, 1)]}

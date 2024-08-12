@@ -440,7 +440,7 @@ def main(
     # output directory.
     osx.remove(f"{dest}")
 
-    maap = MAAP("api.maap-project.org")
+    maap = MAAP()
     cmr_host = "cmr.earthdata.nasa.gov"
 
     aoi_gdf = gpd.read_file(aoi)
