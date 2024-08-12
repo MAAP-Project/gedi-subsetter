@@ -11,6 +11,7 @@ import requests
 import shapely
 from maap.Result import Granule
 from returns.io import IOResultE, impure_safe
+from shapely.geometry.base import BaseGeometry
 
 import gedi_subset.fp as fp
 from gedi_subset.h5frame import H5DataFrame
@@ -78,7 +79,7 @@ def get_geo_boundary(iso: str, level: int) -> gpd.GeoDataFrame:
     return gpd.read_file(file_path)
 
 
-def granule_geometry(granule: Granule) -> shapely.Geometry:
+def granule_geometry(granule: Granule) -> BaseGeometry:
     gpolygon = (
         granule.get("Granule", {})
         .get("Spatial", {})

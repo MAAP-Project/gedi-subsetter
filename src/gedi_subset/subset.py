@@ -197,6 +197,9 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
         # Allow the caller to override the default values above.
         **props.fsspec_kwargs,
     }
+
+    fs: fsspec.AbstractFileSystem
+    urlpath: str
     fs, urlpath = fsspec.url_to_fs(inpath, **fsspec_kwargs)
 
     try:
