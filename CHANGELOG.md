@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## Unreleased
 
+## 0.8.0 (2024-08-13)
+
 ### Fixed
 
 - Remove hard-coded MAAP API host value in the scripts `bin/algo/describe`,
