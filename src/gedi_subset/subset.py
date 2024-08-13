@@ -17,6 +17,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    cast,
 )
 
 import fsspec
@@ -214,8 +215,18 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
                 query=props.query,
             )
 
-            if isinstance(f, fsspec.spec.AbstractBufferedFile):
-                logger.debug(f"{f.cache!r}")
+            if isinstance(f, fsspec.spec.AbstractBufferedFile) and (cache := f.cache):
+                stats = ", ".join(
+                    [
+                        f"{cache.blocksize} bytes per block",
+                        f"{cache.nblocks} blocks",
+                        f"{cache.hit_count} hits",
+                        f"{cache.miss_count} misses",
+                        f"{cache.size} bytes in file",
+                        f"{cache.total_requested_bytes} requested bytes",
+                    ]
+                )
+                logger.debug(f"fsspec cache '{cache.name}' for '{urlpath}': {stats}")
     except Exception as e:
         granule_ur = props.granule["Granule"]["GranuleUR"]
         logger.warning(f"Skipping granule {granule_ur} [failed to read {inpath}: {e}]")
@@ -446,8 +457,8 @@ def main(
     maap = MAAP()
     cmr_host = "cmr.earthdata.nasa.gov"
 
-    aoi_gdf = gpd.read_file(aoi)
-    aoi_geometry = aoi_gdf.unary_union
+    aoi_gdf = cast(gpd.GeoDataFrame, gpd.read_file(aoi))
+    aoi_geometry = aoi_gdf.union_all()
     # Use wildcards around DOI value because some collections have incorrect
     # DOI values. For example, the L2B collection has the full DOI URL as
     # the DOI value (i.e., https://doi.org/<DOI> rather than just <DOI>).
