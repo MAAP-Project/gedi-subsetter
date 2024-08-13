@@ -30,7 +30,7 @@ algorithm_id="${algorithm_name}:${algorithm_version}"
 
 bin=$(dirname "$(dirname "$(readlink -f "$0")")")
 
-"${bin}/run" 2>/dev/null python -c "
+"${bin}/run" --quiet python -c "
 import json
 import sys
 import tempfile
@@ -38,7 +38,7 @@ import tempfile
 import yaml
 from maap.maap import MAAP
 
-maap = MAAP('${MAAP_API_HOST}')
+maap = MAAP()
 
 if r := maap.describeAlgorithm('${algorithm_id}'):
     # This response is XML, not JSON, unfortunately, so the output is not

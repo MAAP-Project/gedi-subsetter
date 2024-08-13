@@ -9,11 +9,9 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.31.0
-      proxy-ticket:
-      - PGT-1789-PqPwhL62u-GPb7lR3Z-cDVDj-RZj41lCMMgkOdQ-YQXAYj9n2hQQcvrrFNr0Z3b1xUY-93f206e1209e
+      - python-requests/2.32.3
       token:
-      - eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiYnNhdG9yaXUiLCJleHAiOjE1NjE1ODY0Nzl9.0Eq92EaiWYQ5jc_wX9lHu_iEOS8xE88FWlvYbOUlD08
+      - some-token
     method: GET
     uri: https://api.maap-project.org/api/cmr/collections?doi=10.5067%2FGEDI%2FGEDI01_B.002&cloud_hosted=true&page_num=1&page_size=20
   response:

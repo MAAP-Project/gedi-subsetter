@@ -86,7 +86,7 @@ import tempfile
 import yaml
 from maap.maap import MAAP
 
-maap = MAAP('${MAAP_API_HOST}')
+maap = MAAP()
 
 with open('${yaml_file}') as f:
     algorithm_config = yaml.safe_load(f)
@@ -106,7 +106,7 @@ with tempfile.NamedTemporaryFile('w+') as f:
         sys.exit(1)
 "
 
-if message=$("${bin}/run" python -c "${script}" 2>/dev/null); then
+if message=$("${bin}/run" --quiet python -c "${script}"); then
     echo "${message}"
 else
     stderr "Error: ${message}"
