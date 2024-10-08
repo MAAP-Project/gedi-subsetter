@@ -41,7 +41,7 @@ jobs:
           create-args: --category main dev
           environment-file: conda-lock.yml
           environment-name: gedi_subset
-          micromamba-version: latest
+          micromamba-version: 1.5.10-0
 
       - name: Install GEDI Subsetter
         run: python -m pip install --no-deps -e .
