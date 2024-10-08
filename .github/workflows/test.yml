@@ -35,7 +35,7 @@ jobs:
         env:
           # Prevent timeouts with micromamba (libmamba) during dependency installation
           MAMBA_NO_LOW_SPEED_LIMIT: 1
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           cache-environment: true
           create-args: --category main dev
