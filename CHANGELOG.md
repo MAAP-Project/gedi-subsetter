@@ -5,14 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog], and this project adheres to
 [Semantic Versioning].
 
-## Unreleased
+## [Unreleased]
+
+## [0.9.0] (2024-10-09)
 
 ### Added
 
 - Add "L4C" as a valid value for the `doi` input, for convenience
   ([#90](https://github.com/MAAP-Project/gedi-subsetter/issues/90))
 
-## 0.8.0 (2024-08-13)
+## [0.8.0] (2024-08-13)
 
 ### Fixed
 
@@ -56,7 +58,7 @@ The format is based on [Keep a Changelog], and this project adheres to
   defaulting to the number of available CPUs
   ([#77](https://github.com/MAAP-Project/gedi-subsetter/issues/77))
 
-## 0.7.0 (2024-04-23)
+## [0.7.0] (2024-04-23)
 
 ### Added
 
@@ -75,14 +77,14 @@ The format is based on [Keep a Changelog], and this project adheres to
   GEDI collections are now cloud-hosted, and granules are now downloaded from
   the cloud rather than from DAAC servers.
 
-## 0.6.2 (2023-12-05)
+## [0.6.2] (2023-12-05)
 
 ### Fixed
 
 - Updated to use v3.1.3 of maap-py in environment-maappy.yml. Previous versions
   of maap-py were using the deprecated MAAP Query Service API endpoint.
 
-## 0.6.1 (2023-09-28)
+## [0.6.1] (2023-09-28)
 
 ### Fixed
 
@@ -90,7 +92,7 @@ The format is based on [Keep a Changelog], and this project adheres to
   URLs that contain ops as they have now been retired (e.g.,
   api.ops.maap-project.org).
 
-## 0.6.0 (2023-06-02)
+## [0.6.0] (2023-06-02)
 
 ### Fixed
 
@@ -132,7 +134,7 @@ The format is based on [Keep a Changelog], and this project adheres to
   the output file, rather than hard-code the name to `gedi-subset.gpkg`.  See
   `docs/MAAP_USAGE.md` for more information.
 
-## 0.5.0 (2023-04-11)
+## [0.5.0] (2023-04-11)
 
 ### Changed
 
@@ -141,14 +143,14 @@ The format is based on [Keep a Changelog], and this project adheres to
   wish to query the MAAP CMR until it is taken down, you may still use an
   earlier version of this algorithm (ideally, 0.4.0).
 
-## 0.4.0 (2022-11-14)
+## [0.4.0] (2022-11-14)
 
 ### Added
 
 - [#6](https://github.com/MAAP-Project/gedi-subsetter/issues/6): Allow user to
   specify which BEAMs to subset
 
-## 0.3.0 (2022-11-10)
+## [0.3.0] (2022-11-10)
 
 ### Fixed
 
@@ -172,7 +174,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 - [#8](https://github.com/MAAP-Project/gedi-subsetter/issues/8): Specifying a
   query is now optional, to allow selecting all rows for specified columns.
 
-## 0.2.7 (2022-10-18)
+## [0.2.7] (2022-10-18)
 
 ### Added
 
@@ -190,3 +192,15 @@ The format is based on [Keep a Changelog], and this project adheres to
   https://github.com/MAAP-Project/maap-documentation-examples
 [MAAP_USAGE.md]:
   docs/MAAP_USAGE.md
+
+[0.2.7]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.2.7
+[0.3.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.3.0
+[0.4.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.4.0
+[0.5.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.5.0
+[0.6.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.6.0
+[0.6.1]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.6.1
+[0.6.2]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.6.2
+[0.7.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.7.0
+[0.8.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.8.0
+[0.9.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.9.0
+[Unreleased]: https://github.com/nsidc/earthaccess/compare/0.9.0...HEAD

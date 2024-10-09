@@ -240,9 +240,13 @@ a new release:
    same value as `<VERSION>` from the previous step.
 1. In the [Changelog](./CHANGELOG.md), immediately below the `Unreleased`
    heading add a new heading (at the same level) using the format
-   `<VERSION> (<YYYY-MM-DD>)`, where `<VERSION>` is as above, and `<YYYY-MM-DD>`
-   is the _expected_ release date (which might not be the _actual_ release date,
-   depending on the PR approval process).
+   `[<VERSION>] (<YYYY-MM-DD>)` (including the square brackets and parentheses),
+   where `<VERSION>` is as above, and `<YYYY-MM-DD>` is the _expected_ release
+   date (which might not be the _actual_ release date, depending on the PR
+   approval process).
+1. Also in the Changelog, at the bottom, add a link to the new release to the
+   existing list of release links (in order), and update the **Unreleased** link
+   accordingly as well.
 1. Commit the changes, and open a Pull Request to `main`.
 1. Once the PR is approved and merged, go to
    <https://github.com/MAAP-Project/gedi-subsetter/releases/new>
