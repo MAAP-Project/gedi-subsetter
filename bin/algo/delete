@@ -39,7 +39,7 @@ branch=$(git rev-parse --abbrev-ref HEAD)
 algorithm_name=$(grep "^algorithm_name:" "${yaml_file}" | sed -E 's/algorithm_name: ([^[:space:]]+).*/\1/')
 algorithm_version=$(grep "^algorithm_version:" "${yaml_file}" | sed -E 's/algorithm_version: ([^[:space:]]+).*/\1/')
 [[ "${branch}" != "main" ]] && algorithm_version=${branch}
-algorithm_id="${algorithm_name}:${algorithm_version}"
+algorithm_id="${algorithm_name}:${VERSION:-${algorithm_version}}"
 
 if [[ -z "${yes}" ]]; then
     read -rp "Are you sure you want to delete algorithm '${algorithm_id}'? [yes/NO] "

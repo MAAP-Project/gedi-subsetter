@@ -8,6 +8,7 @@
     - [L2A](#l2a)
     - [L2B](#l2b)
     - [L4A](#l4a)
+    - [L4C](#l4c)
 - [Running a GEDI Subsetting DPS Job](#running-a-gedi-subsetting-dps-job)
   - [Submitting a DPS Job](#submitting-a-dps-job)
   - [Checking the DPS Job Status](#checking-the-dps-job-status)
@@ -22,7 +23,7 @@ At a high level, the GEDI subsetting algorithm does the following:
 - Queries the MAAP CMR for granules from a specified GEDI collection that
   intersect a specified Area of Interest (AOI) (as a GeoJSON file).  This is
   limited to GEDI collections granule data files are in HDF5 format, which are
-  L1B, L2A, L2B, and L4A.
+  L1B, L2A, L2B, L4A, and L4C.
 - For each granule within the specified AOI, downloads its HDF5 (`.h5`) file.
 - Subsets each data file by selecting specified datasets within the file and
   limiting data to values that match a specified query condition.
@@ -242,6 +243,7 @@ supply one of the following "logical" names as the value of the `doi` input
 |L2A         |[10.5067/GEDI/GEDI02_A.002](https://doi.org/10.5067/GEDI/GEDI02_A.002)
 |L2B         |[10.5067/GEDI/GEDI02_B.002](https://doi.org/10.5067/GEDI/GEDI02_B.002)
 |L4A         |[10.3334/ORNLDAAC/2056](https://doi.org/10.3334/ORNLDAAC/2056)
+|L4C (_Added in version 0.9.0_) |[10.3334/ORNLDAAC/2338](https://doi.org/10.3334/ORNLDAAC/2338)
 
 If, however, a new version of a collection is published, the new version will
 have a different DOI assigned, and the old version of the collection will likely
@@ -270,7 +272,6 @@ inputs = dict(
    doi="L1B",  # or a specific DOI
    lat="geolocation/latitude_bin0",
    lon="geolocation/longitude_bin0",
-   beams="all",
    columns=...,
    query=...,
 )
@@ -284,7 +285,6 @@ inputs = dict(
    doi="L2A",  # or a specific DOI
    lat="lat_lowestmode",  # or "lat_highestreturn"
    lon="lon_lowestmode",  # or "lon_highestreturn"
-   beams="all",
    columns="rh50,rh98",
    query="quality_flag == 1 and sensitivity > 0.95",
 )
@@ -298,7 +298,6 @@ inputs = dict(
    doi="L2B",  # or a specific DOI
    lat="geolocation/lat_lowestmode", # or "geolocation/lat_highestreturn"
    lon="geolocation/lon_lowestmode", # or "geolocation/lon_highestreturn"
-   beams="all",
    columns="rh100",
    query="l2a_quality_flag == 1 and l2b_quality_flag == 1 and sensitivity > 0.95",
 )
@@ -312,9 +311,23 @@ inputs = dict(
    doi="L4A",  # or a specific DOI
    lat="lat_lowestmode",
    lon="lon_lowestmode",
-   beams="all",
    columns="agbd, agbd_se, sensitivity, geolocation/sensitivity_a2",
    query="l2_quality_flag == 1 and l4_quality_flag == 1 and sensitivity > 0.95 and `geolocation/sensitivity_a2` > 0.95",
+)
+```
+
+#### L4C
+
+> _Added in version 0.9.0_
+
+```python
+inputs = dict(
+   aoi=...,
+   doi="L4C",  # or a specific DOI
+   lat="lat_lowestmode",
+   lon="lon_lowestmode",
+   columns="wsci, sensitivity, geolocation/sensitivity_a2",
+   query="l2_quality_flag == 1 and wsci_quality_flag == 1 and sensitivity > 0.95 and `geolocation/sensitivity_a2` > 0.95",
 )
 ```
 
