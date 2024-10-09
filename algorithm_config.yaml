@@ -1,8 +1,8 @@
-algorithm_description: Subset GEDI L1B, L2A, L2B, or L4A granules within an area of interest (AOI)
+algorithm_description: Subset GEDI L1B, L2A, L2B, L4A, or L4C granules within an area of interest (AOI)
 algorithm_name: gedi-subset
-algorithm_version: 0.8.0
+algorithm_version: 0.9.0
 repository_url: https://github.com/MAAP-Project/gedi-subsetter.git
-docker_container_url: mas.maap-project.org/root/maap-workspaces/base_images/python:v4.0.0
+docker_container_url: mas.maap-project.org/root/maap-workspaces/custom_images/maap_base:v4.1.0
 disk_space: 20GB
 queue: maap-dps-worker-32vcpu-64gb
 build_command: gedi-subsetter/bin/build-dps

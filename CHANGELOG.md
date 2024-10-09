@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Add "L4C" as a valid value for the `doi` input, for convenience
+  ([#90](https://github.com/MAAP-Project/gedi-subsetter/issues/90))
+
 ## 0.8.0 (2024-08-13)
 
 ### Fixed
