@@ -6,7 +6,7 @@ ci:
   autofix_prs: false
 
 default_language_version:
-  python: python3.11
+  python: python3.12
 repos:
   - repo: local
     hooks:
