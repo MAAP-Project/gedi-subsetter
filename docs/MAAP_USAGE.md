@@ -145,13 +145,7 @@ optional inputs:
 
   - GPKG (GeoPackage): `.gpkg`
   - (Geo)Parquet: `.parquet`
-  - Feather (V2): `.feather`
   - FlatGeobuf: `.fgb`
-  - GeoJSON: `.json`, `.geojson`
-  - GeoJSONSeq: `.geojsonl`, `.geojsons`
-  - GML: `.gml`, `.xml`
-  - MapInfo File: `.mid`, `.mif`, `.tab`
-  - ESRI Shapefile: `.dbf`, `.shp`
 
   > _Added in version 0.6.0_
 
