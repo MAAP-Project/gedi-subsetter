@@ -143,9 +143,9 @@ optional inputs:
   the output format.  Supported formats inferred from file extensions are as
   follows:
 
+  - FlatGeobuf: `.fgb`
   - GPKG (GeoPackage): `.gpkg`
   - (Geo)Parquet: `.parquet`
-  - FlatGeobuf: `.fgb`
 
   > _Added in version 0.6.0_
 

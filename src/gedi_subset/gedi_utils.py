@@ -78,9 +78,7 @@ def gdf_reformat(path: Union[str, os.PathLike[str]], suffix: str) -> None:
     suffix:
         Desired format, expressed as a destination file suffix, including a
         leading dot (`.`), just like the `suffix` property of a `Path` includes.
-        Supported values: ".parquet", ".feather", or any suffix supported by
-        `GeoDataFrame.to_file`, which will use the suffix to guess the
-        appropriate driver.
+        Supported values: ".fgb", ".gpkg", ".parquet".
     """
     src_path = path if isinstance(path, Path) else Path(path)
     dst_path = src_path.with_suffix(suffix)
@@ -93,11 +91,13 @@ def gdf_reformat(path: Union[str, os.PathLike[str]], suffix: str) -> None:
 
     if suffix == ".parquet":
         gdf.to_parquet(dst_path)
-    elif suffix == ".feather":
-        gdf.to_feather(dst_path)
-    else:
-        # Let to_file guess the appropriate driver based upon the file suffix
+    elif suffix.lower() in {".fgb", ".gpkg"}:
         gdf.to_file(dst_path)
+    else:
+        raise ValueError(
+            "Unsupported output format."
+            f" Expected '.fgb', '.gpkg', or '.parquet': {dst_path}"
+        )
 
     os.remove(path)
 
