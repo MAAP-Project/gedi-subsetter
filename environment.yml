@@ -7,7 +7,7 @@ channels:
 # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#performance-dependencies-recommended
 
 dependencies:
-  - python~=3.12.0
+  - python ~=3.12.0
 
   - boto3
   - bottleneck # pandas performance
@@ -23,13 +23,14 @@ dependencies:
   - pyarrow # parquet support in pandas
   - pydantic
   - returns
-  - s3fs
+  # Oddly, when completely unpinned, a very old version of s3fs is installed
+  - s3fs >=2025.1.0
   - scalene # CPU+mem profiling
   - shapely
   - typer # CLI
 
   - pip:
-      - maap-py
+      - maap-py >=4.0
 
 platforms:
   - linux-64
