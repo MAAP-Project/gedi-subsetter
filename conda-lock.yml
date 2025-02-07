@@ -1249,8 +1249,8 @@ package:
   hash:
     md5: a38b801f2bcc12af80c2e02a9e4ce7d9
     sha256: f334115c6b0c6c2cd0d28595365f205ec7eaa60bcc5ff91a75d7245f728be820
-  category: dev
-  optional: true
+  category: main
+  optional: false
 - name: backoff
   version: 2.2.1
   manager: conda
@@ -1261,8 +1261,8 @@ package:
   hash:
     md5: a38b801f2bcc12af80c2e02a9e4ce7d9
     sha256: f334115c6b0c6c2cd0d28595365f205ec7eaa60bcc5ff91a75d7245f728be820
-  category: dev
-  optional: true
+  category: main
+  optional: false
 - name: backoff
   version: 2.2.1
   manager: conda
@@ -1273,8 +1273,8 @@ package:
   hash:
     md5: a38b801f2bcc12af80c2e02a9e4ce7d9
     sha256: f334115c6b0c6c2cd0d28595365f205ec7eaa60bcc5ff91a75d7245f728be820
-  category: dev
-  optional: true
+  category: main
+  optional: false
 - name: backports
   version: '1.0'
   manager: conda
@@ -1574,7 +1574,7 @@ package:
   category: main
   optional: false
 - name: boto3-stubs
-  version: 1.36.13
+  version: 1.36.15
   manager: conda
   platform: linux-64
   dependencies:
@@ -1582,14 +1582,14 @@ package:
     python: ''
     types-s3transfer: ''
     typing-extensions: '>=4.1.0'
-  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-1.36.13-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-1.36.15-pyhd8ed1ab_0.conda
   hash:
-    md5: 78361c879809a699abfe318de2df610e
-    sha256: 850727752368a6c3d598b4df1dd8e551ccc7b2b40b1045c1cf95f997e4f3a34a
+    md5: c04645cd9b9d0c7a74de53ff5d9ae5d4
+    sha256: b654b80f195f62feff5f783943ff93e22b5b234559fe9a7a3bbe77f45a4e426a
   category: dev
   optional: true
 - name: boto3-stubs
-  version: 1.36.13
+  version: 1.36.15
   manager: conda
   platform: osx-64
   dependencies:
@@ -1597,14 +1597,14 @@ package:
     botocore-stubs: ''
     types-s3transfer: ''
     typing-extensions: '>=4.1.0'
-  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-1.36.13-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-1.36.15-pyhd8ed1ab_0.conda
   hash:
-    md5: 78361c879809a699abfe318de2df610e
-    sha256: 850727752368a6c3d598b4df1dd8e551ccc7b2b40b1045c1cf95f997e4f3a34a
+    md5: c04645cd9b9d0c7a74de53ff5d9ae5d4
+    sha256: b654b80f195f62feff5f783943ff93e22b5b234559fe9a7a3bbe77f45a4e426a
   category: dev
   optional: true
 - name: boto3-stubs
-  version: 1.36.13
+  version: 1.36.15
   manager: conda
   platform: osx-arm64
   dependencies:
@@ -1612,18 +1612,18 @@ package:
     botocore-stubs: ''
     types-s3transfer: ''
     typing-extensions: '>=4.1.0'
-  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-1.36.13-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-1.36.15-pyhd8ed1ab_0.conda
   hash:
-    md5: 78361c879809a699abfe318de2df610e
-    sha256: 850727752368a6c3d598b4df1dd8e551ccc7b2b40b1045c1cf95f997e4f3a34a
+    md5: c04645cd9b9d0c7a74de53ff5d9ae5d4
+    sha256: b654b80f195f62feff5f783943ff93e22b5b234559fe9a7a3bbe77f45a4e426a
   category: dev
   optional: true
 - name: boto3-stubs-essential
-  version: 1.36.13
+  version: 1.36.15
   manager: conda
   platform: linux-64
   dependencies:
-    boto3-stubs: 1.36.13
+    boto3-stubs: 1.36.15
     mypy-boto3-s3: ''
     mypy_boto3_cloudformation: ''
     mypy_boto3_dynamodb: ''
@@ -1631,14 +1631,14 @@ package:
     mypy_boto3_lambda: ''
     mypy_boto3_rds: ''
     mypy_boto3_sqs: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-essential-1.36.13-hd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-essential-1.36.15-hd8ed1ab_0.conda
   hash:
-    md5: 37e2a960e55c344a79df520122d06017
-    sha256: cfd10a7e2d3cd3d3d43aadede190c6c0479d8fca6f070b17408f6704682e0862
+    md5: 306d87d3e91e06cdc7940023d588b935
+    sha256: e17b0694575649297c98c933c7a5a4952716a6b3d884b46d4c03c92a3d436371
   category: dev
   optional: true
 - name: boto3-stubs-essential
-  version: 1.36.13
+  version: 1.36.15
   manager: conda
   platform: osx-64
   dependencies:
@@ -1649,15 +1649,15 @@ package:
     mypy_boto3_lambda: ''
     mypy_boto3_cloudformation: ''
     mypy_boto3_sqs: ''
-    boto3-stubs: 1.36.13
-  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-essential-1.36.13-hd8ed1ab_0.conda
+    boto3-stubs: 1.36.15
+  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-essential-1.36.15-hd8ed1ab_0.conda
   hash:
-    md5: 37e2a960e55c344a79df520122d06017
-    sha256: cfd10a7e2d3cd3d3d43aadede190c6c0479d8fca6f070b17408f6704682e0862
+    md5: 306d87d3e91e06cdc7940023d588b935
+    sha256: e17b0694575649297c98c933c7a5a4952716a6b3d884b46d4c03c92a3d436371
   category: dev
   optional: true
 - name: boto3-stubs-essential
-  version: 1.36.13
+  version: 1.36.15
   manager: conda
   platform: osx-arm64
   dependencies:
@@ -1668,15 +1668,15 @@ package:
     mypy_boto3_lambda: ''
     mypy_boto3_cloudformation: ''
     mypy_boto3_sqs: ''
-    boto3-stubs: 1.36.13
-  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-essential-1.36.13-hd8ed1ab_0.conda
+    boto3-stubs: 1.36.15
+  url: https://conda.anaconda.org/conda-forge/noarch/boto3-stubs-essential-1.36.15-hd8ed1ab_0.conda
   hash:
-    md5: 37e2a960e55c344a79df520122d06017
-    sha256: cfd10a7e2d3cd3d3d43aadede190c6c0479d8fca6f070b17408f6704682e0862
+    md5: 306d87d3e91e06cdc7940023d588b935
+    sha256: e17b0694575649297c98c933c7a5a4952716a6b3d884b46d4c03c92a3d436371
   category: dev
   optional: true
 - name: botocore
-  version: 1.36.14
+  version: 1.36.15
   manager: conda
   platform: linux-64
   dependencies:
@@ -1684,14 +1684,14 @@ package:
     python: '>=3.10'
     python-dateutil: '>=2.1,<3.0.0'
     urllib3: '>=1.25.4,!=2.2.0,<3'
-  url: https://conda.anaconda.org/conda-forge/noarch/botocore-1.36.14-pyge310_1234567_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/botocore-1.36.15-pyge310_1234567_0.conda
   hash:
-    md5: e6688d833f6cb38c3d4e18fe62d19f08
-    sha256: 64e14a80462ea95bb55bb2d019c8fded4e7f17978d96d43349577f72da5a6115
+    md5: 6abd0a41ce58352a008896a51237b7b2
+    sha256: 4e618052a2166c7513814f73ef111b5b3f6458386b28c42a0752242b3bfba668
   category: main
   optional: false
 - name: botocore
-  version: 1.36.14
+  version: 1.36.15
   manager: conda
   platform: osx-64
   dependencies:
@@ -1699,14 +1699,14 @@ package:
     python-dateutil: '>=2.1,<3.0.0'
     jmespath: '>=0.7.1,<2.0.0'
     urllib3: '>=1.25.4,!=2.2.0,<3'
-  url: https://conda.anaconda.org/conda-forge/noarch/botocore-1.36.14-pyge310_1234567_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/botocore-1.36.15-pyge310_1234567_0.conda
   hash:
-    md5: e6688d833f6cb38c3d4e18fe62d19f08
-    sha256: 64e14a80462ea95bb55bb2d019c8fded4e7f17978d96d43349577f72da5a6115
+    md5: 6abd0a41ce58352a008896a51237b7b2
+    sha256: 4e618052a2166c7513814f73ef111b5b3f6458386b28c42a0752242b3bfba668
   category: main
   optional: false
 - name: botocore
-  version: 1.36.14
+  version: 1.36.15
   manager: conda
   platform: osx-arm64
   dependencies:
@@ -1714,52 +1714,52 @@ package:
     python-dateutil: '>=2.1,<3.0.0'
     jmespath: '>=0.7.1,<2.0.0'
     urllib3: '>=1.25.4,!=2.2.0,<3'
-  url: https://conda.anaconda.org/conda-forge/noarch/botocore-1.36.14-pyge310_1234567_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/botocore-1.36.15-pyge310_1234567_0.conda
   hash:
-    md5: e6688d833f6cb38c3d4e18fe62d19f08
-    sha256: 64e14a80462ea95bb55bb2d019c8fded4e7f17978d96d43349577f72da5a6115
+    md5: 6abd0a41ce58352a008896a51237b7b2
+    sha256: 4e618052a2166c7513814f73ef111b5b3f6458386b28c42a0752242b3bfba668
   category: main
   optional: false
 - name: botocore-stubs
-  version: 1.36.14
+  version: 1.36.15
   manager: conda
   platform: linux-64
   dependencies:
     python: '>=3.9'
     types-awscrt: ''
     typing_extensions: '>=4.1.0'
-  url: https://conda.anaconda.org/conda-forge/noarch/botocore-stubs-1.36.14-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/botocore-stubs-1.36.15-pyhd8ed1ab_0.conda
   hash:
-    md5: 5e2037ef4067bd2c4d1dde73977badc7
-    sha256: 7cc2524d20fcef033d1ccb5a8ace97ed92b684372a97c13d605704f3f6f888c8
+    md5: fed0fe4c2ea294313b161479af127127
+    sha256: 44ea661c2af45d75ea31930cbe05f694892061517453c43c5375a01bb364a921
   category: dev
   optional: true
 - name: botocore-stubs
-  version: 1.36.14
+  version: 1.36.15
   manager: conda
   platform: osx-64
   dependencies:
     types-awscrt: ''
     python: '>=3.9'
     typing_extensions: '>=4.1.0'
-  url: https://conda.anaconda.org/conda-forge/noarch/botocore-stubs-1.36.14-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/botocore-stubs-1.36.15-pyhd8ed1ab_0.conda
   hash:
-    md5: 5e2037ef4067bd2c4d1dde73977badc7
-    sha256: 7cc2524d20fcef033d1ccb5a8ace97ed92b684372a97c13d605704f3f6f888c8
+    md5: fed0fe4c2ea294313b161479af127127
+    sha256: 44ea661c2af45d75ea31930cbe05f694892061517453c43c5375a01bb364a921
   category: dev
   optional: true
 - name: botocore-stubs
-  version: 1.36.14
+  version: 1.36.15
   manager: conda
   platform: osx-arm64
   dependencies:
     types-awscrt: ''
     python: '>=3.9'
     typing_extensions: '>=4.1.0'
-  url: https://conda.anaconda.org/conda-forge/noarch/botocore-stubs-1.36.14-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/botocore-stubs-1.36.15-pyhd8ed1ab_0.conda
   hash:
-    md5: 5e2037ef4067bd2c4d1dde73977badc7
-    sha256: 7cc2524d20fcef033d1ccb5a8ace97ed92b684372a97c13d605704f3f6f888c8
+    md5: fed0fe4c2ea294313b161479af127127
+    sha256: 44ea661c2af45d75ea31930cbe05f694892061517453c43c5375a01bb364a921
   category: dev
   optional: true
 - name: bottleneck
@@ -10150,45 +10150,45 @@ package:
   category: dev
   optional: true
 - name: mypy_boto3_cloudformation
-  version: 1.36.0
+  version: 1.36.15
   manager: conda
   platform: linux-64
   dependencies:
     boto3: ''
     python: '>=3.9'
     typing-extensions: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/mypy_boto3_cloudformation-1.36.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/mypy_boto3_cloudformation-1.36.15-pyhd8ed1ab_0.conda
   hash:
-    md5: 488d39d13164142267903d8a3db3bdbf
-    sha256: 4f8a6b1ec3652749691e0394fb1ca118a1d98a44e5c0701ae41301c378fe742a
+    md5: 333bc2da7157fdd060f2192ad8374f3a
+    sha256: 520d16757bef8c27302e13b7276b74c327a92bbcde407e3867bed29ab240cafd
   category: dev
   optional: true
 - name: mypy_boto3_cloudformation
-  version: 1.36.0
+  version: 1.36.15
   manager: conda
   platform: osx-64
   dependencies:
     boto3: ''
     typing-extensions: ''
     python: '>=3.9'
-  url: https://conda.anaconda.org/conda-forge/noarch/mypy_boto3_cloudformation-1.36.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/mypy_boto3_cloudformation-1.36.15-pyhd8ed1ab_0.conda
   hash:
-    md5: 488d39d13164142267903d8a3db3bdbf
-    sha256: 4f8a6b1ec3652749691e0394fb1ca118a1d98a44e5c0701ae41301c378fe742a
+    md5: 333bc2da7157fdd060f2192ad8374f3a
+    sha256: 520d16757bef8c27302e13b7276b74c327a92bbcde407e3867bed29ab240cafd
   category: dev
   optional: true
 - name: mypy_boto3_cloudformation
-  version: 1.36.0
+  version: 1.36.15
   manager: conda
   platform: osx-arm64
   dependencies:
     boto3: ''
     typing-extensions: ''
     python: '>=3.9'
-  url: https://conda.anaconda.org/conda-forge/noarch/mypy_boto3_cloudformation-1.36.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/mypy_boto3_cloudformation-1.36.15-pyhd8ed1ab_0.conda
   hash:
-    md5: 488d39d13164142267903d8a3db3bdbf
-    sha256: 4f8a6b1ec3652749691e0394fb1ca118a1d98a44e5c0701ae41301c378fe742a
+    md5: 333bc2da7157fdd060f2192ad8374f3a
+    sha256: 520d16757bef8c27302e13b7276b74c327a92bbcde407e3867bed29ab240cafd
   category: dev
   optional: true
 - name: mypy_boto3_dynamodb
@@ -16498,39 +16498,219 @@ package:
     sha256: 2d4fd1ff7ee79cd954ca8e81abf11d9d49954dd1fef80f27289e2402ae9c2e09
   category: main
   optional: false
-- name: maap-py
-  version: 0.0.0
+- name: chroma-py
+  version: 0.1.0.dev1
   manager: pip
   platform: linux-64
   dependencies: {}
-  url: git+https://github.com/MAAP-Project/maap-py.git@1887545b4faa03f4e3a6ffcf25e3b170894d3a75
-  hash: {}
+  url: https://files.pythonhosted.org/packages/23/3c/39d07abb9d4bcda64d9c50a4fda2ecfee4d76a436bd590d232a4e1a5ad43/chroma-py-0.1.0.dev1.tar.gz
+  hash:
+    sha256: 0dc1135332e2ed6e74d7b355c8afa7b85c193a7d5af1cb8b6f79c9e2645912b2
   category: main
-  source:
-    type: url
-    url: git+https://github.com/MAAP-Project/maap-py.git@1887545b4faa03f4e3a6ffcf25e3b170894d3a75
   optional: false
-- name: maap-py
-  version: 0.0.0
+- name: chroma-py
+  version: 0.1.0.dev1
   manager: pip
   platform: osx-64
   dependencies: {}
-  url: git+https://github.com/MAAP-Project/maap-py.git@1887545b4faa03f4e3a6ffcf25e3b170894d3a75
-  hash: {}
+  url: https://files.pythonhosted.org/packages/23/3c/39d07abb9d4bcda64d9c50a4fda2ecfee4d76a436bd590d232a4e1a5ad43/chroma-py-0.1.0.dev1.tar.gz
+  hash:
+    sha256: 0dc1135332e2ed6e74d7b355c8afa7b85c193a7d5af1cb8b6f79c9e2645912b2
   category: main
-  source:
-    type: url
-    url: git+https://github.com/MAAP-Project/maap-py.git@1887545b4faa03f4e3a6ffcf25e3b170894d3a75
   optional: false
-- name: maap-py
-  version: 0.0.0
+- name: chroma-py
+  version: 0.1.0.dev1
   manager: pip
   platform: osx-arm64
   dependencies: {}
-  url: git+https://github.com/MAAP-Project/maap-py.git@1887545b4faa03f4e3a6ffcf25e3b170894d3a75
-  hash: {}
+  url: https://files.pythonhosted.org/packages/23/3c/39d07abb9d4bcda64d9c50a4fda2ecfee4d76a436bd590d232a4e1a5ad43/chroma-py-0.1.0.dev1.tar.gz
+  hash:
+    sha256: 0dc1135332e2ed6e74d7b355c8afa7b85c193a7d5af1cb8b6f79c9e2645912b2
   category: main
-  source:
-    type: url
-    url: git+https://github.com/MAAP-Project/maap-py.git@1887545b4faa03f4e3a6ffcf25e3b170894d3a75
+  optional: false
+- name: colour
+  version: 0.1.5
+  manager: pip
+  platform: linux-64
+  dependencies: {}
+  url: https://files.pythonhosted.org/packages/74/46/e81907704ab203206769dee1385dc77e1407576ff8f50a0681d0a6b541be/colour-0.1.5-py2.py3-none-any.whl
+  hash:
+    sha256: 33f6db9d564fadc16e59921a56999b79571160ce09916303d35346dddc17978c
+  category: main
+  optional: false
+- name: colour
+  version: 0.1.5
+  manager: pip
+  platform: osx-64
+  dependencies: {}
+  url: https://files.pythonhosted.org/packages/74/46/e81907704ab203206769dee1385dc77e1407576ff8f50a0681d0a6b541be/colour-0.1.5-py2.py3-none-any.whl
+  hash:
+    sha256: 33f6db9d564fadc16e59921a56999b79571160ce09916303d35346dddc17978c
+  category: main
+  optional: false
+- name: colour
+  version: 0.1.5
+  manager: pip
+  platform: osx-arm64
+  dependencies: {}
+  url: https://files.pythonhosted.org/packages/74/46/e81907704ab203206769dee1385dc77e1407576ff8f50a0681d0a6b541be/colour-0.1.5-py2.py3-none-any.whl
+  hash:
+    sha256: 33f6db9d564fadc16e59921a56999b79571160ce09916303d35346dddc17978c
+  category: main
+  optional: false
+- name: configparser
+  version: 7.1.0
+  manager: pip
+  platform: linux-64
+  dependencies: {}
+  url: https://files.pythonhosted.org/packages/ee/df/1514580907b0bac0970415e5e24ef96a9c1fa71dcf2aa0139045b58fae9a/configparser-7.1.0-py3-none-any.whl
+  hash:
+    sha256: 98e374573c4e10e92399651e3ba1c47a438526d633c44ee96143dec26dad4299
+  category: main
+  optional: false
+- name: configparser
+  version: 7.1.0
+  manager: pip
+  platform: osx-64
+  dependencies: {}
+  url: https://files.pythonhosted.org/packages/ee/df/1514580907b0bac0970415e5e24ef96a9c1fa71dcf2aa0139045b58fae9a/configparser-7.1.0-py3-none-any.whl
+  hash:
+    sha256: 98e374573c4e10e92399651e3ba1c47a438526d633c44ee96143dec26dad4299
+  category: main
+  optional: false
+- name: configparser
+  version: 7.1.0
+  manager: pip
+  platform: osx-arm64
+  dependencies: {}
+  url: https://files.pythonhosted.org/packages/ee/df/1514580907b0bac0970415e5e24ef96a9c1fa71dcf2aa0139045b58fae9a/configparser-7.1.0-py3-none-any.whl
+  hash:
+    sha256: 98e374573c4e10e92399651e3ba1c47a438526d633c44ee96143dec26dad4299
+  category: main
+  optional: false
+- name: geojson
+  version: 3.2.0
+  manager: pip
+  platform: linux-64
+  dependencies: {}
+  url: https://files.pythonhosted.org/packages/18/67/a7fa2d650602731c90e0a86279841b4586e14228199e8c09165ba4863e29/geojson-3.2.0-py3-none-any.whl
+  hash:
+    sha256: 69d14156469e13c79479672eafae7b37e2dcd19bdfd77b53f74fa8fe29910b52
+  category: main
+  optional: false
+- name: geojson
+  version: 3.2.0
+  manager: pip
+  platform: osx-64
+  dependencies: {}
+  url: https://files.pythonhosted.org/packages/18/67/a7fa2d650602731c90e0a86279841b4586e14228199e8c09165ba4863e29/geojson-3.2.0-py3-none-any.whl
+  hash:
+    sha256: 69d14156469e13c79479672eafae7b37e2dcd19bdfd77b53f74fa8fe29910b52
+  category: main
+  optional: false
+- name: geojson
+  version: 3.2.0
+  manager: pip
+  platform: osx-arm64
+  dependencies: {}
+  url: https://files.pythonhosted.org/packages/18/67/a7fa2d650602731c90e0a86279841b4586e14228199e8c09165ba4863e29/geojson-3.2.0-py3-none-any.whl
+  hash:
+    sha256: 69d14156469e13c79479672eafae7b37e2dcd19bdfd77b53f74fa8fe29910b52
+  category: main
+  optional: false
+- name: maap-py
+  version: 4.1.0
+  manager: pip
+  platform: linux-64
+  dependencies:
+    backoff: '>=2.2.1,<3.0.0'
+    boto3: '>=1.34.139,<2.0.0'
+    configparser: '>=7.0.0,<8.0.0'
+    importlib-resources: '>=6.4.0,<7.0.0'
+    mapboxgl: '>=0.10.2,<0.11.0'
+    pyyaml: '>=6.0.1,<7.0.0'
+    requests: '>=2.32.3,<3.0.0'
+  url: https://files.pythonhosted.org/packages/26/b6/31b317ca4277825445fdc7ff3a947783563954744e4a9a1ef0d4b5445fd8/maap_py-4.1.0-py3-none-any.whl
+  hash:
+    sha256: 6433f44a22dc1291d4c3e3f4508203d95f1346ffd5e3e952140e0a1d22145143
+  category: main
+  optional: false
+- name: maap-py
+  version: 4.1.0
+  manager: pip
+  platform: osx-64
+  dependencies:
+    backoff: '>=2.2.1,<3.0.0'
+    boto3: '>=1.34.139,<2.0.0'
+    configparser: '>=7.0.0,<8.0.0'
+    importlib-resources: '>=6.4.0,<7.0.0'
+    mapboxgl: '>=0.10.2,<0.11.0'
+    pyyaml: '>=6.0.1,<7.0.0'
+    requests: '>=2.32.3,<3.0.0'
+  url: https://files.pythonhosted.org/packages/26/b6/31b317ca4277825445fdc7ff3a947783563954744e4a9a1ef0d4b5445fd8/maap_py-4.1.0-py3-none-any.whl
+  hash:
+    sha256: 6433f44a22dc1291d4c3e3f4508203d95f1346ffd5e3e952140e0a1d22145143
+  category: main
+  optional: false
+- name: maap-py
+  version: 4.1.0
+  manager: pip
+  platform: osx-arm64
+  dependencies:
+    backoff: '>=2.2.1,<3.0.0'
+    boto3: '>=1.34.139,<2.0.0'
+    configparser: '>=7.0.0,<8.0.0'
+    importlib-resources: '>=6.4.0,<7.0.0'
+    mapboxgl: '>=0.10.2,<0.11.0'
+    pyyaml: '>=6.0.1,<7.0.0'
+    requests: '>=2.32.3,<3.0.0'
+  url: https://files.pythonhosted.org/packages/26/b6/31b317ca4277825445fdc7ff3a947783563954744e4a9a1ef0d4b5445fd8/maap_py-4.1.0-py3-none-any.whl
+  hash:
+    sha256: 6433f44a22dc1291d4c3e3f4508203d95f1346ffd5e3e952140e0a1d22145143
+  category: main
+  optional: false
+- name: mapboxgl
+  version: 0.10.2
+  manager: pip
+  platform: linux-64
+  dependencies:
+    jinja2: '*'
+    geojson: '*'
+    chroma-py: '*'
+    colour: '*'
+    matplotlib: '*'
+  url: https://files.pythonhosted.org/packages/4f/e1/cdaa6c2f6d3a7a29b0b9a675dcfc25f4c481d577d137da8c769f13014ce5/mapboxgl-0.10.2-py2.py3-none-any.whl
+  hash:
+    sha256: 19a81d16d66da49ba4a55a7a28eb2f1fd8d07f2885f6b3a6d386769eefab17ae
+  category: main
+  optional: false
+- name: mapboxgl
+  version: 0.10.2
+  manager: pip
+  platform: osx-64
+  dependencies:
+    jinja2: '*'
+    geojson: '*'
+    chroma-py: '*'
+    colour: '*'
+    matplotlib: '*'
+  url: https://files.pythonhosted.org/packages/4f/e1/cdaa6c2f6d3a7a29b0b9a675dcfc25f4c481d577d137da8c769f13014ce5/mapboxgl-0.10.2-py2.py3-none-any.whl
+  hash:
+    sha256: 19a81d16d66da49ba4a55a7a28eb2f1fd8d07f2885f6b3a6d386769eefab17ae
+  category: main
+  optional: false
+- name: mapboxgl
+  version: 0.10.2
+  manager: pip
+  platform: osx-arm64
+  dependencies:
+    jinja2: '*'
+    geojson: '*'
+    chroma-py: '*'
+    colour: '*'
+    matplotlib: '*'
+  url: https://files.pythonhosted.org/packages/4f/e1/cdaa6c2f6d3a7a29b0b9a675dcfc25f4c481d577d137da8c769f13014ce5/mapboxgl-0.10.2-py2.py3-none-any.whl
+  hash:
+    sha256: 19a81d16d66da49ba4a55a7a28eb2f1fd8d07f2885f6b3a6d386769eefab17ae
+  category: main
   optional: false
