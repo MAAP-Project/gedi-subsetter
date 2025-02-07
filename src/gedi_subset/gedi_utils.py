@@ -3,6 +3,7 @@ import logging
 import os
 import os.path
 import warnings
+from pathlib import Path
 from typing import Any, Callable, Mapping, Optional, Sequence, Union, cast
 
 import h5py
@@ -59,6 +60,46 @@ def gdf_to_parquet(
 def gdf_read_parquet(path: Union[str, os.PathLike[str]]) -> IOResultE[gpd.GeoDataFrame]:
     """Read a Parquet object from a file path and return it as a GeoDataFrame."""
     return impure_safe(gpd.read_parquet)(path)
+
+
+def gdf_reformat(path: Union[str, os.PathLike[str]], suffix: str) -> None:
+    """
+    Convert a GeoDataFrame written in one format to another format.
+
+    Do nothing if the `suffix` property of the path is the same as the specified
+    suffix.  Otherwise, read the GeoDataFrame at the specified path and write it
+    back out next to the original file, but with the specified suffix, and then
+    remove the original file.
+
+    Parameters
+    ----------
+    path:
+        Path to an existing GeoDataFrame written to the filesystem.
+    suffix:
+        Desired format, expressed as a destination file suffix, including a
+        leading dot (`.`), just like the `suffix` property of a `Path` includes.
+        Supported values: ".fgb", ".gpkg", ".parquet".
+    """
+    src_path = path if isinstance(path, Path) else Path(path)
+    dst_path = src_path.with_suffix(suffix)
+
+    # No need to waste time when the file is already in the desired format
+    if src_path.suffix == suffix:
+        return
+
+    gdf: gpd.GeoDataFrame = gpd.read_file(path)
+
+    if suffix == ".parquet":
+        gdf.to_parquet(dst_path)
+    elif suffix.lower() in {".fgb", ".gpkg"}:
+        gdf.to_file(dst_path)
+    else:
+        raise ValueError(
+            "Unsupported output format."
+            f" Expected '.fgb', '.gpkg', or '.parquet': {dst_path}"
+        )
+
+    os.remove(path)
 
 
 def get_geo_boundary(iso: str, level: int) -> gpd.GeoDataFrame:

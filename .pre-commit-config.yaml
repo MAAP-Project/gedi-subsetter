@@ -6,20 +6,8 @@ ci:
   autofix_prs: false
 
 default_language_version:
-  python: python3.11
+  python: python3.12
 repos:
-  - repo: local
-    hooks:
-      # Make sure the conda-lock.yml file is up to date if the conda environment
-      # files have been changed.  We don't want to commit an outdated lock file.
-      # Since `conda` is not installed on the pre-commit.ci, this will simply
-      # fail the CI build if the lock file is outdated.
-      - id: conda-lock
-        name: update conda-lock.yml file
-        language: system
-        entry: make lock
-        pass_filenames: false
-        files: "^(environment.*.yml|bin/lock)$"
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.10.0.1
     hooks:

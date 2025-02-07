@@ -7,6 +7,15 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Valid values for the `output` option have changed such that a file extension
+  is required, whereas previously this was optional since `.gpkg` was the only
+  supported output format.  However, in addition to `.gpkg`, it is now possible
+  to specify the extensions `.parquet` for (Geo)Parquet format, and `.fgb` for
+  FlatGeobuf format.
+  (([#97](https://github.com/MAAP-Project/gedi-subsetter/issues/97))
+
 ## [0.9.0] (2024-10-09)
 
 ### Added

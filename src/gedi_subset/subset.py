@@ -41,6 +41,7 @@ from gedi_subset.gedi_utils import (
     beam_filter_from_names,
     chext,
     gdf_read_parquet,
+    gdf_reformat,
     gdf_to_file,
     gdf_to_parquet,
     granule_intersects,
@@ -268,6 +269,8 @@ def subset_granules(
     fsspec_kwargs: Optional[Mapping[str, Any]] = None,
     processes: Optional[int] = None,
 ) -> IOResultE[Tuple[str, ...]]:
+    gpkg = dest.with_suffix(".gpkg")
+
     def subset_saved(path: IOResultE[Maybe[str]]) -> bool:
         """Return `True` if `path`'s value is a `Some`, otherwise `False` if it
         is `Nothing`.  This indicates whether or not a subset file was written
@@ -277,11 +280,11 @@ def subset_granules(
 
     def append_subset(src: str) -> IOResultE[str]:
         to_file_props = dict(index=False, mode="a", driver="GPKG")
-        logger.debug(f"Appending {src} to {dest}")
+        logger.debug(f"Appending {src} to {gpkg}")
 
         return flow(
             gdf_read_parquet(src),
-            bind_ioresult(partial(gdf_to_file, dest, to_file_props)),
+            bind_ioresult(partial(gdf_to_file, gpkg, to_file_props)),
             tap(pipe(fp.always(src), osx.remove)),
             map_(fp.always(src)),
         )
@@ -320,13 +323,16 @@ def subset_granules(
 
     logger.info(f"Subsetting on {processes} CPUs (chunksize={chunksize})")
 
-    with multiprocessing.Pool(processes, init_process, init_args) as pool:
+    with multiprocessing.get_context("spawn").Pool(
+        processes, init_process, init_args
+    ) as pool:
         return flow(
             pool.imap_unordered(subset_granule, payloads, chunksize),
             fp.filter(subset_saved),  # Skip granules that produced empty subsets
             fp.map(bind(bind(append_subset))),  # Append non-empty subset # type: ignore
             partial(Fold.collect, acc=IOSuccess(())),
             lash(raise_exception),  # Fail fast (if subsetting errored out)
+            tap(lambda _: gdf_reformat(gpkg, dest.suffix)),
         )
 
 
@@ -377,6 +383,20 @@ def main(
             help="Comma-separated list of columns to select",
         ),
     ],
+    output: Annotated[
+        Path,
+        typer.Option(
+            ...,
+            "-o",
+            "--output",
+            help="Output file path for generated subset file",
+            exists=False,
+            file_okay=True,
+            dir_okay=True,
+            writable=True,
+            readable=True,
+        ),
+    ],
     beams: Annotated[
         str,
         typer.Option(
@@ -408,20 +428,6 @@ def main(
             ),
         ),
     ] = None,
-    output: Annotated[
-        Optional[Path],
-        typer.Option(
-            ...,
-            "-o",
-            "--output",
-            help="Output file path for generated subset file",
-            exists=False,
-            file_okay=True,
-            dir_okay=False,
-            writable=True,
-            readable=True,
-        ),
-    ] = None,
     verbose: Annotated[bool, typer.Option(help="Provide verbose output")] = False,
     fsspec_kwargs: Annotated[
         Optional[dict[str, Any]],
@@ -442,10 +448,8 @@ def main(
     set_logging_level(logging_level)
 
     dest = (
-        ("output" / (output or Path(f"{aoi.stem}_subset")))
-        .with_suffix(".gpkg")
-        .absolute()
-    )
+        output / Path(f"{aoi.stem}_subset.gpkg") if output.is_dir() else output
+    ).absolute()
     output_dir = dest.parent
     os.makedirs(output_dir, exist_ok=True)
 

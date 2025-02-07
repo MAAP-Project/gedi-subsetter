@@ -6,7 +6,7 @@ import geopandas as gpd
 import h5py
 import pytest
 from maap.maap import MAAP
-from moto import mock_s3
+from moto import mock_aws
 from mypy_boto3_s3.client import S3Client
 
 
@@ -22,7 +22,7 @@ def aws_credentials() -> None:
 
 @pytest.fixture(scope="function")
 def s3(aws_credentials) -> Iterable[S3Client]:
-    with mock_s3():
+    with mock_aws():
         yield boto3.client("s3", region_name="us-east-1")
 
 

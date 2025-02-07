@@ -13,35 +13,16 @@ bin=$(dirname "$(readlink -f "$0")")
 basedir=$(dirname "${bin}")
 run="${bin}/run"
 
-# Install dev dependencies by default.  Pass --no-dev to disable.
-dev=1
-conda_env_name="gedi_subset"
-
-# All arguments are passed to conda lock install, but if --no-dev is specified,
-# we want to make sure we do NOT install the environment as a Jupyter kernel.
-while ((${#})); do
-    [[ "${1}" == "--no-dev" ]] && dev=
-    conda_lock_args+=("${1}")
-    shift
-done
-
 # Install dependencies from the conda lock file for speed and reproducibility.
 # Since there is at least one package (maap-py) that is not available on conda,
 # we need to use pip to install it (conda does this for us), so we must set
 # PIP_REQUIRE_VENV=0 to avoid complaints about installing packages outside of a
 # virtual environment.
-PIP_REQUIRE_VENV=0 "${run}" conda lock install "${conda_lock_args[@]}" \
-    --name "${conda_env_name}" "${basedir}/conda-lock.yml"
+PIP_REQUIRE_VENV=0 "${run}" conda lock install "$@" \
+    --name "gedi_subset" "${basedir}/conda-lock.yml"
 
 # pip install gedi-subsetter in editable mode.
 PIP_REQUIRE_VENV=0 "${run}" python -m pip install -e "${basedir}" --no-deps
-
-# If development dependencies were installed, let's also install the conda
-# environment as a Jupyter kernel.
-if [[ -n "${dev}" ]]; then
-    "${run}" python -Xfrozen_modules=off -m ipykernel install --user \
-        --name "${conda_env_name}" --display-name "GEDI Subsetter"
-fi
 
 # Fail build if finicky mix of fiona and gdal isn't correct, so that we don't
 # have to wait to execute a DPS job to find out.

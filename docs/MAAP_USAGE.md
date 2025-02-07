@@ -133,26 +133,24 @@ optional inputs:
 
   > _Added in version 0.6.0_
 
-- `output` (_optional_): Name to use for the output file.  This can also include
-  a path, which will be relative to the standard DPS output directory for a job.
-  **Default:** the output file will be named the same as the name of the AOI
-  file, but with a suffix of `"_subset.gpkg"`.
+- `output` (_optional_): Name to use for the output file.  This may include a
+  path, which will be relative to the standard DPS output directory for a job.
+  **Default:** when a value is not supplied, the output file will be named the
+  same as the name of the AOI file, but with a suffix of `"_subset.gpkg"`
+  (GeoPackage format).
 
-  When explicitly specifying a name, it does not need to include an extension,
-  because a `.gpkg` extension will be added automatically.  If an extension is
-  supplied, it will be replaced with `.gpkg`.
+  When a value is supplied, it must include a file extension in order to infer
+  the output format.  Supported formats inferred from file extensions are as
+  follows:
 
-  Examples showing how the value specified for `output` is mapped to a final
-  output file:
-
-  - Unspecified -> `myaoi.gpkg`, where `myaoi.geojson` is the name of the AOI
-    file
-  - `myoutput` -> `myoutput.gpkg`
-  - `myoutput.gpkg` -> `myoutput.gpkg`
-  - `myoutput.h5` -> `myoutput.gpkg`
-  - `mypath/myoutput` -> `mypath/myoutput.gpkg`
+  - FlatGeobuf: `.fgb`
+  - GPKG (GeoPackage): `.gpkg`
+  - (Geo)Parquet: `.parquet`
 
   > _Added in version 0.6.0_
+
+  > _Changed in version 0.10.0_: Output formats other than GeoPackage (`.gpkg`)
+  are now supported.
 
 - `fsspec_kwargs` (_optional_; default:
   `'{"default_cache_type": "all", "default_block_size": 8388608`): JSON object

@@ -43,7 +43,8 @@ else
     [[ -n "${6}" ]] && args+=(--temporal "${6}")
     [[ -n "${7}" ]] && args+=(--beams "${7}")
     [[ -n "${8}" ]] && args+=(--limit "${8}")
-    [[ -n "${9}" ]] && args+=(--output "${9}")
+    # always specify output dir, even if user doesn't specify output file
+    args+=(--output "${output_dir}/${9}")
     [[ -n "${10}" ]] && args+=(--fsspec-kwargs "${10}")
     [[ -n "${11}" ]] && args+=(--processes "${11}")
     # Split the last argument into an array of arguments to pass to scalene.
