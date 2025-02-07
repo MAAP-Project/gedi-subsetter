@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import cast
+from typing import Iterator, cast
 
 import geopandas as gpd
 import pytest
@@ -16,36 +16,31 @@ from typer import BadParameter
 
 from gedi_subset.subset import SubsetGranuleProps, check_beams_option, subset_granule
 
+
 # The following fixtures are simplifications of those found in the tests for s3fs at
 # https://github.com/fsspec/s3fs/blob/main/s3fs/tests/test_s3fs.py.
-# They are used to work around this issue: https://github.com/getmoto/moto/issues/6836
-
-ip_address = "127.0.0.1"
-port = 5555
-endpoint_uri = f"http://{ip_address}:{port}/"
-
-
 @pytest.fixture(scope="module")
-def moto_server(aws_credentials):
-    server = ThreadedMotoServer(ip_address=ip_address, port=port)
+def moto_server_url(aws_credentials) -> Iterator[str]:
+    server = ThreadedMotoServer(port=0)
     server.start()
-    yield
+    host, port = server.get_host_and_port()
+    yield f"http://{host}:{port}"
     server.stop()
 
 
 @pytest.fixture(autouse=True)
-def reset_s3_fixture():
-    requests.post(f"{endpoint_uri}/moto-api/reset")
+def reset_s3_fixture(moto_server_url: str):
+    requests.post(f"{moto_server_url}/moto-api/reset")
 
 
 def test_subset_granule(
-    moto_server,
+    moto_server_url: str,
     h5_path: str,
     maap: MAAP,
     aoi_gdf: gpd.GeoDataFrame,
     tmp_path: Path,
 ):
-    client = cast(S3Client, Session().create_client("s3", endpoint_url=endpoint_uri))
+    client = cast(S3Client, Session().create_client("s3", endpoint_url=moto_server_url))
     client.create_bucket(Bucket="mybucket")
     client.put_object(Bucket="mybucket", Key="temp.h5", Body=Path(h5_path).read_bytes())
 
@@ -74,7 +69,10 @@ def test_subset_granule(
     expected_path = os.path.join(tmp_path, "temp.gpq")
     io_result = subset_granule(
         SubsetGranuleProps(
-            fsspec_kwargs={"endpoint_url": endpoint_uri, "skip_instance_cache": True},
+            fsspec_kwargs={
+                "client_kwargs": {"endpoint_url": moto_server_url},
+                "skip_instance_cache": True,
+            },
             granule=granule,
             maap=maap,
             aoi_gdf=aoi_gdf,
