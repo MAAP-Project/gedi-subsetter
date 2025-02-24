@@ -131,7 +131,9 @@ def find_gedi_collection(maap: MAAP, params: Mapping[str, str]) -> Collection:
     Examples
     --------
     >>> maap = MAAP("api.maap-project.org")
-    >>> find_collection(maap, {"cloud_hosted": "true", "doi": "10.3334/ORNLDAAC/2056"})  # doctest: +SKIP # noqa: E501
+    >>> find_collection(
+    ...     maap, {"cloud_hosted": "true", "doi": "10.3334/ORNLDAAC/2056"}
+    ... )  # doctest: +SKIP
     {'concept-id': 'C2237824918-ORNL_CLOUD', 'revision-id': '28',
      'format': 'application/echo10+xml',
      'Collection': {'ShortName': 'GEDI_L4A_AGB_Density_V2_1_2056', ...}}

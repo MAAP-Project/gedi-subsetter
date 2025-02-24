@@ -36,17 +36,14 @@ repos:
         stages: [commit-msg]
         # optional: list of Conventional Commits types to allow e.g. [feat, fix, ci, chore, test]
         args: []
-  - repo: https://github.com/pycqa/isort
-    rev: 6.0.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.9.7
     hooks:
-      - id: isort
-        name: isort (python)
-  - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 25.1.0
-    hooks:
-      - id: black
-      - id: black-jupyter
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.1.2
-    hooks:
-      - id: flake8
+      - id: ruff
+        # Remove types_or to also lint notebooks
+        types_or: [ python, pyi ]
+        args: [ --fix ]
+      - id: ruff-format
+        # Remove types_or to also format notebooks
+        types_or: [ python, pyi ]
