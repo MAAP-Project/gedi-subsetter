@@ -392,8 +392,8 @@ def subset_hdf5(
     ...     # `filename` column (which refers to the memory location of the
     ...     # ``io.BytesIO``, not a filename).
     ...     gdf.drop(columns=["filename"])
-       BEAM      agbd  sensitivity                   geometry
-    0  0000  1.116093         0.99  POINT (12.06707 -1.82471)
+           agbd  sensitivity                   geometry
+    0  1.116093         0.99  POINT (12.06707 -1.82471)
 
     Note that the resulting ``geopandas.GeoDataFrame`` contains only the specified
     coverage `BEAM`s, specified columns (`agbd` and `sensitivity`), and only the
@@ -414,7 +414,7 @@ def subset_hdf5(
         # Grab the coordinates for the geometry, before dropping columns
         geometry = gpd.points_from_xy(df[lon_col], df[lat_col])
         # Select only the user-specified columns
-        gdf = gpd.GeoDataFrame(df[[*set(columns)]], geometry=geometry, crs=aoi.crs)
+        gdf = gpd.GeoDataFrame(df[columns], geometry=geometry, crs=aoi.crs)
 
         return cast(gpd.GeoDataFrame, gdf.clip(aoi))
 
