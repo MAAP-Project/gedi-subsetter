@@ -330,11 +330,15 @@ def subset_hdf5(
 
     >>> with h5py.File(bio) as hdf5:
     ...     pd.concat(
-    ...         (gpd.GeoDataFrame({
-    ...             name: pd.Series(data, name=name)
-    ...             for name, data in group.items()
-    ...         })
-    ...         for group in hdf5.values()),
+    ...         (
+    ...             gpd.GeoDataFrame(
+    ...                 {
+    ...                     name: pd.Series(data, name=name)
+    ...                     for name, data in group.items()
+    ...                 }
+    ...             )
+    ...             for group in hdf5.values()
+    ...         ),
     ...         ignore_index=True,
     ...     )
            agbd  l2_quality_flag  lat_lowestmode  lon_lowestmode  sensitivity
@@ -349,18 +353,25 @@ def subset_hdf5(
     constructing it from a features list, but typically, it might be obtained via the
     ``geopandas.read_file`` function:
 
-    >>> aoi = gpd.GeoDataFrame.from_features([{"properties": {}, "geometry": {
-    ...    "type": "Polygon",
-    ...    "coordinates": [
-    ...        [
-    ...            [ 8.45,  2.35],
-    ...            [14.35,  2.35],
-    ...            [14.35, -4.15],
-    ...            [ 8.45, -4.15],
-    ...            [ 8.45,  2.35],
-    ...        ]
-    ...    ],
-    ... }}])
+    >>> aoi = gpd.GeoDataFrame.from_features(
+    ...     [
+    ...         {
+    ...             "properties": {},
+    ...             "geometry": {
+    ...                 "type": "Polygon",
+    ...                 "coordinates": [
+    ...                     [
+    ...                         [8.45, 2.35],
+    ...                         [14.35, 2.35],
+    ...                         [14.35, -4.15],
+    ...                         [8.45, -4.15],
+    ...                         [8.45, 2.35],
+    ...                     ]
+    ...                 ],
+    ...             },
+    ...         }
+    ...     ]
+    ... )
 
     We can now subset the data in the HDF5 file to points that fall within the AOI,
     selecting only the desired columns (i.e., named datasets within the HDF5 file),
@@ -375,7 +386,7 @@ def subset_hdf5(
     ...         lon_col="lon_lowestmode",
     ...         beam_filter=is_coverage_beam,
     ...         columns=["agbd", "sensitivity"],
-    ...         query="l2_quality_flag == 1 and sensitivity > 0.95"
+    ...         query="l2_quality_flag == 1 and sensitivity > 0.95",
     ...     )
     ...     # Since the source of our HDF5 file is an ``io.BytesIO``, we'll drop the
     ...     # `filename` column (which refers to the memory location of the

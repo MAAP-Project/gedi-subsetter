@@ -25,7 +25,7 @@ def always(a: _A) -> Callable[..., _A]:
 
     >>> always(42)(0)
     42
-    >>> always(42)('foo')
+    >>> always(42)("foo")
     42
     """
     return lambda _: a
