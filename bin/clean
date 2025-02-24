@@ -9,8 +9,8 @@ bin=$(dirname "$(readlink -f "$0")")
 conda=${CONDA_EXE:-conda}
 
 if "${conda}" env list | grep -q gedi_subset; then
-    "${bin}/run" jupyter kernelspec remove -y gedi_subset || true
-    "${conda}" env remove --name gedi_subset
+    "${bin}/run" jupyter kernelspec remove -y gedi_subset 2>/dev/null || true
+    "${conda}" env remove -y --name gedi_subset
 else
     echo "Nothing to clean up."
 fi

@@ -129,7 +129,6 @@ class H5DataFrame(pd.DataFrame):
     slashes will be interpreted as division operators:
 
     >>> df.query("group/vector > 0.5")  # doctest: +SKIP
-    ...
     pandas.core.computation.ops.UndefinedVariableError: name 'vector' is not defined
 
     Using backticks around the path prevents such unintended interpretation:
