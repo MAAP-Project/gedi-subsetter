@@ -28,9 +28,7 @@ algorithm_version=$(grep "^algorithm_version:" "${yaml_file}" | sed -E 's/algori
 [[ "${branch}" != "main" ]] && algorithm_version=${branch}
 algorithm_id="${algorithm_name}:${algorithm_version}"
 
-bin=$(dirname "$(dirname "$(readlink -f "$0")")")
-
-"${bin}/run" --quiet python -c "
+read -r -d '' describe_algorithm <<EOF || true
 import json
 import sys
 import tempfile
@@ -40,11 +38,13 @@ from maap.maap import MAAP
 
 maap = MAAP()
 
-if r := maap.describeAlgorithm('${algorithm_id}'):
+if r := maap.describeAlgorithm("${algorithm_id}"):
     # This response is XML, not JSON, unfortunately, so the output is not
     # convenient to read.
     print(r.text)
 else:
     print(r.text, file=sys.stderr)
     sys.exit(1)
-"
+EOF
+
+pixi run --quiet --no-progress -- python -c "${describe_algorithm}"

@@ -2,12 +2,10 @@
 
 set -euo pipefail
 
-bin=$(dirname "$(readlink -f "$0")")
-base_dir=$(dirname "${bin}")
-run="${bin}/run"
-
 input_dir="${PWD}/input"
 output_dir="${PWD}/output"
+
+base_dir=$(dirname "$(dirname "$(readlink -f "$0")")")
 subset_py="${base_dir}/src/gedi_subset/subset.py"
 
 if ! test -d "${input_dir}"; then
@@ -90,7 +88,15 @@ mkdir -p "${output_dir}"
 # from multiple processes into a single file.
 logfile="${PWD}/gedi-subset.log"
 
-AWS_PROFILE=maap-data-reader "${run}" "${command[@]}" 2>"${logfile}"
+pixi=$(type -p pixi || true)
+
+if [[ -z "${pixi}" ]]; then
+    # pixi is not on PATH, so assume it is where build.sh installed it.
+    pixi_home=${HOME}/.pixi
+    pixi=${pixi_home}/bin/pixi
+fi
+
+AWS_PROFILE=maap-data-reader "${pixi}" run -e prod --manifest-path "${base_dir}/pyproject.toml" -- "${command[@]}" 2>"${logfile}"
 
 # If we get here, the command above succeeded (otherwise this script would have
 # exited with a non-zero status).  We can now move the log file to the output

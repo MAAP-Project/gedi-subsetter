@@ -1,3 +1,74 @@
+[project]
+authors = [
+  { name = "Chuck Daniels", email = "chuck@developmentseed.org" },
+  { name = "Jamison French", email = "jamison@developmentseed.org" },
+  { name = "Alex Mandel", email = "alex@developmentseed.org" },
+]
+description = "GEDI Subsetter"
+name = "gedi_subset"
+version = "0.1.0"
+requires-python = ">= 3.12"
+dependencies = [ ]
+
+[tool.pixi.project]
+channels = ["conda-forge", "nodefaults"]
+platforms = ["linux-64", "osx-64", "osx-arm64"]
+
+[tool.pixi.system-requirements]
+macos = "11.0"
+
+[tool.pixi.dependencies]
+python = "~=3.12.0"
+boto3 = "*"
+bottleneck = "*"
+fsspec = "*"
+geopandas = "*"
+h5py = "*"
+numba = "*"
+numexpr = "*"
+pandas = "*"
+pip = "*"
+pyarrow = "*"
+pydantic = "*"
+returns = "*"
+s3fs = "*"
+scalene = "*"
+shapely = "*"
+typer = "*"
+
+[tool.pixi.pypi-dependencies]
+gedi_subset = { path = ".", editable = true }
+maap-py = "*"
+
+[tool.pixi.environments]
+prod = { solve-group = "prod" }
+test = { features = ["test"], solve-group = "prod" }
+default = { features = ["dev", "test"], solve-group = "prod" }
+
+[tool.pixi.tasks]
+lint = "pre-commit run -a"
+test = "pytest"
+mypy = "mypy"
+
+[tool.pixi.feature.dev.dependencies]
+backoff = "*"
+contextily = "*"
+ipykernel = "*"
+pre-commit = "*"
+shellcheck = "*"
+
+[tool.pixi.feature.test.dependencies]
+boto3-stubs-essential = "*"
+botocore-stubs = "*"
+moto = "*"
+mypy = "*"
+pandas-stubs = "*"
+pytest = "*"
+pytest-recording = "*"
+ruff = "*"
+types-requests = "*"
+vcrpy = "*"
+
 [tool.ruff]
 target-version = "py312"
 extend-include = ["*.pyi"]
@@ -6,7 +77,7 @@ extend-include = ["*.pyi"]
 docstring-code-format = true
 
 [tool.mypy]
-mypy_path = ["./src", "./tests", "./typings"]
+files = ["./src", "./tests", "./typings"]
 # This plugin generates many errors that appear to be false positives, so it is
 # commented out until further investigation can be conducted.
 # plugins = ["returns.contrib.mypy.returns_plugin"]
@@ -26,18 +97,11 @@ warn_unused_configs = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = [
-  "fsspec",
-  "geopandas",
-  "h5py",
-  "moto",
-  "s3fs",
-  "shapely.*"
-]
+module = ["fsspec", "geopandas", "h5py", "moto", "s3fs", "shapely.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-addopts = ["--doctest-modules"]
+addopts = ["--doctest-modules", "-v"]
 filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning"]
 # Uncomment next line to enable live logging during tests
 # log_cli = true

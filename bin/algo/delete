@@ -52,15 +52,15 @@ fi
 
 stderr "Deleting algorithm '${algorithm_id}'..."
 
-bin=$(dirname "$(dirname "$(readlink -f "$0")")")
-
-message=$("${bin}/run" --quiet python -c "
+read -r -d '' delete_algorithm <<EOF || true
 from maap.maap import MAAP
 
 maap = MAAP()
 
-if not (r := maap.deleteAlgorithm('${algorithm_id}')):
-    print(r.json()['message'])
-")
+if not (r := maap.deleteAlgorithm("${algorithm_id}")):
+    print(r.json()["message"])
+EOF
+
+message=$(pixi run --quiet --no-progress -- python -c "${delete_algorithm}")
 
 [[ -z "${message}" ]] || (stderr "Error: ${message}" && exit 1)
