@@ -7,14 +7,26 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Columns in the output file are now guaranteed to be in the same order as given
+  by the `columns` input value.
+  ([#100](https://github.com/MAAP-Project/gedi-subsetter/issues/100))
+
 ### Changed
 
-- Valid values for the `output` option have changed such that a file extension
-  is required, whereas previously this was optional since `.gpkg` was the only
-  supported output format.  However, in addition to `.gpkg`, it is now possible
-  to specify the extensions `.parquet` for (Geo)Parquet format, and `.fgb` for
-  FlatGeobuf format.
-  (([#97](https://github.com/MAAP-Project/gedi-subsetter/issues/97))
+- Valid values for the `output` option have changed such that **a file extension
+  is required**, whereas previously this was optional since `.gpkg` was the only
+  supported output format.
+  ([#97](https://github.com/MAAP-Project/gedi-subsetter/issues/97))
+
+### Added
+
+- It is now possible to specify alternative file formats for the `output` value:
+  in addition to the file extension `.gpkg` for GeoPackage format, it is now
+  possible to specify the extensions `.parquet` for (Geo)Parquet format, or
+  `.fgb` for FlatGeobuf format.
+  ([#97](https://github.com/MAAP-Project/gedi-subsetter/issues/97))
 
 ## [0.9.0] (2024-10-09)
 

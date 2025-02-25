@@ -37,6 +37,7 @@ module = [
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
+addopts = ["--doctest-modules"]
 filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning"]
 # Uncomment next line to enable live logging during tests
 # log_cli = true
