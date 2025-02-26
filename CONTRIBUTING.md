@@ -26,15 +26,22 @@ You'll need to have the following installed in your development environment
   installed, but you have `wget` installed, you can replace `curl -fsSL` with
   `wget -qO-` [note the capital letter `O` and the trailing dash])
 
-To prepare for contributing, do the following in your development environment:
+To prepare for contributing, do the following in your development environment
+(see example commands below):
 
 1. Clone this GitHub repository.
 1. Change directory to the cloned working directory.
-1. Install (and run) Git pre-commit hooks: `pixi run lint`
-1. If desired, activate the default Pixi environment: `pixi shell` (**NOTE:**
-   This is not necessary for running any of the `pixi` commands, which
-   automatically use the necessary environment even when the environment is not
-   activated.)
+1. Install (and run) Git pre-commit hooks
+1. If desired, activate the default Pixi environment
+
+For example, after installing `git` (if necessary) and `pixi`:
+
+```plain
+git clone git@github.com:MAAP-Project/gedi-subsetter.git
+cd gedi-subsetter
+pixi run lint  # install and run pre-commit hooks
+pixi shell     # if desired, activate the default Pixi environment
+```
 
 ## Testing
 
@@ -63,8 +70,18 @@ adheres to coding conventions, among other things.  To "lint" the files in the
 repo, as well as run unit tests, run the following:
 
 ```plain
-pixi run lint
-pixi run test
+pixi run lint  # check formatting and code conventions
+pixi run mypy  # perform static type checks
+pixi run test  # run unit tests
+```
+
+If you have activated the default Pixi shell via `pixi shell`, you can either
+use the commands above, or you can use these instead:
+
+```plain
+pre-commit  # check formatting and code conventions
+mypy        # perform static type checks
+pytest      # run unit tests
 ```
 
 If you see any errors, address them and repeat the process until there are no
