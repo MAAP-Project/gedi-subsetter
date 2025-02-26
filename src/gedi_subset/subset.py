@@ -338,7 +338,7 @@ def subset_granules(
         )
 
 
-def main(
+def cli(
     aoi: Annotated[
         Path,
         typer.Option(
@@ -510,5 +510,9 @@ def main(
         logger.info(f"Empty subset: no rows satisfy the query {query!r}")
 
 
+def main():
+    typer.run(cli)
+
+
 if __name__ == "__main__":
-    typer.run(main)
+    main()

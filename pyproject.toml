@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
 [project]
 authors = [
   { name = "Chuck Daniels", email = "chuck@developmentseed.org" },
@@ -6,9 +10,16 @@ authors = [
 ]
 description = "GEDI Subsetter"
 name = "gedi_subset"
-version = "0.1.0"
+dynamic = ["version"]
 requires-python = ">= 3.12"
+scripts = { gedi = "gedi_subset.subset:main" }
 dependencies = [ ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gedi_subset"]
+
+[tool.hatch.version]
+source = "vcs"
 
 [tool.pixi.project]
 channels = ["conda-forge", "nodefaults"]
@@ -77,7 +88,8 @@ extend-include = ["*.pyi"]
 docstring-code-format = true
 
 [tool.mypy]
-files = ["./src", "./tests", "./typings"]
+mypy_path = ["typings"]
+files = ["src", "tests"]
 # This plugin generates many errors that appear to be false positives, so it is
 # commented out until further investigation can be conducted.
 # plugins = ["returns.contrib.mypy.returns_plugin"]

@@ -27,6 +27,8 @@ The format is based on [Keep a Changelog], and this project adheres to
   possible to specify the extensions `.parquet` for (Geo)Parquet format, or
   `.fgb` for FlatGeobuf format.
   ([#97](https://github.com/MAAP-Project/gedi-subsetter/issues/97))
+- Add `gedi` CLI.  Run `gedi --help` for details.
+  ([#95](https://github.com/MAAP-Project/gedi-subsetter/issues/95))
 
 ## [0.9.0] (2024-10-09)
 
