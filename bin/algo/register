@@ -78,7 +78,7 @@ fi
 
 stderr "Registering algorithm '${algorithm_id}' (${yaml_file})..."
 
-script="
+read -r -d '' register_algorithm <<EOF || true
 import json
 import sys
 import tempfile
@@ -88,25 +88,25 @@ from maap.maap import MAAP
 
 maap = MAAP()
 
-with open('${yaml_file}') as f:
+with open("${yaml_file}") as f:
     algorithm_config = yaml.safe_load(f)
 
-with tempfile.NamedTemporaryFile('w+') as f:
+with tempfile.NamedTemporaryFile("w+") as f:
     # Replace the algorithm version, write the modified config to a temporary
     # file, then rewind the file pointer to the beginning so it can be read for
     # registration.
-    algorithm_config['algorithm_version'] = '${algorithm_version}'
+    algorithm_config["algorithm_version"] = "${algorithm_version}"
     json.dump(algorithm_config, f, indent=2)
     f.seek(0)
 
     if r := maap.register_algorithm_from_yaml_file(f.name):
         print(json.dumps(r.json(), indent=2))
     else:
-        print(r.json()['message'])
+        print(r.json()["message"])
         sys.exit(1)
-"
+EOF
 
-if message=$("${bin}/run" --quiet python -c "${script}"); then
+if message=$(pixi run --quiet --no-progress -- python -c "${register_algorithm}"); then
     echo "${message}"
 else
     stderr "Error: ${message}"

@@ -1,7 +1,6 @@
 # Contributing
 
 - [Development Setup](#development-setup)
-- [Managing Dependencies](#managing-dependencies)
 - [Testing](#testing)
   - [Testing CMR Queries](#testing-cmr-queries)
   - [Linting and Running Unit Tests](#linting-and-running-unit-tests)
@@ -16,67 +15,33 @@ To contribute to this work, you must obtain access to the [NASA MAAP], where the
 Algorithm Development Environment (ADE) resides, and thus where algorithms can
 be registered and launched.
 
-If you wish to conduct development work outside of the ADE, you'll need to have
-the following installed in your environment (the ADE has these pre-installed):
+You'll need to have the following installed in your development environment
+(wherever you plan to conduct development, within the ADE or not):
 
-- `git`: On macOS, using Homebrew is highly recommended: `brew install git`.
-  Otherwise, see <https://git-scm.com/downloads>.
-- `conda`: On macOS, using Homebrew to install Miniforge (containing `conda`) is
-  highly recommended: `brew install --cask miniforge`.  Otherwise, see
-  <https://github.com/conda-forge/miniforge>.
+- `git` (already installed in the ADE): On macOS, using Homebrew is highly
+  recommended: `brew install git`.  Otherwise, see
+  <https://git-scm.com/downloads>.
+- `pixi`: See [Pixi Installation](https://pixi.sh/latest/#installation)
+  (**Hint:** if you want to use the `curl` command, but don't have `curl`
+  installed, but you have `wget` installed, you can replace `curl -fsSL` with
+  `wget -qO-` [note the capital letter `O` and the trailing dash])
 
-You must also have `make` installed.  On macOS, `make` should already be
-installed.  On Linux, if not already installed, you must locate installation
-instructions appropriate for your system package manager.
-
-**In the ADE**, `make` is not installed by default (at least not yet; see
-[Install `make` in all ADE images](https://github.com/MAAP-Project/Community/issues/943)),
-and must be installed as follows:
-
-```plain
-apt-get update && apt-get install make -y
-```
-
-To prepare for contributing, do the following on your development system (either
-within the ADE or wherever else you're conducting development):
+To prepare for contributing, do the following in your development environment
+(see example commands below):
 
 1. Clone this GitHub repository.
 1. Change directory to the cloned working directory.
-1. Create the `gedi_subset` conda environment: `make build`
-1. Install (and run) Git pre-commit hooks: `make lint`
-1. If desired, activate the `gedi_subset` conda environment:
-   `conda activate gedi_subset` (**NOTE:** This is not necessary for running
-   any of the `make` commands, which automatically use the `gedi_subset`
-   environment even when the environment is not activated.)
+1. Install (and run) Git pre-commit hooks
+1. If desired, activate the default Pixi environment
 
-## Managing Dependencies
+For example, after installing `git` (if necessary) and `pixi`:
 
-To minimize the time it takes to install dependencies on the Docker image
-created during algorithm registration, we leverage `conda-lock` to pre-resolve
-dependencies and generate a lock file, to avoid dependency resolution during
-registration.  This means that we manage dependencies and update the lock file
-as follows:
-
-1. Dependencies required by the algorithm are specified in `environment.yml`.
-   (These are the only dependencies that will be installed in DPS.)
-1. Development dependencies (for testing, static code analysis, notebooks, etc.)
-   are specified in `environment-dev.yml`.
-1. We use `conda-lock` to generate the lock file `conda-lock.yml` from the files
-   above, whenever we make a change to at least one of the files.
-
-Within `environment.yml` and `environment-dev.yml` we intentionally _avoid_
-specifying _exact_ (`==`) versions to avoid resolution conflicts that might
-prevent successful dependency resolution by giving the resolver enough
-flexibility to satisfy all requirements.  When versions are specified, they are
-only to ensure we use versions with necessary features or bug fixes, and
-typically use the [compatible release operator] (`~=`) to constrain only the
-_major_ version of a dependency.
-
-**IMPORTANT:** Whenever you make changes to either `environment.yml` or
-`environment-dev.yml`, you must regenerate `conda-lock.yml` and install the
-updated dependencies into the `gedi_subset` conda environment on your
-development workstation.  This is done automatically by running `make build`,
-which will also update the `gedi_subset` environment as necessary.
+```plain
+git clone git@github.com:MAAP-Project/gedi-subsetter.git
+cd gedi-subsetter
+pixi run lint  # install and run pre-commit hooks
+pixi shell     # if desired, activate the default Pixi environment
+```
 
 ## Testing
 
@@ -86,7 +51,7 @@ Actions workflow triggered by your PR will succeed.
 ### Testing CMR Queries
 
 We leverage the `vcrpy` library to record responses to HTTP/S requests.  When
-running _existing_ tests, these recordings (_cassettes_ in `vcrp` parlance) are
+running _existing_ tests, these recordings (_cassettes_ in `vcrpy` parlance) are
 replayed so that repeated test executions do _not_ make repeated requests.
 Therefore, if you are not adding or modifying such tests, there is no need to
 have a network connection, nor any need to run the tests within the ADE.
@@ -96,17 +61,27 @@ new tests that make CMR queries (or modifying existing ones) will not only
 require a network connection in order to record live responses, but will also
 require that you obtain such recordings by running the new/modified tests within
 the ADE in order to have the necessary auth in play.  Otherwise, the CMR queries
-will either fail, or produce incorrect responses.
+will either fail or produce incorrect responses.
 
 ### Linting and Running Unit Tests
 
 Linting runs a number of checks on various files, such as making sure your code
-adheres to coding conventions and that the conda lock file is in sync with the
-conda environment files, among other things.  To "lint" the files in the repo,
-as well as run unit tests, run the following:
+adheres to coding conventions, among other things.  To "lint" the files in the
+repo, as well as run unit tests, run the following:
 
 ```plain
-make lint typecheck test
+pixi run lint  # check formatting and code conventions
+pixi run mypy  # perform static type checks
+pixi run test  # run unit tests
+```
+
+If you have activated the default Pixi shell via `pixi shell`, you can either
+use the commands above, or you can use these instead:
+
+```plain
+pre-commit  # check formatting and code conventions
+mypy        # perform static type checks
+pytest      # run unit tests
 ```
 
 If you see any errors, address them and repeat the process until there are no
@@ -120,15 +95,15 @@ GitHub Actions workflows.  After installing `act`, run the following command
 from the root of the repo:
 
 ```plain
-act pull_request
+act
 ```
 
 **NOTE:** `act` uses a Docker container, so this will _NOT_ work within the ADE.
 You must use `act` in an environment where Docker is installed.
 
-The command above will initially take several minutes, but subsequent runs will
-execute more quickly because only the first run must pull the `act` Docker
-image.
+The command above will initially take several minutes, but subsequent runs
+should execute more quickly because only the first run must pull the `act`
+Docker image.
 
 ## Submitting a Pull Request
 
@@ -265,8 +240,6 @@ a new release:
 1. Register the new release of the algorithm as described in the previous
    section.
 
-[compatible release operator]:
-  https://peps.python.org/pep-0440/#compatible-release
 [Keep a Changelog]:
   https://keepachangelog.com/en/1.0.0/
 [NASA MAAP]:
