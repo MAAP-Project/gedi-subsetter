@@ -3,63 +3,23 @@
 Collection functions:
 
 - `find_collection` attempts to find a single collection
-
-Granule functions:
-
-- `download_granule` attempts to download a granule file
 """
 
 import logging
 from typing import Mapping, ParamSpec, TypeVar
 
 from maap.maap import MAAP
-from maap.Result import Collection, Granule
+from maap.Result import Collection
 
 logger = logging.getLogger(__name__)
 
 
 __all__ = [
-    "download_granule",
     "find_collection",
 ]
 
 T = TypeVar("T")
 P = ParamSpec("P")
-
-
-def download_granule(granule: Granule, todir: str) -> str:
-    """Download a granule's data file.
-
-    Parameters
-    ----------
-    todir
-        Directory to which to download the granule.
-    granule
-        Metadata for the granule to download.
-
-    Returns
-    -------
-    dest
-        Absolute path of the downloaded file.
-
-    Raises
-    ------
-    ValueError
-        If the granule is not configured with a download URL.
-    """
-    granule_ur = granule["Granule"]["GranuleUR"]
-
-    if not (download_url := granule.getDownloadUrl()):
-        raise ValueError(f"granule {granule_ur} does not have a download URL")
-
-    logger.debug(f"Downloading granule {granule_ur} from {download_url} to {todir}")
-
-    if dest := granule.getData(todir):
-        return dest
-
-    raise ValueError(
-        f"failed to download granule {granule_ur} from {download_url} to {todir}"
-    )
 
 
 def find_collection(maap: MAAP, params: Mapping[str, str]) -> Collection:
