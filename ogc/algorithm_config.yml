@@ -1,0 +1,88 @@
+# Input params for OGC application package generator
+# The information provided in this file supports CWL and OGC best practices
+algorithm_description: Subset GEDI L1B, L2A, L2B, L4A, or L4C granules within an area of interest (AOI)
+algorithm_name: gedi-subset
+algorithm_version: mlucas/ogc
+keywords: ogc, gedi
+code_repository: https://github.com/MAAP-Project/gedi-subsetter.git
+citation: https://github.com/MAAP-Project/gedi-subsetter.git
+author: maap
+contributor: maap
+license: https://github.com/MAAP-Project/gedi-subsetter/blob/main/LICENSE
+release_notes: None
+run_command: /app/gedi-subsetter/bin/subset.sh
+ram_min: 5 # mebibytes
+cores_min: 1
+outdir_max: 20 # mebibytes
+
+inputs:
+  - name: aoi
+    doc: URL of a file representing the Area of Interest (e.g., GeoJSON file)
+    label: Area of Interest
+    type: string
+  - name: doi
+    doc: "Digital Object Identifier (DOI) of the GEDI collection to subset, or one of these logical names: L1B, L2A, L2B, L4A"
+    label: Digital Object Identifier
+    type: string
+  - name: lat
+    doc: Name of the dataset containing latitude values
+    label: latitude
+    type: string
+  - name: lon
+    doc: Name of the dataset containing longitude values
+    label: longitude
+    type: string
+  - name: columns
+    doc: One or more column names, separated by commas, to include in the output file
+    label: columns
+    type: string
+  - name: query
+    doc: Boolean query expression for subsetting the rows in the output file.
+        If not provided, all rows are included.  See
+        https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.query.html.
+    label: query
+    type: string
+  - name: temporal
+    doc: Temporal range to subset, formatted as an ISO 8601 Time Interval.
+        For example, 2021-01-01T00:00:00Z/2021-12-31T23:59:59Z.  See
+        https://en.wikipedia.org/wiki/ISO_8601#Time_intervals.  If not provided,
+        the entire temporal range of the GEDI collection is used.
+    label: temporal
+    type: string
+  - name: beams
+    doc: "Which beams to include: all, coverage, power, or a comma-separated
+        list of specific beam names, with or without the BEAM prefix (e.g.,
+        BEAM0000,BEAM0001 or 0000,0001)"
+    label: beams
+    type: string
+  - name: limit
+    doc: Maximum number of GEDI granules to subset, regardless of the number
+        of granules within the spatio-temporal range.
+    label: limit
+    type: string
+  - name: output
+    doc: Name of the output file produced by the algorithm.  Defaults to
+        using the AOI file name (without the extension) with the suffix "_subset.gpkg".
+    label: output
+    type: string
+  - name: fsspec_kwargs
+    doc: "JSON object representing keyword arguments to pass to the
+        fsspec.core.url_to_fs function when reading granule data files.  See
+        https://filesystem-spec.readthedocs.io/en/latest/api.html#fsspec.core.url_to_fs."
+    label: fsspec_kwargs
+    type: string
+  - name: processes
+    doc: Number of processes to use for parallel processing.  If not provided,
+        defaults to the number of available CPUs.
+    label: processes
+    type: string
+  - name: scalene_args
+    doc: Arguments to pass to Scalene for memory and CPU profiling.  If not
+        provided, Scalene will not be used.
+    label: scalene_args
+    type: string
+    
+
+outputs:
+  - name: out
+    type: Directory

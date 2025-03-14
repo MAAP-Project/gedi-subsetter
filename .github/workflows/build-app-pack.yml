@@ -1,0 +1,24 @@
+on:
+  push:
+    branches:
+      - mlucas/ogc
+  workflow_dispatch:
+    inputs:
+    environment:
+      required: true
+      default: 'DIT'
+
+jobs:
+  build_app_pack:
+    environment: DIT
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo content
+        uses: actions/checkout@v4
+
+      - name: Use OGC App Pack Generator Action
+        uses: MAAP-Project/ogc-app-pack-generator@feature/create-action
+        with:
+          # Specify action inputs
+          algorithm-configuration-path: ogc/algorithm_config.yml
+          dockerfile-path: Dockerfile
