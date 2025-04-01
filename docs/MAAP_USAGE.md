@@ -464,11 +464,13 @@ GEDI_EPOCH = pd.to_datetime("2018-01-01T00:00:00Z")
 gdf["datetime"] = GEDI_EPOCH + pd.to_timedelta(gdf.delta_time, unit="seconds")
 ```
 
-Note that since adding the `delta_time` column to your output file will increase
-the size of your output file, it is recommended that you avoid adding it if you
-need only the date (without time), and derive the date from the filename column,
-which is always (automatically) included in the output file, as illustrated in
-the first example.
+> [!NOTE]
+>
+> Since adding the `delta_time` column to your output file will increase the
+> size of your output file, it is recommended that you avoid adding it, if you
+> need only the date (without time), and instead derive the date from the
+> filename column, which is always (automatically) included in the output file,
+> as illustrated in the first example.
 
 ## Getting the GeoJSON URL for a geoBoundary
 
