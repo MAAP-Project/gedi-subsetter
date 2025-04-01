@@ -13,6 +13,7 @@
   - [Submitting a DPS Job](#submitting-a-dps-job)
   - [Checking the DPS Job Status](#checking-the-dps-job-status)
   - [Getting the DPS Job Results](#getting-the-dps-job-results)
+  - [Computing Dates and Times](#computing-dates-and-times)
 - [Getting the GeoJSON URL for a geoBoundary](#getting-the-geojson-url-for-a-geoboundary)
 - [Citations](#citations)
 
@@ -425,6 +426,49 @@ available at the following path within the ADE:
 ```plain
 ~/my-private-bucket/dps_output/gedi-subset/<VERSION>/<DATETIME_PATH>/gedi_subset.gpkg
 ```
+
+### Computing Dates and Times
+
+GEDI data does not include absolute date/time values, but if you need such
+information, it can be readily derived.
+
+If you need only a date column (no time information), this can be derived from
+the `filename` column that is automatically added to the output file, as
+follows:
+
+```python
+import geopandas as gpd
+import pandas as pd
+
+# If your output file is a .gpkg or .fgb file
+gdf = gpd.read_file(output_file)
+# If your output file is a .parquet file
+gdf = gpd.read_parquet(output_file)
+
+# Characters 9-15 of filename are in the format YYYYDDD, where DDD is the day of
+# the year, which translates to a Python date format of %Y%j
+gdf["date"] = pd.to_datetime(gdf.filename.str.slice(9, 16), format="%Y%j")
+```
+
+If you want the precise datetime value for each row, this can be derived from
+the `delta_time` column, but in order to do so, you must include `delta_time` in
+your `columns` input value.  With `delta_time` included in your output file, you
+may derive the precise datetime value for each row as follows:
+
+```python
+# ... same imports and read from previous example ...
+
+# delta_time is the number of seconds (float64) since the GEDI epoch, so we
+# must add delta_time seconds to the epoch to get the absolute datetime.
+GEDI_EPOCH = pd.to_datetime("2018-01-01T00:00:00Z")
+gdf["datetime"] = GEDI_EPOCH + pd.to_timedelta(gdf.delta_time, unit="seconds")
+```
+
+Note that since adding the `delta_time` column to your output file will increase
+the size of your output file, it is recommended that you avoid adding it if you
+need only the date (without time), and derive the date from the filename column,
+which is always (automatically) included in the output file, as illustrated in
+the first example.
 
 ## Getting the GeoJSON URL for a geoBoundary
 
