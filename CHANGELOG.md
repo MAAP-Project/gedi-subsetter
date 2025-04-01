@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+## [0.10.0] (2025-04-01)
+
 ### Fixed
 
 - Columns in the output file are now guaranteed to be in the same order as given
@@ -230,4 +232,5 @@ The format is based on [Keep a Changelog], and this project adheres to
 [0.7.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.7.0
 [0.8.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.8.0
 [0.9.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.9.0
-[Unreleased]: https://github.com/nsidc/earthaccess/compare/0.9.0...HEAD
+[0.10.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.10.0
+[Unreleased]: https://github.com/MAAP-Project/gedi-subsetter/compare/0.10.0...HEAD
