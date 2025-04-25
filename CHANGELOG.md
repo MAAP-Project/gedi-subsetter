@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+## [0.11.0] (2025-04-25)
+
 ## Changed
 
 - In addition to a logical name or an official DOI name, the value for the `doi`
@@ -244,4 +246,5 @@ The format is based on [Keep a Changelog], and this project adheres to
 [0.8.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.8.0
 [0.9.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.9.0
 [0.10.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.10.0
-[Unreleased]: https://github.com/MAAP-Project/gedi-subsetter/compare/0.10.0...HEAD
+[0.11.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.11.0
+[Unreleased]: https://github.com/MAAP-Project/gedi-subsetter/compare/0.11.0...HEAD
