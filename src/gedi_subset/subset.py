@@ -52,11 +52,11 @@ from gedi_subset.gedi_utils import (
 from gedi_subset.maapx import find_collection
 
 logical_dois = {
-    "L1B": "10.5067/GEDI/GEDI01_B.002",
-    "L2A": "10.5067/GEDI/GEDI02_A.002",
-    "L2B": "10.5067/GEDI/GEDI02_B.002",
-    "L4A": "10.3334/ORNLDAAC/2056",
-    "L4C": "10.3334/ORNLDAAC/2338",
+    "L1B": "C2142749196-LPCLOUD",  # DOI: 10.5067/GEDI/GEDI01_B.002
+    "L2A": "C2142771958-LPCLOUD",  # DOI: 10.5067/GEDI/GEDI02_A.002
+    "L2B": "C2142776747-LPCLOUD",  # DOI: 10.5067/GEDI/GEDI02_B.002
+    "L4A": "C2237824918-ORNL_CLOUD",  # DOI: 10.3334/ORNLDAAC/2056
+    "L4C": "C3049900163-ORNL_CLOUD",  # DOI: 10.3334/ORNLDAAC/2338
 }
 
 DEFAULT_LIMIT = 100_000
@@ -356,9 +356,9 @@ def cli(
         str,
         typer.Option(
             show_default=False,
-            callback=lambda value: logical_dois.get(value.upper(), value),
+            callback=lambda value: logical_dois.get(value.upper(), value.upper()),
             help=(
-                "Digital Object Identifier (DOI) of collection to subset"
+                "Digital Object Identifier (DOI) or Concept ID of collection to subset"
                 " (https://www.doi.org/), or one of these logical, case-insensitive"
                 f" names: {', '.join(logical_dois)}"
             ),
@@ -466,17 +466,21 @@ def cli(
 
     aoi_gdf = cast(gpd.GeoDataFrame, gpd.read_file(aoi))
     aoi_geometry = aoi_gdf.union_all()
-    # Use wildcards around DOI value because some collections have incorrect
-    # DOI values. For example, the L2B collection has the full DOI URL as
-    # the DOI value (i.e., https://doi.org/<DOI> rather than just <DOI>).
-    collection = find_gedi_collection(
-        maap, dict(cmr_host=cmr_host, doi=f"*{doi}*", cloud_hosted="true")
+    collection_concept_id = (
+        doi
+        # Assume `doi` value is actually a collection concept ID, and thus avoid
+        # a search for the collection, since all we need is the concept ID.
+        if doi.startswith("C")
+        # Otherwise, search for collection by DOI so we can get its concept ID.
+        else find_gedi_collection(
+            maap, dict(cmr_host=cmr_host, doi=doi, cloud_hosted="true")
+        )["concept-id"]
     )
     granules = [
         granule
         for granule in maap.searchGranule(
             cmr_host=cmr_host,
-            collection_concept_id=collection["concept-id"],
+            collection_concept_id=collection_concept_id,
             bounding_box=",".join(fp.map(str)(aoi_gdf.total_bounds)),  # pyright: ignore
             limit=limit,
             **(dict(temporal=temporal) if temporal else {}),

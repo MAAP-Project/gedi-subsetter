@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+## Changed
+
+- In addition to a logical name or an official DOI name, the value for the `doi`
+  may now be a collection concept ID to uniquely specify a collection, because
+  searching by DOI does not guarantee uniqueness (due to a bug in CMR Search).
+  Further, specifying a logical name (e.g., "L4A") now uses the appropriate
+  collection concept ID rather than the official DOI name so that this change
+  requires no change in user code (other than changing the algorithm version) in
+  order to gain this uniqueness guarantee.
+  ([#124](https://github.com/MAAP-Project/gedi-subsetter/issues/124))
+
 ## [0.10.0] (2025-04-01)
 
 ### Fixed
