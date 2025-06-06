@@ -385,7 +385,7 @@ result = maap.submitJob(
     identifier="<DESCRIPTION>",
     algo_id="gedi-subset",
     version="<VERSION>",
-    queue="maap-dps-worker-32gb",
+    queue="maap-dps-worker-32vcpu-64gb",
     username="<USERNAME>",  # Your Earthdata Login username
     **inputs
 )
