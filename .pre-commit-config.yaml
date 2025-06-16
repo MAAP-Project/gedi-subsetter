@@ -30,14 +30,14 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v4.0.0
+    rev: v4.2.0
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
         # optional: list of Conventional Commits types to allow e.g. [feat, fix, ci, chore, test]
         args: []
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.10
+    rev: v0.11.13
     hooks:
       - id: ruff
         # Remove types_or to also lint notebooks

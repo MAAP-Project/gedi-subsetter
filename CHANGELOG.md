@@ -7,6 +7,21 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+## [0.11.0] (2025-04-25)
+
+## Changed
+
+- In addition to a logical name or an official DOI name, the value for the `doi`
+  may now be a collection concept ID to uniquely specify a collection, because
+  searching by DOI does not guarantee uniqueness (due to a bug in CMR Search).
+  Further, specifying a logical name (e.g., "L4A") now uses the appropriate
+  collection concept ID rather than the official DOI name so that this change
+  requires no change in user code (other than changing the algorithm version) in
+  order to gain this uniqueness guarantee.
+  ([#124](https://github.com/MAAP-Project/gedi-subsetter/issues/124))
+
+## [0.10.0] (2025-04-01)
+
 ### Fixed
 
 - Columns in the output file are now guaranteed to be in the same order as given
@@ -29,6 +44,10 @@ The format is based on [Keep a Changelog], and this project adheres to
   ([#97](https://github.com/MAAP-Project/gedi-subsetter/issues/97))
 - Add `gedi` CLI.  Run `gedi --help` for details.
   ([#95](https://github.com/MAAP-Project/gedi-subsetter/issues/95))
+- Document how to derive a date-only column or a datetime column.  See the
+  section "Computing Dates and Times" in [MAAP_USAGE.md].
+  ([#110](https://github.com/MAAP-Project/gedi-subsetter/issues/110),
+  [#111](https://github.com/MAAP-Project/gedi-subsetter/issues/111))
 
 ## [0.9.0] (2024-10-09)
 
@@ -87,7 +106,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 - [#57](https://github.com/MAAP-Project/gedi-subsetter/issues/57) Users may
   choose to profile their jobs by specifying command-line options for the
-  `scalene` profiling tool. See `docs/MAAP_USAGE.md` for more information.
+  `scalene` profiling tool. See [MAAP_USAGE.md] for more information.
 - [#44](https://github.com/MAAP-Project/gedi-subsetter/issues/44) Granule
   download failures are now retried up to 10 times to reduce the likelihood that
   subsetting will fail due to a download failure.
@@ -152,10 +171,10 @@ The format is based on [Keep a Changelog], and this project adheres to
 - [#38](https://github.com/MAAP-Project/gedi-subsetter/issues/38): Temporal
   filtering is now supported, such that specifying a temporal range will
   limit the granules downloaded from the CMR, pulling only granules obtained
-  within the specified range.  See `docs/MAAP_USAGE.md` for more information.
+  within the specified range.  See [MAAP_USAGE.md] for more information.
 - Added an input parameter named `output` to allow user to specify the name of
   the output file, rather than hard-code the name to `gedi-subset.gpkg`.  See
-  `docs/MAAP_USAGE.md` for more information.
+  [MAAP_USAGE.md] for more information.
 
 ## [0.5.0] (2023-04-11)
 
@@ -226,4 +245,6 @@ The format is based on [Keep a Changelog], and this project adheres to
 [0.7.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.7.0
 [0.8.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.8.0
 [0.9.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.9.0
-[Unreleased]: https://github.com/nsidc/earthaccess/compare/0.9.0...HEAD
+[0.10.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.10.0
+[0.11.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.11.0
+[Unreleased]: https://github.com/MAAP-Project/gedi-subsetter/compare/0.11.0...HEAD

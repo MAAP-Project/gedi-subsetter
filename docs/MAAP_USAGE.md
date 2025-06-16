@@ -13,6 +13,7 @@
   - [Submitting a DPS Job](#submitting-a-dps-job)
   - [Checking the DPS Job Status](#checking-the-dps-job-status)
   - [Getting the DPS Job Results](#getting-the-dps-job-results)
+  - [Computing Dates and Times](#computing-dates-and-times)
 - [Getting the GeoJSON URL for a geoBoundary](#getting-the-geojson-url-for-a-geoboundary)
 - [Citations](#citations)
 
@@ -104,11 +105,14 @@ optional inputs:
   > effectively behave as if it were unlimited because all supported GEDI
   > collections have fewer granules than this default limit.
 
-- `doi` (_required_): [Digital Object Identifier] (DOI) of the GEDI collection
-  to subset, or a logical name representing such a DOI (see
+- `doi` (_required_): [Digital Object Identifier] (DOI) or Concept ID of the
+  GEDI collection to subset, or a logical name representing such an ID (see
   [Specifying a DOI](#specifying-a-doi))
 
   > _Added in version 0.3.0_
+
+  > _Changed in version 0.11.0_: In addition to a logical name or an official
+  > DOI, the `doi` also accepts a Collection Concept ID.
 
 - `lat` (_required_): _Name_ of the dataset used for latitude values.
 
@@ -231,33 +235,49 @@ https://maap-ops-workspace.s3.amazonaws.com/shared/<USERNAME>/path/to/aoi.geojso
 
 ### Specifying a DOI
 
-To avoid the need to remember or lookup a DOI for a GEDI collection, you may
-supply one of the following "logical" names as the value of the `doi` input
-(case is ignored):
+To avoid the need to remember or lookup a DOI or concept ID for a GEDI
+collection, you may supply one of the following "logical" names as the value of
+the `doi` input (case is ignored):
 
-|Logical name|Corresponding DOI
-|:-----------|:----------------
-|L1B         |[10.5067/GEDI/GEDI01_B.002](https://doi.org/10.5067/GEDI/GEDI01_B.002)
-|L2A         |[10.5067/GEDI/GEDI02_A.002](https://doi.org/10.5067/GEDI/GEDI02_A.002)
-|L2B         |[10.5067/GEDI/GEDI02_B.002](https://doi.org/10.5067/GEDI/GEDI02_B.002)
-|L4A         |[10.3334/ORNLDAAC/2056](https://doi.org/10.3334/ORNLDAAC/2056)
-|L4C (_Added in version 0.9.0_) |[10.3334/ORNLDAAC/2338](https://doi.org/10.3334/ORNLDAAC/2338)
+|Logical name|Concept ID              |DOI
+|:-----------|:-----------------------|:----------------
+|L1B         |[C2142749196-LPCLOUD]   |[10.5067/GEDI/GEDI01_B.002]
+|L2A         |[C2142771958-LPCLOUD]   |[10.5067/GEDI/GEDI02_A.002]
+|L2B         |[C2142776747-LPCLOUD]   |[10.5067/GEDI/GEDI02_B.002]
+|L4A         |[C2237824918-ORNL_CLOUD]|[10.3334/ORNLDAAC/2056]
+|L4C         |[C3049900163-ORNL_CLOUD]|[10.3334/ORNLDAAC/2338]
 
 If, however, a new version of a collection is published, the new version will
-have a different DOI assigned, and the old version of the collection will likely
-be removed from the CMR.  In this case, the job will fail because it will be
-unable to obtain the collection data via the CMR.
+have a different DOI and concept ID assigned, and the old version of the
+collection will likely be removed from the CMR.  In this case, the job will fail
+because it will be unable to obtain the collection data via the CMR.
 
-Therefore, to avoid being blocked by this, you may specify a DOI name as the
-value for the `doi` input field until this algorithm is updated to associate the
-new DOI with the logical name.
+Therefore, to avoid being blocked by this, you may specify an official DOI name
+or a collection concept ID as the value for the `doi` input field until this
+algorithm is updated to associate the new concept ID with the logical name.  In
+order to lookup the new version of the collection and find its DOI or concept
+ID, you will need to locate it via a
+[GEDI instrument search in Earthdata Search].
 
-When supplying a DOI name (rather than a logical name), the job will fail for
-any of the following reasons:
+When supplying an official DOI name or collection concept ID (rather than a
+logical name), the job will fail for any of the following reasons:
 
 - There is no collection in the MAAP CMR corresponding to the DOI
 - There is such a collection in the MAAP CMR, but it is not a GEDI collection
 - The collection is a GEDI collection, but its data format is not HDF5
+
+> _Added in version 0.9.0_: The logical name L4C is now supported.
+>
+> _Added in version 0.11.0_: In addition to specifying either a logical DOI name
+> or an official DOI name, you now also have the choice of specifying a
+> Collection Concept ID.  By default, when specifying one of the logical names
+> listed above, the associated collection concept ID is now used in place of the
+> associated official DOI name.
+>
+> This was added to avoid a bug in the CMR where it sometimes returns _multiple_
+> collections as a result of a search by DOI, but we require it to return
+> _exactly one_ result.  By adding support for search via concept ID, we are
+> able to avoid this bug.
 
 Here are some _example_ input values per DOI, where ellipses should be replaced
 with appropriate values:
@@ -365,7 +385,7 @@ result = maap.submitJob(
     identifier="<DESCRIPTION>",
     algo_id="gedi-subset",
     version="<VERSION>",
-    queue="maap-dps-worker-32gb",
+    queue="maap-dps-worker-32vcpu-64gb",
     username="<USERNAME>",  # Your Earthdata Login username
     **inputs
 )
@@ -425,6 +445,51 @@ available at the following path within the ADE:
 ```plain
 ~/my-private-bucket/dps_output/gedi-subset/<VERSION>/<DATETIME_PATH>/gedi_subset.gpkg
 ```
+
+### Computing Dates and Times
+
+GEDI data does not include absolute date/time values, but if you need such
+information, it can be readily derived.
+
+If you need only a date column (no time information), this can be derived from
+the `filename` column that is automatically added to the output file, as
+follows:
+
+```python
+import geopandas as gpd
+import pandas as pd
+
+# If your output file is a .gpkg or .fgb file
+gdf = gpd.read_file(output_file)
+# If your output file is a .parquet file
+gdf = gpd.read_parquet(output_file)
+
+# Characters 9-15 of filename are in the format YYYYDDD, where DDD is the day of
+# the year, which translates to a Python date format of %Y%j
+gdf["date"] = pd.to_datetime(gdf.filename.str.slice(9, 16), format="%Y%j")
+```
+
+If you want the precise datetime value for each row, this can be derived from
+the `delta_time` column, but in order to do so, you must include `delta_time` in
+your `columns` input value.  With `delta_time` included in your output file, you
+may derive the precise datetime value for each row as follows:
+
+```python
+# ... same imports and read from previous example ...
+
+# delta_time is the number of seconds (float64) since the GEDI epoch, so we
+# must add delta_time seconds to the epoch to get the absolute datetime.
+GEDI_EPOCH = pd.to_datetime("2018-01-01T00:00:00Z")
+gdf["datetime"] = GEDI_EPOCH + pd.to_timedelta(gdf.delta_time, unit="seconds")
+```
+
+> [!NOTE]
+>
+> Since adding the `delta_time` column to your output file will increase the
+> size of your output file, it is recommended that you avoid adding it, if you
+> need only the date (without time), and instead derive the date from the
+> filename column, which is always (automatically) included in the output file,
+> as illustrated in the first example.
 
 ## Getting the GeoJSON URL for a geoBoundary
 
@@ -497,10 +562,32 @@ Runfola, D. et al. (2020) geoBoundaries: A global database of political
 administrative boundaries.  PLoS ONE 15(4): e0231866.
 <https://doi.org/10.1371/journal.pone.0231866>
 
+[10.5067/GEDI/GEDI01_B.002]:
+  https://doi.org/10.5067/GEDI/GEDI01_B.002
+[10.5067/GEDI/GEDI02_A.002]:
+  https://doi.org/10.5067/GEDI/GEDI02_A.002
+[10.5067/GEDI/GEDI02_B.002]:
+  https://doi.org/10.5067/GEDI/GEDI02_B.002
+[10.3334/ORNLDAAC/2056]:
+  https://doi.org/10.3334/ORNLDAAC/2056
+[10.3334/ORNLDAAC/2338]:
+  https://doi.org/10.3334/ORNLDAAC/2338
+[C2142749196-LPCLOUD]:
+  https://search.earthdata.nasa.gov/search?q=C2142749196-LPCLOUD
+[C2142771958-LPCLOUD]:
+  https://search.earthdata.nasa.gov/search?q=C2142771958-LPCLOUD
+[C2142776747-LPCLOUD]:
+  https://search.earthdata.nasa.gov/search?q=C2142776747-LPCLOUD
+[C2237824918-ORNL_CLOUD]:
+  https://search.earthdata.nasa.gov/search?q=C2237824918-ORNL_CLOUD
+[C3049900163-ORNL_CLOUD]:
+  https://search.earthdata.nasa.gov/search?q=C3049900163-ORNL_CLOUD
 [Digital Object Identifier]:
-   https://doi.org
+  https://doi.org
 [fsspec.url_to_fs]:
   https://filesystem-spec.readthedocs.io/en/latest/api.html#fsspec.core.url_to_fs."
+[GEDI instrument search in Earthdata Search]:
+  https://search.earthdata.nasa.gov/search?fi=GEDI&as[instrument][0]=GEDI
 [geoBoundaries]:
   https://www.geoboundaries.org
 [geoBoundaries API]:
