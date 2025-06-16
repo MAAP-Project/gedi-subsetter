@@ -4,9 +4,9 @@ on:
       - mlucas/ogc
   workflow_dispatch:
     inputs:
-    environment:
-      required: true
-      default: 'DIT'
+      environment:
+        required: true
+        default: 'DIT'
 
 jobs:
   build_app_pack:
@@ -17,8 +17,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Use OGC App Pack Generator Action
-        uses: MAAP-Project/ogc-app-pack-generator@feature/create-action
+        uses: MAAP-Project/ogc-app-pack-generator@main
         with:
           # Specify action inputs
           algorithm-configuration-path: ogc/algorithm_config.yml
           dockerfile-path: Dockerfile
+          deploy-app-pack: false
+          #app-pack-register-endpoint: https://api.dit.maap-project.org/api/ogc/processes
+        # env:
+          # MAAP PGT token is required to deploy the process
+          # MAAP_PGT: ${{ secrets.MAAP_PGT_TOKEN }}
