@@ -12,6 +12,13 @@ if [[ -z "${pixi}" ]]; then
     wget -qO- https://pixi.sh/install.sh | PIXI_HOME=${pixi_home} bash
 fi
 
+# Source to add pixi $PATH
+source ${HOME}/.bashrc
+
+# Install package dependencies
+cd app/gedi-subsetter/
+pixi install
+
 # Check that things appear to be installed correctly in the prod environment
 
 base_dir=$(dirname "$(dirname "$(readlink -f "$0")")")

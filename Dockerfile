@@ -10,6 +10,9 @@ RUN mkdir -p /app/gedi-subsetter
 # Copy application files to the working directory
 COPY ./ /app/gedi-subsetter
 
+# Run build.sh to install pixi
+RUN /app/gedi-subsetter/bin/build.sh
+
 # Assign execute permissions to the scripts
 RUN chmod +x /app/gedi-subsetter/bin/subset.sh
 
