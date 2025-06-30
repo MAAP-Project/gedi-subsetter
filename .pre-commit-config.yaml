@@ -37,7 +37,7 @@ repos:
         # optional: list of Conventional Commits types to allow e.g. [feat, fix, ci, chore, test]
         args: []
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.0
+    rev: v0.12.1
     hooks:
       - id: ruff
         # Remove types_or to also lint notebooks
