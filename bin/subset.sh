@@ -96,7 +96,7 @@ if [[ -z "${pixi}" ]]; then
     pixi=${pixi_home}/bin/pixi
 fi
 
-AWS_PROFILE=maap-data-reader "${pixi}" run -e prod --manifest-path "${base_dir}/pyproject.toml" -- "${command[@]}" 2>"${logfile}"
+AWS_PROFILE=maap-data-reader "${pixi}" --no-progress run -e prod --manifest-path "${base_dir}/pyproject.toml" -- "${command[@]}" 2>"${logfile}"
 
 # If we get here, the command above succeeded (otherwise this script would have
 # exited with a non-zero status).  We can now move the log file to the output

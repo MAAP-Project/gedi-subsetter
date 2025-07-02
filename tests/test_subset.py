@@ -60,12 +60,6 @@ def test_subset_granule(
         dps=None,
     )
 
-    # Since we have used a fixture to generate an h5 file, when subset_granule attempts
-    # to download the granule, no download will occur since the file already exists,
-    # which means we do not need to mock any S3 or HTTP calls.  Therefore, the result
-    # we get should simply match the path of the h5 fixture file, except with a .gpq
-    # extension, rather than an .h5 extension.
-
     expected_path = os.path.join(tmp_path, "temp.gpq")
     io_result = subset_granule(
         SubsetGranuleProps(
