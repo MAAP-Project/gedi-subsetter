@@ -63,7 +63,7 @@ DEFAULT_LIMIT = 100_000
 
 LOGGING_FORMAT = "%(asctime)s [%(processName)s:%(name)s] [%(levelname)s] %(message)s"
 
-logging.basicConfig(level=logging.INFO, format=LOGGING_FORMAT)
+logging.basicConfig(level=logging.WARN, format=LOGGING_FORMAT)
 logging.Formatter.converter = time.gmtime
 logging.Formatter.default_time_format = "%Y-%m-%dT%H:%M:%S"
 logging.Formatter.default_msec_format = "%s,%03dZ"
@@ -196,9 +196,10 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
 
     logger.debug(f"Subsetting {inpath}")
     fsspec_kwargs = {
-        "default_cache_type": "all",
-        "default_block_size": 8 * 1024 * 1024,
+        "default_cache_type": "mmap",
+        "default_block_size": 5 * 1024 * 1024,  # fsspec default is 5 MB
         "default_fill_cache": True,
+        "requester_pays": True,
         # Allow the caller to override the default values above.
         **props.fsspec_kwargs,
     }

@@ -157,13 +157,19 @@ optional inputs:
   are now supported.
 
 - `fsspec_kwargs` (_optional_; default:
-  `'{"default_cache_type": "all", "default_block_size": 8388608`): JSON object
-  representing keyword arguments to pass to the [fsspec.url_to_fs] function when
-  reading granule files.  **ADVANCED:** Normal usage should leave this input
-  blank, meaning that the default value will be used, which prioritizes
-  algorithm speed over minimizing data transfer volume.
+  `'{"default_cache_type": "mmap", "default_block_size": 5242880, "requester_pays": true}'`
+  JSON object representing keyword arguments to pass to the [fsspec.url_to_fs]
+  function when reading granule files.  **ADVANCED:** Normal usage should leave
+  this input blank, meaning that the default value will be used, which attempts
+  to balance algorithm speed with the volume of data transfer requests.
 
   > _Added in version 0.8.0_
+
+  > _Changed in version 0.12.0_: Changed default value from
+  `'{"default_cache_type": "all", "default_block_size": 8388608}'` to
+  `'{"default_cache_type": "mmap", "default_block_size": 5242880, "requester_pays": true}'`
+  to provide good performance while reducing both the volume of transferred data
+  and peak memory usage.
 
 - `processes` (_optional_; default: number of available CPUs): Number of
   processes to use for parallel processing.  **ADVANCED:** Normal usage should

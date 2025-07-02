@@ -7,9 +7,14 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Add "requester pays" flag for reading granule data files from S3
+  ([#138](https://github.com/MAAP-Project/gedi-subsetter/issues/138))
+
 ## [0.11.0] (2025-04-25)
 
-## Changed
+### Changed
 
 - In addition to a logical name or an official DOI name, the value for the `doi`
   may now be a collection concept ID to uniquely specify a collection, because

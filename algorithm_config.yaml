@@ -67,7 +67,7 @@ inputs:
         fsspec.core.url_to_fs function when reading granule data files.  See
         https://filesystem-spec.readthedocs.io/en/latest/api.html#fsspec.core.url_to_fs."
       required: false
-      default: '{"default_cache_type": "all", "default_block_size": 8388608}'
+      default: ""
     - name: processes
       description: Number of processes to use for parallel processing.  If not provided,
         defaults to the number of available CPUs.
