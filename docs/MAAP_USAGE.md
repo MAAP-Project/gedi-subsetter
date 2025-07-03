@@ -156,6 +156,13 @@ optional inputs:
   > _Changed in version 0.10.0_: Output formats other than GeoPackage (`.gpkg`)
   are now supported.
 
+- `tolerated_failure_percentage` (_optional_; default: 0): Integral percentage
+  of individual granule subset failures to tolerate before failing a job.
+  Default tolerance is 0 (i.e., fail fast), thus any single granule failure will
+  immediately fail the job.
+
+  > _Added in version 0.12.0_
+
 - `fsspec_kwargs` (_optional_; default:
   `'{"default_cache_type": "mmap", "default_block_size": 5242880, "requester_pays": true}'`
   JSON object representing keyword arguments to pass to the [fsspec.url_to_fs]
