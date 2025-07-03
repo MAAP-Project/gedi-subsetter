@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+## [0.12.0] (2025-07-03)
+
 ### Changed
 
 - Add "requester pays" flag for reading granule data files from S3
@@ -256,4 +258,5 @@ The format is based on [Keep a Changelog], and this project adheres to
 [0.9.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.9.0
 [0.10.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.10.0
 [0.11.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.11.0
-[Unreleased]: https://github.com/MAAP-Project/gedi-subsetter/compare/0.11.0...HEAD
+[0.12.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.12.0
+[Unreleased]: https://github.com/MAAP-Project/gedi-subsetter/compare/0.12.0...HEAD
