@@ -62,6 +62,11 @@ inputs:
         using the AOI file name (without the extension) with the suffix "_subset.gpkg".
       required: false
       default: ""
+    - name: tolerated_failure_percentage
+      description: Integral percentage of individual granule subset failures tolerated
+        before causing job failure.
+      required: false
+      default: ""
     - name: fsspec_kwargs
       description: "JSON object representing keyword arguments to pass to the
         fsspec.core.url_to_fs function when reading granule data files.  See

@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 - Add "requester pays" flag for reading granule data files from S3
   ([#138](https://github.com/MAAP-Project/gedi-subsetter/issues/138))
+- Add `tolerated_failure_percentage` input to control percentage of individual
+  granule failures to tolerate before failing a job.  Default tolerance is 0
+  (i.e., fail fast), thus any single failure will immediately fail the job.
+  ([#62](https://github.com/MAAP-Project/gedi-subsetter/issues/62))
 
 ## [0.11.0] (2025-04-25)
 

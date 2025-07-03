@@ -28,11 +28,12 @@ from maap.maap import MAAP
 from maap.Result import Collection, Granule
 from returns.curry import partial
 from returns.functions import raise_exception, tap
-from returns.io import IOResultE, IOSuccess
+from returns.io import IOFailure, IOResultE, IOSuccess
 from returns.iterables import Fold
 from returns.maybe import Maybe, Nothing, Some
-from returns.pipeline import flow, is_successful, pipe
-from returns.pointfree import bind, bind_ioresult, lash, map_
+from returns.pipeline import flow, pipe
+from returns.pointfree import alt, bind, bind_ioresult, map_
+from returns.result import Success
 from returns.unsafe import unsafe_perform_io
 
 import gedi_subset.fp as fp
@@ -60,6 +61,7 @@ logical_dois = {
 }
 
 DEFAULT_LIMIT = 100_000
+DEFAULT_TOLERATED_FAILURE_PERCENTAGE = 0
 
 LOGGING_FORMAT = "%(asctime)s [%(processName)s:%(name)s] [%(levelname)s] %(message)s"
 
@@ -183,10 +185,9 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
     downloaded granule file, and return the path to the output file.
 
     Return `Nothing` if the subset is empty or if an error occurred attempting
-    to read the granule file (in which case, the offending file is retained in
-    order to facilitate analysis).  In either case, no GeoParquet file is
-    written; otherwise return `Some[str]` indicating the output path of the
-    GeoParquet file.
+    to read the granule file.  In either case, no GeoParquet file is written;
+    otherwise return `Some[str]` indicating the output path of the GeoParquet
+    file.
     """
 
     if not (inpath := props.granule.getDownloadUrl()):
@@ -234,9 +235,9 @@ def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
                 logger.debug(f"fsspec cache '{cache.name}' for '{urlpath}': {stats}")
     except Exception as e:
         granule_ur = props.granule["Granule"]["GranuleUR"]
-        logger.warning(f"Skipping granule {granule_ur} [failed to read {inpath}: {e}]")
+        logger.warning(f"Failed to read {inpath}: {e}")
         logger.exception(e)
-        return IOSuccess(Nothing)
+        return IOFailure(e)
 
     if gdf.empty:
         logger.debug(f"Empty subset produced from {inpath}; not writing")
@@ -257,6 +258,19 @@ def set_logging_level(logging_level: int) -> None:
     logger.setLevel(logging_level)
 
 
+def make_failure_tracker(max_failures: int) -> Callable[[Exception], None]:
+    n_failures = 0
+
+    def track_failure(e: Exception) -> None:
+        nonlocal n_failures
+        n_failures += 1
+
+        if n_failures > max_failures:
+            raise e
+
+    return track_failure
+
+
 def subset_granules(
     maap: MAAP,
     aoi_gdf: gpd.GeoDataFrame,
@@ -271,6 +285,7 @@ def subset_granules(
     granules: Iterable[Granule],
     fsspec_kwargs: Optional[Mapping[str, Any]] = None,
     processes: Optional[int] = None,
+    tolerated_failure_percentage: int = DEFAULT_TOLERATED_FAILURE_PERCENTAGE,
 ) -> IOResultE[Tuple[str, ...]]:
     gpkg = dest.with_suffix(".gpkg")
 
@@ -279,7 +294,11 @@ def subset_granules(
         is `Nothing`.  This indicates whether or not a subset file was written
         (and thus whether or not the subset was empty).
         """
-        return unsafe_perform_io(path.map(is_successful).value_or(False))
+        match path:
+            case IOSuccess(Success(Some(_))):
+                return True
+            case _:
+                return False
 
     def append_subset(src: str) -> IOResultE[str]:
         to_file_props = dict(index=False, mode="a", driver="GPKG")
@@ -299,9 +318,8 @@ def subset_granules(
     downloadable_granules = [
         granule for granule in found_granules if granule._downloadname
     ]
-    # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool.imap
-    # If we have at least 10 granules per process, use a chunksize of 10.
-    chunksize = 10 if processes and len(downloadable_granules) >= 10 * processes else 1
+    max_failures = len(downloadable_granules) * tolerated_failure_percentage // 100
+    track_failure = make_failure_tracker(max_failures)
 
     logger.info(
         f"Granules found in the CMR: {len(found_granules)}"
@@ -324,19 +342,22 @@ def subset_granules(
         for granule in downloadable_granules
     )
 
-    logger.info(f"Subsetting on {processes} CPUs (chunksize={chunksize})")
+    logger.info(f"Subsetting on {processes} CPUs")
 
     with multiprocessing.get_context("spawn").Pool(
         processes, init_process, init_args
     ) as pool:
-        return flow(
-            pool.imap_unordered(subset_granule, payloads, chunksize),
-            fp.filter(subset_saved),  # Skip granules that produced empty subsets
-            fp.map(bind(bind(append_subset))),  # Append non-empty subset # type: ignore
+        result: IOResultE[Tuple[str, ...]] = flow(
+            pool.imap_unordered(subset_granule, payloads),
+            fp.map(tap(alt(track_failure))),
+            fp.filter(subset_saved),  # Skip granules that produced empty/no subsets
+            fp.map(bind(bind(append_subset))),  # Append non-empty subset
             partial(Fold.collect, acc=IOSuccess(())),
-            lash(raise_exception),  # Fail fast (if subsetting errored out)
-            tap(lambda _: gdf_reformat(gpkg, dest.suffix)),
         )
+
+    gdf_reformat(gpkg, dest.suffix)
+
+    return result
 
 
 def cli(
@@ -432,6 +453,17 @@ def cli(
         ),
     ] = None,
     verbose: Annotated[bool, typer.Option(help="Provide verbose output")] = False,
+    tolerated_failure_percentage: Annotated[
+        int,
+        typer.Option(
+            min=0,
+            max=100,
+            help=(
+                "Integral percentage of individual granule subset failures"
+                " tolerated before failing the job"
+            ),
+        ),
+    ] = DEFAULT_TOLERATED_FAILURE_PERCENTAGE,
     fsspec_kwargs: Annotated[
         Optional[dict[str, Any]],
         typer.Option(
@@ -506,6 +538,7 @@ def cli(
             granules,
             fsspec_kwargs,
             processes,
+            tolerated_failure_percentage,
         )
         .alt(raise_exception)
         .unwrap()
