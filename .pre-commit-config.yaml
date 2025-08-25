@@ -9,11 +9,11 @@ default_language_version:
   python: python3.12
 repos:
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.10.0.1
+    rev: v0.11.0.1
     hooks:
       - id: shellcheck
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
         exclude: pixi.lock
@@ -37,7 +37,7 @@ repos:
         # optional: list of Conventional Commits types to allow e.g. [feat, fix, ci, chore, test]
         args: []
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.3
+    rev: v0.12.10
     hooks:
       - id: ruff
         # Remove types_or to also lint notebooks
