@@ -25,10 +25,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source files
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Pixi
-        uses: prefix-dev/setup-pixi@v0.8.11
+        uses: prefix-dev/setup-pixi@v0.9.0
 
       - name: Run unit tests
         run: pixi run test
@@ -37,10 +37,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source files
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Pixi
-        uses: prefix-dev/setup-pixi@v0.8.11
+        uses: prefix-dev/setup-pixi@v0.9.0
 
       - name: Run static type analysis
         run: pixi run mypy
@@ -49,10 +49,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source files
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Pixi
-        uses: prefix-dev/setup-pixi@v0.8.11
+        uses: prefix-dev/setup-pixi@v0.9.0
 
       - name: Validate "prod" installation
         run: bin/build.sh
