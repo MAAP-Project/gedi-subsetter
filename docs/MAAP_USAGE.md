@@ -59,16 +59,21 @@ optional inputs:
   `geolocation/sensitivity_a2`.
 
   Further, for 2-dimensional datasets, there are several options for selecting
-  either all data or only a specific column or columns.  For example, given a
-  2D dataset named `rh`, the following options are possible as elements of this
+  either all data or only a specific column or columns.  For example, given a 2D
+  dataset named `rh`, the following options are possible as an element of this
   `columns` input list:
 
   - `"rh"`: Selects entire 2D dataset into a single output column named `"rh"`,
     where each value in the column is a list of row values from the dataset,
     rather than a scalar value, as would be the case for a 1D dataset.  For
     example, if `rh` contains 101 columns, the output would contain only 1
-    column named `rh`, but each value in the column would be a list of 101
+    column named `"rh"`, but each value in the column would be a list of 101
     values (an entire row of values from the 2D dataset).
+
+    **WARNING:** This works _only_ for GeoParquet output files, so you must also
+    specify a filename for `output` that has the file extension `.parquet`.
+    Otherwise, each value is written as a string rather than as a list of
+    numbers.  Only Parquet files retain the correct data type.
 
   - `"rh[i]"`: Selects the column at index _i_ (0-based) from the 2D dataset and
     adds a column of the same name (including the square brackets and index
