@@ -15,7 +15,7 @@ from returns.io import IOResultE, impure_safe
 from shapely.geometry.base import BaseGeometry
 
 import gedi_subset.fp as fp
-from gedi_subset.h5frame import H5DataFrame
+from gedi_subset.h5frame import h5py_pandas_projector
 
 # Suppress UserWarning: The Shapely GEOS version (3.10.2-CAPI-1.16.0) is incompatible
 # with the GEOS version PyGEOS was compiled with (3.8.1-CAPI-1.13.3). Conversions
@@ -233,15 +233,15 @@ def subset_hdf5(
     Assumptions:
 
     - The HDF5 group/file contains subgroups that are named with the prefix `"BEAM"`.
-    - Every `"BEAM*"` subgroup contains degree unit datasets with names given by the
-      specified ``lat`` and ``lon`` parameters, representing the latitude and longitude,
-      respectively, used to create the ``geometry`` column of the resulting
-      ``GeoDataFrame``.
+    - Every `"BEAM*"` subgroup contains degree unit datasets with names given by
+      the specified ``lat_col`` and ``lon_col`` parameters, representing the
+      latitude and longitude, respectively, used to create the ``geometry``
+      column of the resulting ``GeoDataFrame``.
     - For every column name in `columns` and every column name appearing in the `query`
       expression, every `"BEAM*"` subgroup contains a dataset of the same name.
 
-    Further, for traceability, the `filename` and `BEAM` columns are inserted,
-    regardless of the specified `columns` value.
+    Further, for traceability, the `filename` column is inserted, regardless of
+    the specified `columns` value.
 
     See the code example below for the code that corresponds to this illustration.
 
@@ -410,13 +410,30 @@ def subset_hdf5(
 
     def subset_beam(beam: h5py.Group) -> gpd.GeoDataFrame:
         """Subset an individual `"BEAM*"` group as described above."""
-        df = H5DataFrame(beam).query(query) if query else H5DataFrame(beam)
-        # Grab the coordinates for the geometry, before dropping columns
-        geometry = gpd.points_from_xy(df[lon_col], df[lat_col])
-        # Select only the user-specified columns
-        gdf = gpd.GeoDataFrame(df[columns], geometry=geometry, crs=aoi.crs)
 
-        return cast(gpd.GeoDataFrame, gdf.clip(aoi))
+        # Project only the columns specified by the caller.
+        # => SELECT col1, col2, ..., colN FROM beam
+
+        # Avoid duplicating the coord columns, in case the caller also lists
+        # them with the other columns, while also maintaining the column
+        # ordering given by the caller.
+        coord_columns = [col for col in (lon_col, lat_col) if col not in columns]
+        projector = h5py_pandas_projector(beam)
+        projection = projector[[*columns, *coord_columns]]
+
+        # Filter rows, if a query was specified.
+        # => WHERE condition
+        df = projection.query(query, resolvers=[projector]) if query else projection
+
+        # Create a GeoDataFrame from the subsetted data, and clip to the AOI.
+        # => AND ST_Contains(aoi, geometry)
+        return gpd.GeoDataFrame(
+            # Drop coord columns that were NOT specified in the columns list
+            df.drop(columns=coord_columns),
+            geometry=gpd.points_from_xy(df[lon_col], df[lat_col]),
+            crs=aoi.crs,
+            copy=False,
+        ).clip(aoi)
 
     beams = (
         group
