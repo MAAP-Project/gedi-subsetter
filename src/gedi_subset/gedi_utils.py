@@ -14,6 +14,7 @@ import shapely
 from maap.Result import Granule
 from shapely.geometry.base import BaseGeometry
 
+import gedi_subset.fp as fp
 from gedi_subset.h5frame import h5py_pandas_projector
 
 # Suppress UserWarning: The Shapely GEOS version (3.10.2-CAPI-1.16.0) is incompatible
@@ -38,6 +39,28 @@ def chext(ext: str, path: str) -> str:
 
 
 def concat_parquet_files(files: Iterable[Path], dest: Path) -> Path:
+    """Concatenate multiple parquet files into a single file.
+
+    Input files are assumed to be parquet files, and as each is read it is
+    deleted.
+
+    Parameters
+    ----------
+    files
+        Paths to input parquet files to be concatenated into a single file.
+    dest
+        Path to destination file to contain concatenation of input files.
+
+    Returns
+    -------
+    dest
+        Path to destination file (i.e., same value as `dest` parameter)
+
+    Raises
+    ------
+    ValueError
+        if `dest` does not have a suffix of `.fgb`, `.gpkg`, or `.parquet`
+    """
     import pyarrow.parquet as pq
 
     if dest.suffix.lower() not in {".fgb", ".gpkg", ".parquet"}:
@@ -52,13 +75,14 @@ def concat_parquet_files(files: Iterable[Path], dest: Path) -> Path:
     with pq.ParquetWriter(temp_dest, schema=schema) as writer:
         for file in files:
             writer.write_table(pq.read_table(file, schema=schema))
+            fp.safely(os.remove, file)
 
     # If the destination file must be a different format, then reformat it and
     # remove the temporary combined parquet file.
     if temp_dest != dest:
         gdf: gpd.GeoDataFrame = gpd.read_parquet(temp_dest)
         gdf.to_file(dest)
-        os.remove(temp_dest)
+        fp.safely(os.remove, temp_dest)
 
     return dest
 
