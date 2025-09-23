@@ -3,18 +3,17 @@ import logging
 import os
 import os.path
 import warnings
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
-from typing import Any, Callable, Mapping, Optional, Sequence, Union, cast
+from typing import Any, cast
 
 import h5py
 import pandas as pd
 import requests
 import shapely
 from maap.Result import Granule
-from returns.io import IOResultE, impure_safe
 from shapely.geometry.base import BaseGeometry
 
-import gedi_subset.fp as fp
 from gedi_subset.h5frame import h5py_pandas_projector
 
 # Suppress UserWarning: The Shapely GEOS version (3.10.2-CAPI-1.16.0) is incompatible
@@ -38,68 +37,30 @@ def chext(ext: str, path: str) -> str:
     return f"{os.path.splitext(path)[0]}{ext}"
 
 
-def gdf_to_file(
-    file: Union[str, os.PathLike], props: Mapping[str, Any], gdf: gpd.GeoDataFrame
-) -> IOResultE[None]:
-    # Unfortunately, using mode='a' when the target file does not exist throws an
-    # exception rather than simply creating a new file.  Therefore, in that case, we
-    # switch to mode='w' to avoid the error.
-    mode = props.get("mode")
-    props = dict(props, mode="w") if mode == "a" and not os.path.exists(file) else props
+def concat_parquet_files(files: Iterable[Path], dest: Path) -> Path:
+    import pyarrow.parquet as pq
 
-    return impure_safe(gdf.to_file)(file, **props)
+    if dest.suffix.lower() not in {".fgb", ".gpkg", ".parquet"}:
+        msg = f"Unsupported format.  Expected '.fgb', '.gpkg', or '.parquet': {dest}"
+        raise ValueError(msg)
 
+    sources = tuple(files)
+    schema = pq.ParquetFile(sources[0]).schema_arrow
+    temp_dest = dest.with_suffix(".parquet")
 
-def gdf_to_parquet(
-    path: Union[str, os.PathLike], gdf: gpd.GeoDataFrame
-) -> IOResultE[None]:
-    """Write a GeoDataFrame to the Parquet format."""
-    return impure_safe(gdf.to_parquet)(path)
+    # Combine all parquet files into a single parquet file.
+    with pq.ParquetWriter(temp_dest, schema=schema) as writer:
+        for file in files:
+            writer.write_table(pq.read_table(file, schema=schema))
 
+    # If the destination file must be a different format, then reformat it and
+    # remove the temporary combined parquet file.
+    if temp_dest != dest:
+        gdf: gpd.GeoDataFrame = gpd.read_parquet(temp_dest)
+        gdf.to_file(dest)
+        os.remove(temp_dest)
 
-def gdf_read_parquet(path: Union[str, os.PathLike[str]]) -> IOResultE[gpd.GeoDataFrame]:
-    """Read a Parquet object from a file path and return it as a GeoDataFrame."""
-    return impure_safe(gpd.read_parquet)(path)
-
-
-def gdf_reformat(path: Union[str, os.PathLike[str]], suffix: str) -> None:
-    """
-    Convert a GeoDataFrame written in one format to another format.
-
-    Do nothing if the `suffix` property of the path is the same as the specified
-    suffix.  Otherwise, read the GeoDataFrame at the specified path and write it
-    back out next to the original file, but with the specified suffix, and then
-    remove the original file.
-
-    Parameters
-    ----------
-    path:
-        Path to an existing GeoDataFrame written to the filesystem.
-    suffix:
-        Desired format, expressed as a destination file suffix, including a
-        leading dot (`.`), just like the `suffix` property of a `Path` includes.
-        Supported values: ".fgb", ".gpkg", ".parquet".
-    """
-    src_path = path if isinstance(path, Path) else Path(path)
-    dst_path = src_path.with_suffix(suffix)
-
-    # No need to waste time when the file is already in the desired format
-    if src_path.suffix == suffix:
-        return
-
-    gdf: gpd.GeoDataFrame = gpd.read_file(path)
-
-    if suffix == ".parquet":
-        gdf.to_parquet(dst_path)
-    elif suffix.lower() in {".fgb", ".gpkg"}:
-        gdf.to_file(dst_path)
-    else:
-        raise ValueError(
-            "Unsupported output format."
-            f" Expected '.fgb', '.gpkg', or '.parquet': {dst_path}"
-        )
-
-    os.remove(path)
+    return dest
 
 
 def get_geo_boundary(iso: str, level: int) -> gpd.GeoDataFrame:
@@ -179,9 +140,9 @@ def subset_hdf5(
     aoi: gpd.GeoDataFrame,
     lat_col: str,
     lon_col: str,
-    beam_filter: Callable[[h5py.Group], bool] = fp.always(True),
+    beam_filter: Callable[[h5py.Group], bool] = lambda _: True,
     columns: Sequence[str],
-    query: Optional[str] = None,
+    query: str | None = None,
 ) -> gpd.GeoDataFrame:
     """Subset the data in an HDF5 Group into a ``geopandas.GeoDataFrame``.
 
@@ -247,17 +208,17 @@ def subset_hdf5(
 
     Parameters
     ----------
-    hdf5 : h5py.Group
+    hdf5
         HDF5 group to subset (typically an ``h5py.File`` instance).
-    aoi : gpd.GeoDataFrame
+    aoi
         Area of Interest.  The subset is limited to data points that fall within this
         area of interest, as determined by the latitude and longitude datasets of each
         `"BEAM*"` group within the HDF5 file.
-    lat_col: str
+    lat_col
         Name of the latitude dataset used for the resulting ``GeoDataFrame`` geometry.
-    lon_col: str
+    lon_col
         Name of the longitude dataset used for the resulting ``GeoDataFrame`` geometry.
-    beam_filter: Callable[[h5py.Group], bool] = fp.always(True)
+    beam_filter
         Callable used to determine whether or not a top-level BEAM subgroup within the
         specified ``hdf5`` group should be included in the subset. This callable is
         called once for each subgroup that has a name prefixed with `"BEAM"`. If not
@@ -266,14 +227,14 @@ def subset_hdf5(
         py:`is_coverage_beam` and py:`is_power_beam` may be used. Further, the function
         returned by calling py:`beam_filter_from_names` with a specific list of BEAM
         names may be used.
-    columns : Sequence[str]
+    columns
         Column names to be included in the subset.  The specified column names must
         match dataset names within the `"BEAM*"` groups of the HDF5 file.  Although the
         `query` expression may include column names not given in this sequence of names,
         the resulting ``GeoDataFrame`` will contain only the columns specified by this
         parameter, along with `filename` (str) and `BEAM` (str) columns (for
         traceability).
-    query : Optional[str]
+    query
         Query expression for subsetting the rows of the data.  After "flattening" all
         of the `"BEAM*"` groups of the HDF5 file into rows across with columns formed by
         the groups' datasets, only rows satisfying this query expression are returned.

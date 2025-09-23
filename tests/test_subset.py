@@ -1,20 +1,23 @@
-import os
+from collections.abc import Callable
 from pathlib import Path
 from typing import Iterator, cast
 
 import geopandas as gpd
+import numpy as np
+import pandas as pd
 import pytest
 import requests
 from botocore.session import Session
-from maap.maap import MAAP
-from maap.Result import Granule
 from moto.moto_server.threaded_moto_server import ThreadedMotoServer
 from mypy_boto3_s3.client import S3Client
-from returns.io import IOSuccess
-from returns.maybe import Some
 from typer import BadParameter
 
-from gedi_subset.subset import SubsetGranuleProps, check_beams_option, subset_granule
+from gedi_subset.subset import (
+    SubsetGranuleProps,
+    check_beams_option,
+    subset_granule,
+    subset_granules,
+)
 
 
 # The following fixtures are simplifications of those found in the tests for s3fs at
@@ -36,7 +39,6 @@ def reset_s3_fixture(moto_server_url: str):
 def test_subset_granule(
     moto_server_url: str,
     h5_path: str,
-    maap: MAAP,
     aoi_gdf: gpd.GeoDataFrame,
     tmp_path: Path,
 ):
@@ -44,42 +46,91 @@ def test_subset_granule(
     client.create_bucket(Bucket="mybucket")
     client.put_object(Bucket="mybucket", Key="temp.h5", Body=Path(h5_path).read_bytes())
 
-    granule = Granule(
-        {
-            "Granule": {
-                "GranuleUR": "foo",
-                "OnlineAccessURLs": {
-                    "OnlineAccessURL": {"URL": "s3://mybucket/temp.h5"}
-                },
-            }
-        },
-        awsAccessKey="",
-        awsAccessSecret="",
-        cmrFileUrl="",
-        apiHeader={},
-        dps=None,
-    )
+    expected_path = tmp_path / "temp.parquet"
 
-    expected_path = os.path.join(tmp_path, "temp.gpq")
-    io_result = subset_granule(
+    subset_granule(
         SubsetGranuleProps(
             fsspec_kwargs={
                 "client_kwargs": {"endpoint_url": moto_server_url},
                 "skip_instance_cache": True,
             },
-            granule=granule,
-            maap=maap,
+            granule_url="s3://mybucket/temp.h5",
             aoi_gdf=aoi_gdf,
             lat_col="lat_lowestmode",
             lon_col="lon_lowestmode",
             beams="all",
-            columns=["agbd"],
+            columns=["agbd", "xvar"],
             query="l2_quality_flag == 1",
             output_dir=tmp_path,
         )
     )
 
-    assert io_result == IOSuccess(Some(expected_path))
+    assert expected_path.exists()
+    gdf = gpd.read_parquet(expected_path)
+    assert isinstance(gdf.xvar[0], np.ndarray)
+
+
+# @pytest.mark.parametrize("filename", ["subset.gpkg", "subset.parquet"])
+@pytest.mark.parametrize(
+    ["filename", "read_file", "two_d_row_type"],
+    [
+        ("subset.gpkg", gpd.read_file, str),
+        ("subset.fgb", gpd.read_file, str),
+        ("subset.parquet", gpd.read_parquet, np.ndarray),
+    ],
+)
+def test_subset_granules(
+    moto_server_url: str,
+    h5_path: str,
+    aoi_gdf: gpd.GeoDataFrame,
+    tmp_path: Path,
+    filename: str,
+    read_file: Callable[[Path], pd.DataFrame],
+    two_d_row_type: type,
+):
+    import logging
+
+    client = cast(S3Client, Session().create_client("s3", endpoint_url=moto_server_url))
+    client.create_bucket(Bucket="mybucket")
+    client.put_object(
+        Bucket="mybucket", Key="temp1.h5", Body=Path(h5_path).read_bytes()
+    )
+    client.put_object(
+        Bucket="mybucket", Key="temp2.h5", Body=Path(h5_path).read_bytes()
+    )
+
+    dest = tmp_path / filename
+
+    subset_granules(
+        aoi_gdf=aoi_gdf,
+        lat="lat_lowestmode",
+        lon="lon_lowestmode",
+        beams="all",
+        columns=["agbd", "xvar"],
+        query="l2_quality_flag == 1",
+        output_dir=tmp_path,
+        dest=dest,
+        init_args=(logging.DEBUG,),
+        granule_urls=(
+            "s3://mybucket/temp1.h5",
+            "s3://mybucket/temp2.h5",
+        ),
+        fsspec_kwargs={
+            "client_kwargs": {"endpoint_url": moto_server_url},
+            "skip_instance_cache": True,
+        },
+    )
+
+    # Make sure the 2D xvar dataset roundtrips correctly retaining its data type.
+    # Since we have selected xvar into a single column, we must ensure each
+    # value is written and read back as a list (one per row in the xvar dataset).
+    # We expect this to work only when the output (dest) format is parquet.
+    # That is, only when dest is a '.parquet' file do we expect the row type to
+    # retain its type as a numpy array.  In other cases, they get written as
+    # strings, and thus read back in as strings, unfortunately.
+    gdf = read_file(dest)
+    assert isinstance(gdf.xvar[0], two_d_row_type)
+    assert len(gdf.xvar) == 4
 
 
 @pytest.mark.parametrize(
