@@ -13,7 +13,7 @@ name = "gedi_subset"
 dynamic = ["version"]
 requires-python = ">= 3.12"
 scripts = { gedi = "gedi_subset.subset:main" }
-dependencies = [ ]
+dependencies = []
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/gedi_subset"]
@@ -41,8 +41,7 @@ pandas = "*"
 pip = "*"
 pyarrow = "*"
 pydantic = "*"
-returns = "*"
-s3fs = "*"
+s3fs = ">=2025.9.0"
 scalene = "*"
 shapely = "*"
 typer = "*"
@@ -90,9 +89,6 @@ docstring-code-format = true
 [tool.mypy]
 mypy_path = ["typings"]
 files = ["src", "tests"]
-# This plugin generates many errors that appear to be false positives, so it is
-# commented out until further investigation can be conducted.
-# plugins = ["returns.contrib.mypy.returns_plugin"]
 allow_redefinition = false
 check_untyped_defs = true
 ignore_errors = false
