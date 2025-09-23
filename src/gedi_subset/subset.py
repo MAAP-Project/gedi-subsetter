@@ -444,7 +444,7 @@ def cli(
         )["concept-id"]
     )
     granule_urls = tuple(
-        granule._downloadname
+        url
         for granule in maap.searchGranule(
             cmr_host=cmr_host,
             collection_concept_id=collection_concept_id,
@@ -452,7 +452,9 @@ def cli(
             limit=limit,
             **(dict(temporal=temporal) if temporal else {}),
         )
-        if granule._downloadname and granule_intersects(aoi_geometry, granule)
+        if granule._downloadname
+        and granule_intersects(aoi_geometry, granule)
+        and (url := granule.getDownloadUrl())
     )
 
     if not granule_urls:
