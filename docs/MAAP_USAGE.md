@@ -120,11 +120,11 @@ optional inputs:
       named like `"rh[i]"` for each _i_ from 0 through _n - 1_, where _n_ is the
       number of columns in `rh`.
     - `"rh[:10]"`: Selects the first 10 columns from `rh` and includes each
-      individually in the output as columns named `"rh[0]"` through `"rh[9]`".
+      individually in the output as columns named `"rh[0]"` through `"rh[9]"`.
     - `"rh[91:]"`: Selects the _last_ 10 columns: `"rh[91]"` through
       `"rh[100]"`.
     - `"rh[-10]"`: Also selects the last 10 columns, but in this case, the
-      negative numbering is retaining, adding the following columns to the
+      negative numbering is retained, adding the following columns to the
       output: `"rh[-10]"`, ..., `"rh[-1]"`.
     - `"rh[10:20]"`: Selects second set of 10 columns: `"rh[10]"` through
       `"rh[19]"`.
