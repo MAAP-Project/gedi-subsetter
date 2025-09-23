@@ -255,6 +255,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/pure_eval-0.2.3-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyarrow-21.0.0-py312h7900ff3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyarrow-core-21.0.0-py312hc195796_0_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pyarrow-stubs-20.0.0.20250825-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pycparser-2.22-pyh29332c3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydantic-2.11.9-pyh3cfb1c2_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pydantic-core-2.33.2-py312h680f630_0.conda
@@ -344,7 +345,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/18/67/a7fa2d650602731c90e0a86279841b4586e14228199e8c09165ba4863e29/geojson-3.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b1/cc/489f27424422daa49b8038650464736aa4a4c2bd554911887a5b13f7125d/maap_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/4f/e1/cdaa6c2f6d3a7a29b0b9a675dcfc25f4c481d577d137da8c769f13014ce5/mapboxgl-0.10.2-py2.py3-none-any.whl
-      - pypi: .
+      - pypi: ./
       osx-64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/_python_abi3_support-1.0-hd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/affine-2.4.0-pyhd8ed1ab_1.conda
@@ -583,6 +584,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/pure_eval-0.2.3-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/pyarrow-21.0.0-py312hb401068_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/pyarrow-core-21.0.0-py312had73edf_0_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pyarrow-stubs-20.0.0.20250825-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pycparser-2.22-pyh29332c3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydantic-2.11.9-pyh3cfb1c2_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/pydantic-core-2.33.2-py312haba3716_0.conda
@@ -671,7 +673,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/18/67/a7fa2d650602731c90e0a86279841b4586e14228199e8c09165ba4863e29/geojson-3.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b1/cc/489f27424422daa49b8038650464736aa4a4c2bd554911887a5b13f7125d/maap_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/4f/e1/cdaa6c2f6d3a7a29b0b9a675dcfc25f4c481d577d137da8c769f13014ce5/mapboxgl-0.10.2-py2.py3-none-any.whl
-      - pypi: .
+      - pypi: ./
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/_python_abi3_support-1.0-hd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/affine-2.4.0-pyhd8ed1ab_1.conda
@@ -910,6 +912,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/pure_eval-0.2.3-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyarrow-21.0.0-py312h1f38498_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyarrow-core-21.0.0-py312h3dbcb64_0_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pyarrow-stubs-20.0.0.20250825-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pycparser-2.22-pyh29332c3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydantic-2.11.9-pyh3cfb1c2_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pydantic-core-2.33.2-py312hd3c0895_0.conda
@@ -998,7 +1001,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/18/67/a7fa2d650602731c90e0a86279841b4586e14228199e8c09165ba4863e29/geojson-3.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b1/cc/489f27424422daa49b8038650464736aa4a4c2bd554911887a5b13f7125d/maap_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/4f/e1/cdaa6c2f6d3a7a29b0b9a675dcfc25f4c481d577d137da8c769f13014ce5/mapboxgl-0.10.2-py2.py3-none-any.whl
-      - pypi: .
+      - pypi: ./
   prod:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
@@ -1244,7 +1247,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/18/67/a7fa2d650602731c90e0a86279841b4586e14228199e8c09165ba4863e29/geojson-3.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b1/cc/489f27424422daa49b8038650464736aa4a4c2bd554911887a5b13f7125d/maap_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/4f/e1/cdaa6c2f6d3a7a29b0b9a675dcfc25f4c481d577d137da8c769f13014ce5/mapboxgl-0.10.2-py2.py3-none-any.whl
-      - pypi: .
+      - pypi: ./
       osx-64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/aiobotocore-2.24.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/aiohappyeyeballs-2.6.1-pyhd8ed1ab_0.conda
@@ -1470,7 +1473,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/18/67/a7fa2d650602731c90e0a86279841b4586e14228199e8c09165ba4863e29/geojson-3.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b1/cc/489f27424422daa49b8038650464736aa4a4c2bd554911887a5b13f7125d/maap_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/4f/e1/cdaa6c2f6d3a7a29b0b9a675dcfc25f4c481d577d137da8c769f13014ce5/mapboxgl-0.10.2-py2.py3-none-any.whl
-      - pypi: .
+      - pypi: ./
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/aiobotocore-2.24.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/aiohappyeyeballs-2.6.1-pyhd8ed1ab_0.conda
@@ -1696,7 +1699,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/18/67/a7fa2d650602731c90e0a86279841b4586e14228199e8c09165ba4863e29/geojson-3.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b1/cc/489f27424422daa49b8038650464736aa4a4c2bd554911887a5b13f7125d/maap_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/4f/e1/cdaa6c2f6d3a7a29b0b9a675dcfc25f4c481d577d137da8c769f13014ce5/mapboxgl-0.10.2-py2.py3-none-any.whl
-      - pypi: .
+      - pypi: ./
   test:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
@@ -1916,6 +1919,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pthread-stubs-0.4-hb9d3cd8_1002.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyarrow-21.0.0-py312h7900ff3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyarrow-core-21.0.0-py312hc195796_0_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pyarrow-stubs-20.0.0.20250825-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pycparser-2.22-pyh29332c3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydantic-2.11.9-pyh3cfb1c2_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pydantic-core-2.33.2-py312h680f630_0.conda
@@ -1993,7 +1997,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/18/67/a7fa2d650602731c90e0a86279841b4586e14228199e8c09165ba4863e29/geojson-3.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b1/cc/489f27424422daa49b8038650464736aa4a4c2bd554911887a5b13f7125d/maap_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/4f/e1/cdaa6c2f6d3a7a29b0b9a675dcfc25f4c481d577d137da8c769f13014ce5/mapboxgl-0.10.2-py2.py3-none-any.whl
-      - pypi: .
+      - pypi: ./
       osx-64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/aiobotocore-2.24.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/aiohappyeyeballs-2.6.1-pyhd8ed1ab_0.conda
@@ -2194,6 +2198,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/pthread-stubs-0.4-h00291cd_1002.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/pyarrow-21.0.0-py312hb401068_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/pyarrow-core-21.0.0-py312had73edf_0_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pyarrow-stubs-20.0.0.20250825-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pycparser-2.22-pyh29332c3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydantic-2.11.9-pyh3cfb1c2_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/pydantic-core-2.33.2-py312haba3716_0.conda
@@ -2270,7 +2275,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/18/67/a7fa2d650602731c90e0a86279841b4586e14228199e8c09165ba4863e29/geojson-3.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b1/cc/489f27424422daa49b8038650464736aa4a4c2bd554911887a5b13f7125d/maap_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/4f/e1/cdaa6c2f6d3a7a29b0b9a675dcfc25f4c481d577d137da8c769f13014ce5/mapboxgl-0.10.2-py2.py3-none-any.whl
-      - pypi: .
+      - pypi: ./
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/aiobotocore-2.24.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/aiohappyeyeballs-2.6.1-pyhd8ed1ab_0.conda
@@ -2471,6 +2476,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pthread-stubs-0.4-hd74edd7_1002.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyarrow-21.0.0-py312h1f38498_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyarrow-core-21.0.0-py312h3dbcb64_0_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pyarrow-stubs-20.0.0.20250825-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pycparser-2.22-pyh29332c3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydantic-2.11.9-pyh3cfb1c2_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pydantic-core-2.33.2-py312hd3c0895_0.conda
@@ -2547,7 +2553,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/18/67/a7fa2d650602731c90e0a86279841b4586e14228199e8c09165ba4863e29/geojson-3.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b1/cc/489f27424422daa49b8038650464736aa4a4c2bd554911887a5b13f7125d/maap_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/4f/e1/cdaa6c2f6d3a7a29b0b9a675dcfc25f4c481d577d137da8c769f13014ce5/mapboxgl-0.10.2-py2.py3-none-any.whl
-      - pypi: .
+      - pypi: ./
 packages:
 - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
   sha256: fe51de6107f9edc7aa4f786a70f4a883943bc9d39b3bb7307c04c41410990726
@@ -4574,10 +4580,10 @@ packages:
   - pkg:pypi/fsspec?source=hash-mapping
   size: 145678
   timestamp: 1756908673345
-- pypi: .
+- pypi: ./
   name: gedi-subset
-  version: 0.12.1.dev5+g65b8e67eb.d20250922
-  sha256: 0f3f8391fb99934660912c5c95960e42e02af9db0e720bf65af136a5c4f1bd8b
+  version: 0.12.1.dev10+g6cdcd2f66.d20250923
+  sha256: 2a49a815d82c4e9c23b9342b6ff5b1f2bd849f420582be7ad03128eff3a05b90
   requires_python: '>=3.12'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/geographiclib-2.1-pyhd8ed1ab_0.conda
@@ -9947,6 +9953,17 @@ packages:
   - pkg:pypi/pyarrow?source=hash-mapping
   size: 4258662
   timestamp: 1753371934508
+- conda: https://conda.anaconda.org/conda-forge/noarch/pyarrow-stubs-20.0.0.20250825-pyhd8ed1ab_0.conda
+  sha256: 4676b68609ff275d18c12775f80430f1eb667c6015a948fa9e68e382f283164c
+  md5: e42b443c082b15d19eaa849d26778bd5
+  depends:
+  - python >=3.10,<4.0
+  license: BSD-2-Clause
+  license_family: BSD
+  purls:
+  - pkg:pypi/pyarrow-stubs?source=hash-mapping
+  size: 168261
+  timestamp: 1756107242811
 - conda: https://conda.anaconda.org/conda-forge/noarch/pycparser-2.22-pyh29332c3_1.conda
   sha256: 79db7928d13fab2d892592223d7570f5061c192f27b9febd1a418427b719acc6
   md5: 12c566707c80111f9799308d9e265aef
