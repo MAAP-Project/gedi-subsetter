@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+## [0.13.0] (2025-09-30)
+
+### Added
+
+- Add support for indexing and slicing 2D datasets
+  ([#48](https://github.com/MAAP-Project/gedi-subsetter/issues/48))
+
+### Removed
+
+- Remove use of `returns` library
+  ([#3](https://github.com/MAAP-Project/gedi-subsetter/issues/3))
+
 ## [0.12.0] (2025-07-03)
 
 ### Changed
@@ -259,4 +271,5 @@ The format is based on [Keep a Changelog], and this project adheres to
 [0.10.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.10.0
 [0.11.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.11.0
 [0.12.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.12.0
-[Unreleased]: https://github.com/MAAP-Project/gedi-subsetter/compare/0.12.0...HEAD
+[0.13.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.13.0
+[Unreleased]: https://github.com/MAAP-Project/gedi-subsetter/compare/0.13.0...HEAD
