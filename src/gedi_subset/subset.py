@@ -262,7 +262,7 @@ def subset_granules(
     fsspec_kwargs: Optional[Mapping[str, Any]] = None,
     processes: Optional[int] = None,
     tolerated_failure_percentage: int = DEFAULT_TOLERATED_FAILURE_PERCENTAGE,
-) -> None:
+) -> tuple[Path, ...]:
     max_errors = len(granule_urls) * tolerated_failure_percentage // 100
     track_error = make_error_tracker(max_errors)
     payloads = (
@@ -291,7 +291,10 @@ def subset_granules(
             if isinstance(file := track_error(result), Path)
         )
 
-    concat_parquet_files(files, dest)
+    if files:
+        concat_parquet_files(files, dest)
+
+    return files
 
 
 def cli(
@@ -459,24 +462,24 @@ def cli(
 
     if not granule_urls:
         logger.info("No granules intersect the AOI within the temporal range.")
+    elif paths := subset_granules(
+        aoi_gdf,
+        lat,
+        lon,
+        beams,
+        [c.strip() for c in columns.split(",")],
+        query,
+        output_dir,
+        dest,
+        (logging_level,),
+        granule_urls,
+        fsspec_kwargs,
+        processes,
+        tolerated_failure_percentage,
+    ):
+        logger.info(f"Subset {len(paths)} granule(s) to {dest}.")
     else:
-        subset_granules(
-            aoi_gdf,
-            lat,
-            lon,
-            beams,
-            [c.strip() for c in columns.split(",")],
-            query,
-            output_dir,
-            dest,
-            (logging_level,),
-            granule_urls,
-            fsspec_kwargs,
-            processes,
-            tolerated_failure_percentage,
-        )
-
-        logger.info(f"Subset {len(granule_urls)} granule(s) to {dest}.")
+        logger.info(f"Empty subset: no rows satisfy the query {query!r}")
 
 
 def main():
