@@ -10,11 +10,11 @@ import numpy as np
 import pandas as pd
 
 NAME_INDEX_PATTERN = re.compile(
-    r"(?P<name>[a-z_0-9]+(?:/[a-z_0-9]+)*)\[(?P<index>-?\d+)\]",
+    r"(?P<name>\w+(?:/\w+)*)\[(?P<index>-?\d+)\]",
     re.IGNORECASE,
 )
 NAME_SLICE_PATTERN = re.compile(
-    r"(?P<name>[a-z_0-9]+(?:/[a-z_0-9]+)*)\[(?P<start>-?\d+)?:(?P<end>-?\d+)?\]",
+    r"(?P<name>\w+(?:/\w+)*)\[(?P<start>-?\d+)?:(?P<end>-?\d+)?\]",
     re.IGNORECASE,
 )
 
