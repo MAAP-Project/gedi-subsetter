@@ -58,9 +58,82 @@ optional inputs:
   `sensitivity_a2`, then you would refer to that nested dataset as
   `geolocation/sensitivity_a2`.
 
+  Further, for 2-dimensional datasets, there are several options for selecting
+  either all data or only a specific column or columns.  For example, given a 2D
+  dataset named `rh`, the following options are possible as an element of this
+  `columns` input list:
+
+  - `"rh"`: Selects entire 2D dataset into a single output column named `"rh"`,
+    where each value in the column is a list of row values from the dataset,
+    rather than a scalar value, as would be the case for a 1D dataset.  For
+    example, if `rh` contains 101 columns, the output would contain only 1
+    column named `"rh"`, but each value in the column would be a list of 101
+    values (an entire row of values from the 2D dataset).
+
+    **WARNING:** This works _only_ for GeoParquet output files, so you must also
+    specify a filename for `output` that has the file extension `.parquet`.
+    Otherwise, each value is written as a string rather than as a list of
+    numbers.  Only Parquet files retain the correct data type.
+
+  - `"rh[i]"`: Selects the column at index _i_ (0-based) from the 2D dataset and
+    adds a column of the same name (including the square brackets and index
+    value) to the output.  For example, including `"rh[0]"` in the columns list
+    will add a column named `"rh[0]"` to the output, containing the data from
+    column 0 of the `rh` 2D dataset.
+
+    Negative indexing is also supported.  For example `"rh[-1]"` will produce an
+    output column also named `"rh[-1]"`, containing data from the _last_ column
+    of the `rh` dataset.  This may be useful for cases where you know the
+    dataset is 2D, but perhaps don't know how many columns it contains.
+
+  - `"rh[:]"`: Selects entire 2D dataset, but unlike using only `"rh"`, the
+    Python "full slice" syntax (`[:]`) will cause the columns of `rh` to be
+    expanded into separate columns in the output, each named like `"rh[i]"`,
+    where `i` is the 0-based column index from the original `rh` dataset.  For
+    example, if `rh` contains 101 columns, the output would also contain 101
+    columns, corresponding to the dataset columns, named `"rh[0]"` through
+    `"rh[100]"`.
+
+  - `"rh[start:stop]"`: Selects a slice (range) of columns from `rh` into
+    corresponding columns in the output.  Both `start` and `stop` are optional,
+    0-based, and if both are unspecified, this syntax reduces to what is
+    described in the previous point.
+
+    This notation will select all columns from `rh` starting from the column at
+    index `start` (0-based) up to, but excluding, the column at index `end`
+    (0-based), creating columns in the output of the form `"rh[i]"` for each `i`
+    from `start` up to (and excluding) `end`.
+
+    When `start` is unspecified, it defaults to `0`.  When `end` is unspecified,
+    it defaults to the number of columns in the dataset.  Further, `end` is
+    _exclusive_, meaning that the column at index position `end` is _not_
+    included in the output.
+
+    Negative indexing is also supported.
+
+    Examples for a 2D dataset named `rh`:
+
+    - `"rh"`: Selects entire dataset, but outputs only a single column of the
+      same name, where each value in the column is a row of values from the
+      dataset.
+    - `"rh[:]"`: Selects entire dataset, but outputs all columns separately,
+      named like `"rh[i]"` for each _i_ from 0 through _n - 1_, where _n_ is the
+      number of columns in `rh`.
+    - `"rh[:10]"`: Selects the first 10 columns from `rh` and includes each
+      individually in the output as columns named `"rh[0]"` through `"rh[9]"`.
+    - `"rh[91:]"`: Selects the _last_ 10 columns: `"rh[91]"` through
+      `"rh[100]"`.
+    - `"rh[-10]"`: Also selects the last 10 columns, but in this case, the
+      negative numbering is retained, adding the following columns to the
+      output: `"rh[-10]"`, ..., `"rh[-1]"`.
+    - `"rh[10:20]"`: Selects second set of 10 columns: `"rh[10]"` through
+      `"rh[19]"`.
+
   > _Changed in version 0.6.0_: The `beam` column is no longer automatically
   > included.  If you wish to include the `beam` column, you must specify it
   > explicitly in this `columns` value.
+
+  > _Changed in version 0.13.0_: Added square bracket (`[]`) indexing/selecting.
 
 - `query` (_optional_; default: no query, select all rows): Query expression for
   subsetting the rows in the output file.  This expression selects rows of data
@@ -85,6 +158,18 @@ optional inputs:
   ```plain
   quality_flag == 1 and `geolocation/sensitivity_a2` > 0.95
   ```
+
+  Further, it is possible to use column indexing on 2D datasets within queries.
+  For example, given a 2D dataset named `rh`, it is possible to select rows
+  based upon conditions on column values:
+
+  ```plain
+  quality_flag == 1 and rh[100] > 35.0
+  ```
+
+  The expression above would select only rows where `quality_flag` is `1` and
+  where the values from column 100 (0-based) of the 2D dataset `rh` are greater
+  than 35.0.
 
 - `limit` (_optional_; default: 100000): Maximum number of GEDI granule data
   files to subset, among those that intersect the specified AOI's bounding box,
