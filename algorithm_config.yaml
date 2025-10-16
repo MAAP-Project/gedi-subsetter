@@ -1,6 +1,6 @@
 algorithm_description: Subset GEDI L1B, L2A, L2B, L4A, or L4C granules within an area of interest (AOI)
 algorithm_name: gedi-subset
-algorithm_version: 0.11.0
+algorithm_version: 0.13.0
 repository_url: https://github.com/MAAP-Project/gedi-subsetter.git
 docker_container_url: mas.maap-project.org/root/maap-workspaces/custom_images/maap_base:v4.2.0
 disk_space: 20GB
@@ -62,12 +62,17 @@ inputs:
         using the AOI file name (without the extension) with the suffix "_subset.gpkg".
       required: false
       default: ""
+    - name: tolerated_failure_percentage
+      description: Integral percentage of individual granule subset failures tolerated
+        before causing job failure.
+      required: false
+      default: ""
     - name: fsspec_kwargs
       description: "JSON object representing keyword arguments to pass to the
         fsspec.core.url_to_fs function when reading granule data files.  See
         https://filesystem-spec.readthedocs.io/en/latest/api.html#fsspec.core.url_to_fs."
       required: false
-      default: '{"default_cache_type": "all", "default_block_size": 8388608}'
+      default: ""
     - name: processes
       description: Number of processes to use for parallel processing.  If not provided,
         defaults to the number of available CPUs.

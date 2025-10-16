@@ -1,10 +1,11 @@
 import os
-from typing import Iterable
 
 import boto3
 import geopandas as gpd
 import h5py
 import pytest
+import typing as t
+from collections.abc import Iterable, Iterator
 from maap.maap import MAAP
 from moto import mock_aws
 from mypy_boto3_s3.client import S3Client
@@ -86,7 +87,7 @@ def h5_path(tmp_path_factory: pytest.TempPathFactory) -> str:
         beam.create_dataset("lat_highestreturn", data=[-0.82556, -8.82514, -0.82471])
         beam.create_dataset("lon_highestreturn", data=[13.06648, 13.06678, 13.06707])
         beam.create_dataset("sensitivity", data=[0.9, 0.97, 0.99], dtype="f4")
-        beam.create_dataset("x_var", data=[[10.0, 15.0], [20.0, 10.0], [15.0, 20.0]])
+        beam.create_dataset("xvar", data=[[10.0, 15.0], [20.0, 10.0], [15.0, 20.0]])
         land_cover = beam.create_group("land_cover_data")
         land_cover.create_dataset("landsat_treecover", data=[77.0, 98.0, 95.0])
         geolocation = beam.create_group("geolocation")
@@ -110,7 +111,7 @@ def h5_path(tmp_path_factory: pytest.TempPathFactory) -> str:
         beam.create_dataset("lat_highestreturn", data=[-0.82556, -8.82514, -0.82471])
         beam.create_dataset("lon_highestreturn", data=[13.06648, 13.06678, 13.06707])
         beam.create_dataset("sensitivity", data=[0.93, 0.96, 0.98], dtype="f4")
-        beam.create_dataset("x_var", data=[[15.0, 20.0], [25.0, 15.0], [20.0, 25.0]])
+        beam.create_dataset("xvar", data=[[15.0, 20.0], [25.0, 15.0], [20.0, 25.0]])
         land_cover = beam.create_group("land_cover_data")
         land_cover.create_dataset("landsat_treecover", data=[68.0, 85.0, 83.0])
         geolocation = beam.create_group("geolocation")
@@ -123,3 +124,14 @@ def h5_path(tmp_path_factory: pytest.TempPathFactory) -> str:
         beam.attrs.create("description", "Full power beam")
 
     return str(path)
+
+
+@pytest.fixture(scope="function")
+def h5_file(h5_path: str) -> Iterator[h5py.File]:
+    with h5py.File(h5_path) as h5:
+        yield h5
+
+
+@pytest.fixture(scope="function")
+def beam0000(h5_file: h5py.File) -> h5py.Group:
+    return t.cast(h5py.Group, h5_file["/BEAM0000"])

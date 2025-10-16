@@ -4,7 +4,6 @@ import json
 import logging
 import multiprocessing
 import os
-import os.path
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -12,7 +11,6 @@ from typing import (
     Annotated,
     Any,
     Callable,
-    Iterable,
     Mapping,
     Optional,
     Sequence,
@@ -25,25 +23,12 @@ import geopandas as gpd
 import h5py
 import typer
 from maap.maap import MAAP
-from maap.Result import Collection, Granule
-from returns.curry import partial
-from returns.functions import raise_exception, tap
-from returns.io import IOResultE, IOSuccess
-from returns.iterables import Fold
-from returns.maybe import Maybe, Nothing, Some
-from returns.pipeline import flow, is_successful, pipe
-from returns.pointfree import bind, bind_ioresult, lash, map_
-from returns.unsafe import unsafe_perform_io
+from maap.Result import Collection
 
 import gedi_subset.fp as fp
-from gedi_subset import osx
 from gedi_subset.gedi_utils import (
     beam_filter_from_names,
-    chext,
-    gdf_read_parquet,
-    gdf_reformat,
-    gdf_to_file,
-    gdf_to_parquet,
+    concat_parquet_files,
     granule_intersects,
     is_coverage_beam,
     is_power_beam,
@@ -60,10 +45,11 @@ logical_dois = {
 }
 
 DEFAULT_LIMIT = 100_000
+DEFAULT_TOLERATED_FAILURE_PERCENTAGE = 0
 
 LOGGING_FORMAT = "%(asctime)s [%(processName)s:%(name)s] [%(levelname)s] %(message)s"
 
-logging.basicConfig(level=logging.INFO, format=LOGGING_FORMAT)
+logging.basicConfig(level=logging.WARN, format=LOGGING_FORMAT)
 logging.Formatter.converter = time.gmtime
 logging.Formatter.default_time_format = "%Y-%m-%dT%H:%M:%S"
 logging.Formatter.default_msec_format = "%s,%03dZ"
@@ -82,8 +68,7 @@ class SubsetGranuleProps:
     """
 
     fsspec_kwargs: Mapping[str, Any] = field(default_factory=dict)
-    granule: Granule
-    maap: MAAP
+    granule_url: str
     aoi_gdf: gpd.GeoDataFrame
     lat_col: str
     lon_col: str
@@ -153,7 +138,7 @@ def beam_filter(beams: str) -> Callable[[h5py.Group], bool]:
     if beams.upper() == "POWER":
         return is_power_beam
     if beams.upper() == "ALL":
-        return fp.always(True)
+        return lambda _: True
     return beam_filter_from_names([item.strip() for item in beams.split(",")])
 
 
@@ -174,77 +159,70 @@ def check_beams_option(value: str) -> str:
     )
 
 
-def subset_granule(props: SubsetGranuleProps) -> IOResultE[Maybe[str]]:
-    """Subset a granule to a GeoParquet file and return the output path.
+def subset_granule(props: SubsetGranuleProps) -> Path | None | Exception:
+    """Subset a granule to a GeoParquet file.
 
-    Download the specified granule (`props.granule`) obtained from a CMR search
-    to the specified directory (`props.output_dir`), subset it to a GeoParquet
-    file where it overlaps with the specified AOI (`props.aoi_gdf`), remove the
-    downloaded granule file, and return the path to the output file.
+    Subset the specified granule (`props.granule_url`) to a GeoParquet file
+    where it overlaps with the specified AOI (`props.aoi_gdf`) and return the
+    path to the output file, or return `None` if the subset is empty.
 
-    Return `Nothing` if the subset is empty or if an error occurred attempting
-    to read the granule file (in which case, the offending file is retained in
-    order to facilitate analysis).  In either case, no GeoParquet file is
-    written; otherwise return `Some[str]` indicating the output path of the
-    GeoParquet file.
+    Returns
+    -------
+    Path | None
+        Absolute path to output file, if subset is non-empty; otherwise, `None`.
     """
 
-    if not (inpath := props.granule.getDownloadUrl()):
-        granule_ur = props.granule["Granule"]["GranuleUR"]
-        logger.warning(f"Skipping granule {granule_ur} [no download URL]")
-        return IOSuccess(Nothing)
-
-    logger.debug(f"Subsetting {inpath}")
+    granule_url = props.granule_url
+    logger.debug("Subsetting %s", granule_url)
     fsspec_kwargs = {
-        "default_cache_type": "all",
-        "default_block_size": 8 * 1024 * 1024,
+        "default_cache_type": "mmap",
+        "default_block_size": 5 * 1024 * 1024,  # fsspec default is 5 MB
         "default_fill_cache": True,
+        "requester_pays": True,
         # Allow the caller to override the default values above.
         **props.fsspec_kwargs,
     }
 
     fs: fsspec.AbstractFileSystem
     urlpath: str
-    fs, urlpath = fsspec.url_to_fs(inpath, **fsspec_kwargs)
+    fs, urlpath = fsspec.url_to_fs(granule_url, **fsspec_kwargs)
 
-    try:
-        with fs.open(urlpath, mode="rb") as f, h5py.File(f) as hdf5:
-            gdf = subset_hdf5(
-                hdf5,
-                aoi=props.aoi_gdf,
-                lat_col=props.lat_col,
-                lon_col=props.lon_col,
-                beam_filter=beam_filter(props.beams),
-                columns=props.columns,
-                query=props.query,
+    with fs.open(urlpath, mode="rb") as f, h5py.File(f) as hdf5:
+        gdf = fp.safely(
+            subset_hdf5,
+            hdf5,
+            aoi=props.aoi_gdf,
+            lat_col=props.lat_col,
+            lon_col=props.lon_col,
+            beam_filter=beam_filter(props.beams),
+            columns=props.columns,
+            query=props.query,
+        )
+
+        if isinstance(gdf, Exception):
+            return gdf
+
+        if isinstance(f, fsspec.spec.AbstractBufferedFile) and (cache := f.cache):
+            stats = ", ".join(
+                [
+                    f"{cache.blocksize} bytes per block",
+                    f"{cache.nblocks} blocks",
+                    f"{cache.hit_count} hits",
+                    f"{cache.miss_count} misses",
+                    f"{cache.size} bytes in file",
+                    f"{cache.total_requested_bytes} requested bytes",
+                ]
             )
-
-            if isinstance(f, fsspec.spec.AbstractBufferedFile) and (cache := f.cache):
-                stats = ", ".join(
-                    [
-                        f"{cache.blocksize} bytes per block",
-                        f"{cache.nblocks} blocks",
-                        f"{cache.hit_count} hits",
-                        f"{cache.miss_count} misses",
-                        f"{cache.size} bytes in file",
-                        f"{cache.total_requested_bytes} requested bytes",
-                    ]
-                )
-                logger.debug(f"fsspec cache '{cache.name}' for '{urlpath}': {stats}")
-    except Exception as e:
-        granule_ur = props.granule["Granule"]["GranuleUR"]
-        logger.warning(f"Skipping granule {granule_ur} [failed to read {inpath}: {e}]")
-        logger.exception(e)
-        return IOSuccess(Nothing)
+            logger.debug("fsspec cache '%s' for '%s': %s", cache.name, urlpath, stats)
 
     if gdf.empty:
-        logger.debug(f"Empty subset produced from {inpath}; not writing")
-        return IOSuccess(Nothing)
+        logger.debug("Empty subset produced from %s; not writing", granule_url)
+        return None
 
-    outpath = chext(".gpq", os.path.join(props.output_dir, inpath.split("/")[-1]))
-    logger.debug(f"Writing subset to {outpath}")
+    outpath = (props.output_dir / granule_url.split("/")[-1]).with_suffix(".parquet")
+    logger.debug("Writing subset to %s", outpath)
 
-    return gdf_to_parquet(outpath, gdf).map(fp.always(Some(outpath)))
+    return err if (err := fp.safely(gdf.to_parquet, outpath)) else outpath
 
 
 def init_process(logging_level: int) -> None:
@@ -256,8 +234,21 @@ def set_logging_level(logging_level: int) -> None:
     logger.setLevel(logging_level)
 
 
+def make_error_tracker[T](max_errors: int) -> Callable[[T], T]:
+    n_errors = 0
+
+    def track_error(value: T) -> T:
+        nonlocal n_errors
+
+        if isinstance(value, Exception) and (n_errors := n_errors + 1) > max_errors:
+            raise value
+
+        return value
+
+    return track_error
+
+
 def subset_granules(
-    maap: MAAP,
     aoi_gdf: gpd.GeoDataFrame,
     lat: str,
     lon: str,
@@ -267,51 +258,17 @@ def subset_granules(
     output_dir: Path,
     dest: Path,
     init_args: Tuple[Any, ...],
-    granules: Iterable[Granule],
+    granule_urls: Sequence[str],
     fsspec_kwargs: Optional[Mapping[str, Any]] = None,
     processes: Optional[int] = None,
-) -> IOResultE[Tuple[str, ...]]:
-    gpkg = dest.with_suffix(".gpkg")
-
-    def subset_saved(path: IOResultE[Maybe[str]]) -> bool:
-        """Return `True` if `path`'s value is a `Some`, otherwise `False` if it
-        is `Nothing`.  This indicates whether or not a subset file was written
-        (and thus whether or not the subset was empty).
-        """
-        return unsafe_perform_io(path.map(is_successful).value_or(False))
-
-    def append_subset(src: str) -> IOResultE[str]:
-        to_file_props = dict(index=False, mode="a", driver="GPKG")
-        logger.debug(f"Appending {src} to {gpkg}")
-
-        return flow(
-            gdf_read_parquet(src),
-            bind_ioresult(partial(gdf_to_file, gpkg, to_file_props)),
-            tap(pipe(fp.always(src), osx.remove)),
-            map_(fp.always(src)),
-        )
-
-    found_granules = list(granules)
-    # On occasion, a granule is missing a download URL, so the _downloadname
-    # attribute is set to None, and attempting to download it throws an
-    # exception, so we just skip such granules to avoid failing.
-    downloadable_granules = [
-        granule for granule in found_granules if granule._downloadname
-    ]
-    # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool.imap
-    # If we have at least 10 granules per process, use a chunksize of 10.
-    chunksize = 10 if processes and len(downloadable_granules) >= 10 * processes else 1
-
-    logger.info(
-        f"Granules found in the CMR: {len(found_granules)}"
-        f" (downloadable: {len(downloadable_granules)})"
-    )
-
+    tolerated_failure_percentage: int = DEFAULT_TOLERATED_FAILURE_PERCENTAGE,
+) -> tuple[Path, ...]:
+    max_errors = len(granule_urls) * tolerated_failure_percentage // 100
+    track_error = make_error_tracker(max_errors)
     payloads = (
         SubsetGranuleProps(
             fsspec_kwargs=fsspec_kwargs or {},
-            granule=granule,
-            maap=maap,
+            granule_url=granule_url,
             aoi_gdf=aoi_gdf,
             lat_col=lat,
             lon_col=lon,
@@ -320,22 +277,24 @@ def subset_granules(
             query=query,
             output_dir=output_dir,
         )
-        for granule in downloadable_granules
+        for granule_url in granule_urls
     )
 
-    logger.info(f"Subsetting on {processes} CPUs (chunksize={chunksize})")
+    logger.info(f"Subsetting on {processes} CPUs")
 
     with multiprocessing.get_context("spawn").Pool(
         processes, init_process, init_args
     ) as pool:
-        return flow(
-            pool.imap_unordered(subset_granule, payloads, chunksize),
-            fp.filter(subset_saved),  # Skip granules that produced empty subsets
-            fp.map(bind(bind(append_subset))),  # Append non-empty subset # type: ignore
-            partial(Fold.collect, acc=IOSuccess(())),
-            lash(raise_exception),  # Fail fast (if subsetting errored out)
-            tap(lambda _: gdf_reformat(gpkg, dest.suffix)),
+        files = tuple(
+            file
+            for result in pool.imap_unordered(subset_granule, payloads)
+            if isinstance(file := track_error(result), Path)
         )
+
+    if files:
+        concat_parquet_files(files, dest)
+
+    return files
 
 
 def cli(
@@ -431,6 +390,17 @@ def cli(
         ),
     ] = None,
     verbose: Annotated[bool, typer.Option(help="Provide verbose output")] = False,
+    tolerated_failure_percentage: Annotated[
+        int,
+        typer.Option(
+            min=0,
+            max=100,
+            help=(
+                "Integral percentage of individual granule subset failures"
+                " tolerated before failing the job"
+            ),
+        ),
+    ] = DEFAULT_TOLERATED_FAILURE_PERCENTAGE,
     fsspec_kwargs: Annotated[
         Optional[dict[str, Any]],
         typer.Option(
@@ -459,7 +429,7 @@ def cli(
     # testing.  When running in the context of a DPS job, there
     # should be no existing file since every job uses a unique
     # output directory.
-    osx.remove(f"{dest}")
+    dest.unlink(missing_ok=True)
 
     maap = MAAP()
     cmr_host = "cmr.earthdata.nasa.gov"
@@ -476,40 +446,38 @@ def cli(
             maap, dict(cmr_host=cmr_host, doi=doi, cloud_hosted="true")
         )["concept-id"]
     )
-    granules = [
-        granule
+    granule_urls = tuple(
+        url
         for granule in maap.searchGranule(
             cmr_host=cmr_host,
             collection_concept_id=collection_concept_id,
-            bounding_box=",".join(fp.map(str)(aoi_gdf.total_bounds)),  # pyright: ignore
+            bounding_box=",".join(map(str, aoi_gdf.total_bounds)),
             limit=limit,
             **(dict(temporal=temporal) if temporal else {}),
         )
-        if granule_intersects(aoi_geometry, granule)
-    ]
+        if granule._downloadname
+        and granule_intersects(aoi_geometry, granule)
+        and (url := granule.getDownloadUrl())
+    )
 
-    if not granules:
+    if not granule_urls:
         logger.info("No granules intersect the AOI within the temporal range.")
-    elif gpq_paths := unsafe_perform_io(
-        subset_granules(
-            maap,
-            aoi_gdf,
-            lat,
-            lon,
-            beams,
-            [c.strip() for c in columns.split(",")],
-            query,
-            output_dir,
-            dest,
-            (logging_level,),
-            granules,
-            fsspec_kwargs,
-            processes,
-        )
-        .alt(raise_exception)
-        .unwrap()
+    elif paths := subset_granules(
+        aoi_gdf,
+        lat,
+        lon,
+        beams,
+        [c.strip() for c in columns.split(",")],
+        query,
+        output_dir,
+        dest,
+        (logging_level,),
+        granule_urls,
+        fsspec_kwargs,
+        processes,
+        tolerated_failure_percentage,
     ):
-        logger.info(f"Subset {len(gpq_paths)} granule(s) to {dest}.")
+        logger.info(f"Subset {len(paths)} granule(s) to {dest}.")
     else:
         logger.info(f"Empty subset: no rows satisfy the query {query!r}")
 

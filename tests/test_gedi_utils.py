@@ -67,19 +67,11 @@ def fixture_path(filename: str) -> str:
             "lat_lowestmode",
             "lon_lowestmode",
             "all",
-            {"x_var0"},
+            {"xvar[0]"},
             "l2_quality_flag == 1 & sensitivity > 0.9",
             2,
         ),
         # Test: nested group datasets
-        (
-            "lat_lowestmode",
-            "lon_lowestmode",
-            "all",
-            {"land_cover_data/landsat_treecover"},
-            "land_cover_data.landsat_treecover > 60.0",
-            4,
-        ),
         (
             "lat_lowestmode",
             "lon_lowestmode",
@@ -222,18 +214,6 @@ def test_subset_hdf5(
     assert gdf.notna().all(axis=None)
 
 
-def test_subset_hdf5_2d_dataset(h5_path: str, aoi_gdf: gpd.GeoDataFrame) -> None:
-    with pytest.raises(TypeError):
-        with h5py.File(h5_path) as hdf5:
-            subset_hdf5(
-                hdf5,
-                aoi=aoi_gdf,
-                lat_col="lat_lowestmode",
-                lon_col="lon_lowestmode",
-                columns=["x_var"],  # 2D column not allowed, must specify index
-            )
-
-
 def test_subset_hdf5_2d_dataset_indexed(
     h5_path: str, aoi_gdf: gpd.GeoDataFrame
 ) -> None:
@@ -243,12 +223,12 @@ def test_subset_hdf5_2d_dataset_indexed(
             aoi=aoi_gdf,
             lat_col="lat_lowestmode",
             lon_col="lon_lowestmode",
-            columns=["x_var0"],
+            columns=["xvar[0]"],
         )
 
-    x_var0 = gdf["x_var0"]
+    xvar0 = gdf["xvar[0]"]
 
-    assert isinstance(x_var0, pd.Series) and len(x_var0) == 4
+    assert isinstance(xvar0, pd.Series) and len(xvar0) == 4
 
 
 def test_subset_hdf5_repeated_nested_column_in_query_expr(
@@ -260,10 +240,10 @@ def test_subset_hdf5_repeated_nested_column_in_query_expr(
             aoi=aoi_gdf,
             lat_col="lat_lowestmode",
             lon_col="lon_lowestmode",
-            columns=["x_var0", "land_cover_data/landsat_treecover"],
+            columns=["xvar[0]", "land_cover_data/landsat_treecover"],
             query=(
-                "land_cover_data.landsat_treecover > 80"
-                " and land_cover_data.landsat_treecover < 90"
+                "`land_cover_data/landsat_treecover` > 80"
+                " and `land_cover_data/landsat_treecover` < 90"
             ),
         )
 

@@ -1,89 +1,55 @@
-"""Higher-order functions, generally curried for composition.
+"""Higher-order functions.
 
 The `fp` (Functional Programming) module is along the lines of the standard
 `functools` module, providing higher-order functions for easily constructing
 new functions from other functions, for writing more declarative code.
-Since the functions in this module are curried, there's no need to use
-`functools.partial` for partially binding arguments.
 """
 
-import builtins
-from typing import Any, Callable, Iterable, TypeVar, cast
-
-from returns.curry import partial
-from returns.maybe import Maybe, Nothing, Some
-
-_A = TypeVar("_A")
-_B = TypeVar("_B")
+from collections.abc import Callable
 
 
-def always(a: _A) -> Callable[..., _A]:
-    """Return the kestrel combinator ("constant" function).
+def safely[**P, T](
+    f: Callable[P, T],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> T | Exception:
+    """Safely call a function that might raise an exception.
 
-    Return a callable that accepts exactly one argument of any type, but always
-    returns the value `a`.
+    Invoke `f` with the specified arguments, but if `f` raises an exception,
+    return the exception rather than raising it.
 
-    >>> always(42)(0)
-    42
-    >>> always(42)("foo")
-    42
+    NOTE: This is purposely _not_ written as a decorator, as it would cause a
+    decorated function to have a type signature with a return type that differs
+    from the resulting function, which could lead to confusion.
+
+    Parameters
+    ----------
+    f
+        Callable that might raise an exception.
+    *args
+        Positional arguments acceptable to `f`.
+    **kwargs
+        Keyword argumantes acceptable to `f`.
+
+    Returns
+    -------
+    T | Exception
+        Either the value return from calling `f` with the specified arguments,
+        or the exception caught from `f`, if `f` raised one.
+
+    Examples
+    --------
+    Using division by zero as an example, notice how "safe" division simply
+    returns an instance of `ZeroDivisionError` rather than raising it:
+
+    >>> from operator import truediv
+
+    >>> safely(truediv, 4, 2)
+    2.0
+    >>> safely(truediv, 1, 0)
+    ZeroDivisionError('division by zero')
     """
-    return lambda _: a
-
-
-def filter(predicate: Callable[[_A], bool]) -> Callable[[Iterable[_A]], Iterable[_A]]:
-    """Return a callable that accepts an iterable and returns an iterator that
-    yields only the items of the iterable for which `predicate(item)` is `True`.
-    Strictly curried to allow composition without the use of `functools.partial`.
-
-    >>> list(filter(lambda x: x % 2 == 0)([1, 2, 3, 4, 5]))
-    [2, 4]
-    """
-    return partial(builtins.filter, predicate)
-
-
-def find(predicate: Callable[[_A], bool]) -> Callable[[Iterable[_A]], Maybe[_A]]:
-    """Return a callable that accepts an iterable and returns the first item of the
-    iterable (in a `Some`) for which `predicate` returns `True`; otherwise `Nothing`.
-
-    >>> find(bool)([])
-    <Nothing>
-    >>> find(lambda x: x > 42)([19, 2, 42, 55, 45])
-    <Some: 55>
-    >>> find(lambda x: x > 99)([19, 2, 42, 55, 45])
-    <Nothing>
-    """
-
-    def go(xs: Iterable[_A]) -> Maybe[_A]:
-        for x in xs:
-            if predicate(x):
-                return Some(x)
-        return Nothing
-
-    return go
-
-
-def for_each(f: Callable[[_A], Any]) -> Callable[[Iterable[_A]], None]:
-    """Return a callable that accepts an iterable and applies a function to each
-    element of the iterable.
-
-    >>> for_each(print)(["a", "b"])
-    a
-    b
-    """
-
-    def go(xs: Iterable[_A]) -> None:
-        for x in xs:
-            f(x)
-
-    return go
-
-
-def map(f: Callable[[_A], _B]) -> Callable[[Iterable[_A]], Iterable[_B]]:
-    """Return a callable that accepts an iterable and returns an iterator that
-    yields `f(item)` for each item in the iterable.
-
-    >>> list(map(lambda x: 2 * x)([1, 2, 3]))
-    [2, 4, 6]
-    """
-    return cast(Callable[[Iterable[_A]], Iterable[_B]], partial(builtins.map, f))
+    try:
+        return f(*args, **kwargs)
+    except Exception as e:
+        return e

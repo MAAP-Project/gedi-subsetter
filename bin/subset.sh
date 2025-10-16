@@ -25,7 +25,7 @@ else
     aoi="$(ls "${input_dir}"/*)"
 
     n_actual=${#}
-    n_expected=12
+    n_expected=13
 
     if test ${n_actual} -ne ${n_expected}; then
         echo "Expected ${n_expected} inputs, but got ${n_actual}:$(printf " '%b'" "$@")" >&2
@@ -43,10 +43,11 @@ else
     [[ -n "${8}" ]] && args+=(--limit "${8}")
     # always specify output dir, even if user doesn't specify output file
     args+=(--output "${output_dir}/${9}")
-    [[ -n "${10}" ]] && args+=(--fsspec-kwargs "${10}")
-    [[ -n "${11}" ]] && args+=(--processes "${11}")
+    [[ -n "${10}" ]] && args+=(--tolerated-failure-percentage "${10}")
+    [[ -n "${11}" ]] && args+=(--fsspec-kwargs "${11}")
+    [[ -n "${12}" ]] && args+=(--processes "${12}")
     # Split the last argument into an array of arguments to pass to scalene.
-    IFS=' ' read -ra scalene_args <<<"${12}"
+    IFS=' ' read -ra scalene_args <<<"${13}"
 
     command=("${subset_py}" "${args[@]}")
 
@@ -96,7 +97,7 @@ if [[ -z "${pixi}" ]]; then
     pixi=${pixi_home}/bin/pixi
 fi
 
-AWS_PROFILE=maap-data-reader "${pixi}" run -e prod --manifest-path "${base_dir}/pyproject.toml" -- "${command[@]}" 2>"${logfile}"
+AWS_PROFILE=maap-data-reader "${pixi}" --no-progress run -e prod --manifest-path "${base_dir}/pyproject.toml" -- "${command[@]}" 2>"${logfile}"
 
 # If we get here, the command above succeeded (otherwise this script would have
 # exited with a non-zero status).  We can now move the log file to the output
