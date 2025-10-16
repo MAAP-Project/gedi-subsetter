@@ -97,7 +97,7 @@ s:contributor:
   s:name: MAAP
 s:citation: https://zenodo.org/records/15284245
 s:codeRepository: https://github.com/MAAP-Project/gedi-subsetter.git
-s:dateCreated: 2025-06-16
+s:dateCreated: 2025-06-17
 s:license: https://github.com/MAAP-Project/gedi-subsetter/blob/main/LICENSE
 s:softwareVersion: 1.0.0
 s:version: mlucas_ogc
