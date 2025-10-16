@@ -1,0 +1,5 @@
+aoi: "/Users/mlucas/MAAP/gedi_subsetter_data/C_PERU_ID_1id_5.gpkg"
+doi: "L2A"
+lat: "lat_lowestmode"
+lon: "lon_lowestmode"
+columns: "shot_number,lon_lowestmode,lat_lowestmode,rh98,quality_flag,sensitivity"
