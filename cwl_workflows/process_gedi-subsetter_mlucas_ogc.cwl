@@ -57,7 +57,7 @@ $graph:
       ramMin: 5
       coresMin: 1
       outdirMax: 20
-  baseCommand: /app/gedi-subsetter/bin/subset.sh
+  baseCommand: /gedi-subsetter/bin/subset.sh
   inputs:
     aoi:
       type: string
@@ -97,8 +97,8 @@ s:contributor:
   s:name: MAAP
 s:citation: https://zenodo.org/records/15284245
 s:codeRepository: https://github.com/MAAP-Project/gedi-subsetter.git
-s:commitHash: 0723f83529f6532827a54511ff5a566d631a09bb
-s:dateCreated: 2025-10-16
+s:commitHash: b43658fb43f713d5293ac399360819dee20696df
+s:dateCreated: 2026-01-07
 s:license: https://github.com/MAAP-Project/gedi-subsetter/blob/main/LICENSE
 s:softwareVersion: 1.0.0
 s:version: mlucas_ogc
