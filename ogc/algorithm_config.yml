@@ -9,7 +9,7 @@ author: MAAP
 contributor: MAAP
 license: https://github.com/MAAP-Project/gedi-subsetter/blob/main/LICENSE
 release_notes: None
-run_command: /app/gedi-subsetter/bin/subset.sh
+run_command: /gedi-subsetter/bin/subset.sh
 ram_min: 5 # mebibytes
 cores_min: 1
 outdir_max: 20 # mebibytes
