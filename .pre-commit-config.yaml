@@ -39,7 +39,7 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.6
     hooks:
-      - id: ruff
+      - id: ruff-check
         # Remove types_or to also lint notebooks
         types_or: [ python, pyi ]
         args: [ --fix ]
