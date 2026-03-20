@@ -1,29 +1,69 @@
 #!/usr/bin/env bash
 
+# Run the GEDI Subsetter
+#
+# This script is invoked by the DPS system and does the following:
+#
+# - Parses arguments, handling either positional-only or keyword-only args.
+# - Invokes the gedi-subset command via "pixi run" in the pixi production
+#   environment.
+
 set -euo pipefail
 
-input_dir="${PWD}/input"
 output_dir="${PWD}/output"
-
 base_dir=$(dirname "$(dirname "$(readlink -f "$0")")")
-subset_py="${base_dir}/src/gedi_subset/subset.py"
 
-if ! test -d "${input_dir}"; then
-    # There is no `input` sub-directory of the current working directory, so
-    # simply pass all arguments through to the Python script.  This is useful
-    # for testing in a non-DPS environment, where there is no `input` directory
-    # since the DPS system creates the `input` directory and places the AOI file
-    # within it.
-    command=("${subset_py}" --verbose "$@")
-else
-    echo "--- >>> ${input_dir} ---" >&2
-    ls -l "${input_dir}" >&2
-    echo "--- <<< ${input_dir} ---" >&2
+function normalize_args() {
+    case "${1}" in
+        --*)
+            normalize_keyword_args "$@"
+            ;;
+        *)
+            if ! raw_kwargs=$(positional_to_keyword_args "$@"); then
+                exit $?
+            fi
 
-    # There is an `input` sub-directory of the current working directory, so
-    # assume the AOI file is the sole file within the `input` sub-directory.
-    aoi="$(ls "${input_dir}"/*)"
+            readarray -t kwargs <<< "${raw_kwargs}"
+            normalize_keyword_args "${kwargs[@]}"
+            ;;
+    esac
+}
 
+function normalize_keyword_args() {
+    subset_args=()
+    scalene_arg=""
+
+    while [[ ${#} -gt 0 ]]; do
+        case "${1}" in
+            --output)
+                # We need to handle --output specially because we need to prefix
+                # the specified output file with the output directory, which the
+                # user is not expected to supply.  We assume a value was given,
+                # but it can be an empty string.
+                subset_args+=("${1}" "${output_dir}/${2}")
+                shift 2
+                ;;
+            --scalene)
+                # We assume a value was given, but it can be an empty string.
+                scalene_arg="${2}"
+                shift 2
+                ;;
+            *)
+                # Otherwise, just collect each argument as-is.
+                subset_args+=("${1}")
+                shift 1
+                ;;
+        esac
+    done
+
+    echo "${scalene_arg}"
+
+    for arg in "${subset_args[@]}"; do
+        echo "${arg}"
+    done
+}
+
+function positional_to_keyword_args() {
     n_actual=${#}
     n_expected=13
 
@@ -32,74 +72,139 @@ else
         exit 1
     fi
 
-    args=(--verbose --aoi "${aoi}")
-    args+=(--doi "${1}")     # doi is required
-    args+=(--lat "${2}")     # lat is required
-    args+=(--lon "${3}")     # lon is required
-    args+=(--columns "${4}") # columns is required
-    [[ -n "${5}" ]] && args+=(--query "${5}")
-    [[ -n "${6}" ]] && args+=(--temporal "${6}")
-    [[ -n "${7}" ]] && args+=(--beams "${7}")
-    [[ -n "${8}" ]] && args+=(--limit "${8}")
-    # always specify output dir, even if user doesn't specify output file
-    args+=(--output "${output_dir}/${9}")
-    [[ -n "${10}" ]] && args+=(--tolerated-failure-percentage "${10}")
-    [[ -n "${11}" ]] && args+=(--fsspec-kwargs "${11}")
-    [[ -n "${12}" ]] && args+=(--processes "${12}")
-    # Split the last argument into an array of arguments to pass to scalene.
-    IFS=' ' read -ra scalene_args <<<"${13}"
+    # AOI is a "file" input that the DPS automatically downloads to the input
+    # directory, and is not supplied as an explicit command-line argument.
 
-    command=("${subset_py}" "${args[@]}")
+    input_dir="${PWD}/input"
 
-    if [[ ${#scalene_args[@]} -ne 0 ]]; then
-        ext="html"
+    if [[ ! -d "${input_dir}" ]]; then
+        echo "Input directory does not exist: ${input_dir}" >&2
+        exit 1
+    fi
+
+    aoi=$(ls "${input_dir}"/* 2>/dev/null)
+
+    if [[ -z "${aoi}" ]]; then
+        echo "Input directory is empty (no AOI file found): ${input_dir}" >&2
+        exit 1
+    fi
+
+    kwargs=(--aoi "${aoi}")
+
+    kwargs+=(--doi "${1}")     # doi is required
+    kwargs+=(--lat "${2}")     # lat is required
+    kwargs+=(--lon "${3}")     # lon is required
+    kwargs+=(--columns "${4}") # columns is required
+    [[ -n "${5}" ]] && kwargs+=(--query "${5}")
+    [[ -n "${6}" ]] && kwargs+=(--temporal "${6}")
+    [[ -n "${7}" ]] && kwargs+=(--beams "${7}")
+    [[ -n "${8}" ]] && kwargs+=(--limit "${8}")
+    kwargs+=(--output "${9}")  # output is required
+    [[ -n "${10}" ]] && kwargs+=(--tolerated-failure-percentage "${10}")
+    [[ -n "${11}" ]] && kwargs+=(--fsspec-kwargs "${11}")
+    [[ -n "${12}" ]] && kwargs+=(--processes "${12}")
+    [[ -n "${13}" ]] && kwargs+=(--scalene "${13}")
+
+    for kwarg in "${kwargs[@]}"; do
+        echo "${kwarg}"
+    done
+}
+
+function parse_scalene_arg() {
+    local scalene_arg
+
+    # The first argument is a string of scalene arguments joined into a single,
+    # space-separated string that we have to split into separate arguments.
+    # For example, we need to split "arg1 ... argN" into ("arg1" ... "argN").
+    scalene_arg=$1
+    ext="html"
+
+    # Split joined scalene arguments into array of arguments to pass to scalene.
+    readrray -t scalene_args <<< "${scalene_arg}"
+
+    for arg in "${scalene_args[@]}"; do
+        if [[ "${arg}" == "--json" ]]; then
+            ext="json"
+        elif [[ "${arg}" == "--cli" ]]; then
+            ext="txt"
+        fi
+    done
+
+    # Force output to be written to the output directory by adding the
+    # `--outfile` argument after any user-provided arguments.  If the user
+    # provides their own `--outfile` argument, it will be ignored.  Also,
+    # add `--no-browser` to ensure that scalene does not attempt to open a
+    # browser.
+    scalene_args+=(--no-browser --outfile "${output_dir}/profile.${ext}")
+
+    for arg in "${scalene_args[@]}"; do
+        echo "${arg}"
+    done
+}
+
+function build_command() {
+    args=("$@")
+    scalene_arg=${args[0]}
+    subset_args=("${args[@]:1}")
+
+    if [[ -z "${scalene_arg}" ]]; then
+        echo gedi-subset
+    else
+        if ! raw_scalene_args=$(parse_scalene_arg "${scalene_arg}"); then
+            exit $?
+        fi
+
+        readarray -t scalene_args <<< "${raw_scalene_args}"
+
+        echo scalene
 
         for arg in "${scalene_args[@]}"; do
-            if [[ "${arg}" == "--json" ]]; then
-                ext="json"
-            elif [[ "${arg}" == "--cli" ]]; then
-                ext="txt"
-            fi
+            echo "${arg}"
         done
 
-        # Force output to be written to the output directory by adding the
-        # `--outfile` argument after any user-provided arguments.  If the user
-        # provides their own `--outfile` argument, it will be ignored.  Also,
-        # add `--no-browser` to ensure that scalene does not attempt to open a
-        # browser.
-        command=(
-            scalene
-            "${scalene_args[@]}"
-            --no-browser
-            --outfile "${output_dir}/profile.${ext}"
-            ---
-            "${command[@]}"
-        )
+        # Scalene doesn't recognize the installed gedi-subset command, because
+        # it expects to be able to locate the file on the file system, so we
+        # have to specify the python file directly.
+        echo src/gedi_subset/subset.py
+        echo ---
     fi
-fi
 
-set -x
-mkdir -p "${output_dir}"
+    for arg in "${subset_args[@]}"; do
+        echo "${arg}"
+    done
+}
 
-# Capture stderr and write to a log file in the current working directory so
-# that if the job fails, the log file is copied to the triage directory (all
-# "${PWD}/*.log" files are copied to the triage directory by the DPS system).
-# Note that we chose to capture stderr rather than configuring Python logging
-# to write directly to a file because it is a tricky feat to coordinate logging
-# from multiple processes into a single file.
-logfile="${PWD}/gedi-subset.log"
+function run_command() {
+    set -x
 
-pixi=$(type -p pixi || true)
+    mkdir -p "${output_dir}"
 
-if [[ -z "${pixi}" ]]; then
-    # pixi is not on PATH, so assume it is where build.sh installed it.
-    pixi_home=${HOME}/.pixi
-    pixi=${pixi_home}/bin/pixi
-fi
+    pixi run \
+        --quiet \
+        --no-progress \
+        --no-install \
+        --frozen \
+        --environment prod \
+        --manifest-path "${base_dir}/pyproject.toml" \
+        -- "$@"
+}
 
-AWS_PROFILE=maap-data-reader "${pixi}" --no-progress run -e prod --manifest-path "${base_dir}/pyproject.toml" -- "${command[@]}" 2>"${logfile}"
+function main() {
+    args=("$@")
 
-# If we get here, the command above succeeded (otherwise this script would have
-# exited with a non-zero status).  We can now move the log file to the output
-# directory so that is included in the final output directory for the user.
-mv "${logfile}" "${output_dir}"
+    if ! normalized_args=$(normalize_args "$@"); then
+        exit $?
+    fi
+
+    readarray -t args <<< "${normalized_args}"
+
+    if ! raw_command=$(build_command "${args[@]}"); then
+        exit $?
+    fi
+
+    readarray -t command <<< "${raw_command}"
+
+    run_command "${command[@]}"
+}
+
+main "$@"

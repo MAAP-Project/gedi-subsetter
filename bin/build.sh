@@ -1,22 +1,29 @@
 #!/usr/bin/env bash
 
+# Build the "production" image:
+#
+# - Assume pixi is already installed on the PATH
+# - Build wheel for GEDI Subsetter
+# - Install wheel for GEDI Subsetter
+# - Install pixi production environment (i.e., all required dependencies)
+# - Clean pixi cache and pixi default environment to reduce image size
+
 set -euo pipefail
 
-# Install pixi if not already installed on the PATH
-
-pixi=$(type -p pixi || true)
-
-if [[ -z "${pixi}" ]]; then
-    pixi_home=${HOME}/.pixi
-    pixi=${pixi_home}/bin/pixi
-    wget -qO- https://pixi.sh/install.sh | PIXI_HOME=${pixi_home} bash
-fi
-
-# Check that things appear to be installed correctly in the prod environment
-
 base_dir=$(dirname "$(dirname "$(readlink -f "$0")")")
+manifest_path=(--manifest-path "${base_dir}/pyproject.toml")
 
-"${pixi}" run -q --no-progress -e prod --manifest-path "${base_dir}/pyproject.toml" -- python -c '
+pixi run "${manifest_path[@]}" build-wheel
+
+# Clean up things we don't need in production to trim the resulting image size.
+pixi clean cache --yes
+pixi clean "${manifest_path[@]}" --environment default
+
+# Install GEDI Subsetter
+pixi run "${manifest_path[@]}" postinstall-production
+
+# Verify installation
+pixi run --no-progress --no-install --frozen --environment prod --manifest-path "${base_dir}/pyproject.toml" -- python -c '
 import geopandas as gpd
 import tempfile
 import warnings
