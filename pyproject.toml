@@ -105,11 +105,30 @@ pip = "*"
 
 [tool.pixi.feature.prod.tasks]
 # Install into the production environment
-postinstall-production = "pip install --root-user-action ignore --no-deps --disable-pip-version-check dist/gedi_subset-*.whl"
+postinstall-production = { cmd = [
+  "pip",
+  "install",
+  "--root-user-action",
+  "ignore",
+  "--no-deps",
+  "--disable-pip-version-check",
+  "dist/gedi_subset-*.whl",
+] }
 
 [tool.pixi.tasks]
-# cwltool = "cwltool --disable-color --no-read-only --no-match-user --cidfile-dir $PWD --tmpdir-prefix $PWD --log-dir $PWD"
-cwltool = "cwltool --disable-color --no-read-only --no-match-user --tmpdir-prefix $PWD --log-dir $PWD"
+cwltool = { cmd = [
+  "cwltool",
+  "--disable-color",
+  "--no-read-only",
+  "--no-match-user",
+  "--tmpdir-prefix",
+  "$PWD",
+  "--log-dir",
+  "$PWD",
+], depends-on = [
+  "docker-build",
+] }
+docker-build = "docker build -t gedi-subset ."
 lint = "pre-commit run -a"
 mypy = "mypy"
 

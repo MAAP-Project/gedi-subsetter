@@ -5,6 +5,7 @@
   - [Testing CMR Queries](#testing-cmr-queries)
   - [Linting and Running Unit Tests](#linting-and-running-unit-tests)
   - [Locally Running GitHub Actions Workflows](#locally-running-github-actions-workflows)
+  - [Locally Testing CWL](#locally-testing-cwl)
 - [Submitting a Pull Request](#submitting-a-pull-request)
 - [Registering a Version of the Algorithm](#registering-a-version-of-the-algorithm)
 - [Creating a Release](#creating-a-release)
@@ -104,6 +105,58 @@ You must use `act` in an environment where Docker is installed.
 The command above will initially take several minutes, but subsequent runs
 should execute more quickly because only the first run must pull the `act`
 Docker image.
+
+### Locally Testing CWL
+
+In the MAAP Hub, job execution uses CWL.  This can be tested locally, to some
+extent, by using `cwltool` to run the GEDI Subsetter locally, as follows:
+
+```plain
+pixi run cwltool subset.cwl ARG ...
+```
+
+where `ARG ...` are arguments required by the Subsetter.  To see the available
+arguments, run the command above without any arguments.
+
+For example:
+
+```plain
+pixi run cwltool subset.cwl --aoi input/GAB-ADM0.geojson --doi L4A --columns agbd --limit 5
+```
+
+> [!NOTE]
+>
+> For the `--aoi` option, you may run the following commands to obtain the
+> `.geojson` file shown in the command above, if you don't already have a
+> `.geojson` file handy for testing (`git` is already configured to ignore the
+> `input` directory):
+>
+> ```plain
+> mkdir input
+> wget -q -O input/GAB-ADM0.geojson https://github.com/wmgeolab/geoBoundaries/raw/9f8c9e0f3aa13c5d07efaf10a829e3be024973fa/releaseData/gbOpen/GAB/ADM0/geoBoundaries-GAB-ADM0.geojson
+> ```
+
+This will run the Subsetter within a Docker container (which is automatically
+built as part of the `pixi run` command above), but at the moment, the Subsetter
+will fail because it attempts to use S3, which won't work locally. However, you
+should at least be able to get the Subsetter running, then fail with a "no
+credentials found" error because it will attempt to find AWS credentials within
+the container.
+
+> [!WARNING]
+>
+> When running `cwltool` via the command given above, you might encounter the
+> following error:
+>
+> ```plain
+> Error response from daemon: pull access denied for gedi-subset, repository
+> does not exist or may require 'docker login': denied: requested access to the
+> resource is denied
+> ```
+>
+> You should be able to ignore this error. Rerunning the `cwltool` command
+> should succeed (up to the point that the Subsetter itself is expected to fail
+> locally, as noted above).
 
 ## Submitting a Pull Request
 
