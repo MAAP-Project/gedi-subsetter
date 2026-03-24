@@ -137,6 +137,32 @@ $graph:
           encountered for every granule, the job will still succeed, resulting
           in an empty output file.
 
+      fsspec_kwargs:
+        label: "[Advanced] Keyword Arguments for fsspec configuration"
+        type: string?
+        default: "{}"
+        doc: >-
+          JSON object representing keyword arguments to pass to the
+          fsspec.core.url_to_fs function when reading granule data files.  See
+          https://filesystem-spec.readthedocs.io/en/latest/api.html#fsspec.core.url_to_fs.
+
+      processes:
+        label: "[Advanced] Number of Processes"
+        type: int?
+        default: 0
+        doc: >-
+          Number of processes to use for parallel processing.  If not provided, or
+          a value less than 1 is provided, defaults to the number of available CPUs
+          available on the provisioned instance.
+
+      scalene_args:
+        label: "[Advanced] Scalene Arguments"
+        type: string?
+        default: ""
+        doc: >-
+          Space-separated list of arguments to pass to Scalene for memory and CPU
+          profiling.  If not provided, Scalene will not be used.
+
     outputs:
       out:
         type: Directory
@@ -237,6 +263,24 @@ $graph:
         inputBinding:
           prefix: --tolerated-failure-percentage
           position: 11
+      fsspec_kwargs:
+        type: string?
+        default: "{}"
+        inputBinding:
+          prefix: --fsspec-kwargs
+          position: 12
+      processes:
+        type: int?
+        default: 0
+        inputBinding:
+          prefix: --processes
+          position: 13
+      scalene_args:
+        type: string?
+        default: ""
+        inputBinding:
+          prefix: --scalene
+          position: 14
 
     outputs:
       outputs_result:

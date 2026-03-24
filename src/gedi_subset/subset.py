@@ -280,7 +280,10 @@ def subset_granules(
         for granule_url in granule_urls
     )
 
-    logger.info(f"Subsetting on {processes} CPUs")
+    n_processes = processes or os.cpu_count() or 1
+    logger.info(
+        "Subsetting on %s process%s", n_processes, "" if n_processes == 1 else "es"
+    )
 
     with multiprocessing.get_context("spawn").Pool(
         processes, init_process, init_args
@@ -323,20 +326,6 @@ def cli(
             ),
         ),
     ],
-    lat: Annotated[
-        str,
-        typer.Option(
-            show_default=False,
-            help=("Latitude dataset used in the geometry of the dataframe"),
-        ),
-    ],
-    lon: Annotated[
-        str,
-        typer.Option(
-            show_default=False,
-            help=("Longitude dataset used in the geometry of the dataframe"),
-        ),
-    ],
     columns: Annotated[
         str,
         typer.Option(
@@ -358,6 +347,18 @@ def cli(
             readable=True,
         ),
     ],
+    lat: Annotated[
+        str,
+        typer.Option(
+            help=("Latitude dataset used in the geometry of the dataframe"),
+        ),
+    ] = "lat_lowestmode",
+    lon: Annotated[
+        str,
+        typer.Option(
+            help=("Longitude dataset used in the geometry of the dataframe"),
+        ),
+    ] = "lon_lowestmode",
     beams: Annotated[
         str,
         typer.Option(
@@ -413,8 +414,12 @@ def cli(
         ),
     ] = None,
     processes: Annotated[
-        int, typer.Option(help="Number of processes to use for parallel processing")
-    ] = (os.cpu_count() or 1),
+        int,
+        typer.Option(
+            help="Number of processes to use for parallel processing.  "
+            "A value of 0 or smaller will use 1 process per available CPU."
+        ),
+    ] = 0,
 ) -> None:
     logging_level = logging.DEBUG if verbose else logging.INFO
     set_logging_level(logging_level)
@@ -474,7 +479,10 @@ def cli(
         (logging_level,),
         granule_urls,
         fsspec_kwargs,
-        processes,
+        # Use user-supplied value only if it is an integer greater than 0.
+        # Otherwise, use None in order to cause multiprocessing.Pool to use its
+        # default value.
+        processes if processes > 0 else None,
         tolerated_failure_percentage,
     ):
         logger.info(f"Subset {len(paths)} granule(s) to {dest}.")
