@@ -18,7 +18,7 @@ outdir_max: 20 # mebibytes
 
 inputs:
   - name: aoi
-    label: Area of Interest (AOI)
+    label: URL of file describing Area of Interest (AOI)
     type: File
     doc: >-
       URL of a file representing the Area of Interest (e.g., GeoJSON file)
@@ -63,6 +63,8 @@ inputs:
   - name: temporal
     label: Temporal Range
     type: string?
+    # We are forced to supply a non-empty default due to MAAP Hub Job UI limitation.
+    default: "2018-01-01T00:00:00Z/"
     doc: >-
       Temporal range to subset, formatted as an ISO 8601 Time Interval.
       For example, 2021-01-01T00:00:00Z/2021-12-31T23:59:59Z.  See
@@ -81,7 +83,7 @@ inputs:
   - name: limit
     label: Limit
     type: int?
-    default: "100_000"
+    default: 100000
     doc: >-
       Maximum number of GEDI granules to subset, regardless of the number
       of granules within the spatio-temporal range.
@@ -89,6 +91,7 @@ inputs:
   - name: output
     label: Output Filename
     type: string?
+    default: gedi-subset.parquet
     doc: >-
       Name of the output file produced by the algorithm.  Defaults to using
       the AOI filename (without the extension) with the suffix `_subset`
@@ -109,7 +112,7 @@ inputs:
       a value such as `my_aoi.parquet` (where `my_aoi` can be whatever name
       you prefer).
 
-  - name: tolerated_failure_percentage
+  - name: tolerated-failure-percentage
     label: Tolerated Failure Percentage
     type: int?
     default: "0"
@@ -124,7 +127,7 @@ inputs:
       encountered for every granule, the job will still succeed, resulting
       in an empty output file.
 
-  - name: fsspec_kwargs
+  - name: fsspec-kwargs
     label: "[Advanced] Keyword Arguments for fsspec configuration"
     type: string?
     default: "{}"
@@ -142,19 +145,26 @@ inputs:
       a value less than 1 is provided, defaults to the number of CPUs available
       on the provisioned instance.
 
-  - name: scalene_args
-    label: "[Advanced] Scalene Arguments"
-    type: string?
-    default: ""
-    doc: >-
-      Space-separated list of arguments to pass to Scalene for memory and CPU
-      profiling.  See https://github.com/plasma-umass/scalene/blob/v2.2.1/README.md
-      for documentation on available arguments.
+  # NOTE: Scalene support is currently disabled.  This is due to a limitation
+  # in the MAAP Hub Job Submission UI, which requires a non-blank default value
+  # for optional inputs.  Unfortunately, that means we cannot supply an empty
+  # default to effectively disable Scalene.  Any non-empty value supplied for
+  # this input (default or not) automatically enables Scalene, meaning that it
+  # is currently impossible to disable Scalene when submitting a job via the UI.
 
-      If not provided, Scalene will not be used.  To use Scalene, specify at
-      least 2 arguments (due to an argument-parsing limitation) supported by the
-      `scalene run` command.  Minimally, `--on --async` should work and should
-      use all default settings for Scalene.
+  # - name: scalene-args
+  #   label: "[Advanced] Scalene Arguments"
+  #   type: string?
+  #   default: ""
+  #   doc: >-
+  #     Space-separated list of arguments to pass to Scalene for memory and CPU
+  #     profiling.  See https://github.com/plasma-umass/scalene/blob/v2.2.1/README.md
+  #     for documentation on available arguments.
+
+  #     If not provided, Scalene will not be used.  To use Scalene, specify at
+  #     least 2 arguments (due to an argument-parsing limitation) supported by the
+  #     `scalene run` command.  Minimally, `--on --async` should work and should
+  #     use all default settings for Scalene.
 
 outputs:
   - name: output
