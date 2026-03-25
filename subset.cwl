@@ -155,7 +155,7 @@ $graph:
           a value less than 1 is provided, defaults to the number of available CPUs
           available on the provisioned instance.
 
-      scalene_args:
+      scalene:
         label: "[Advanced] Scalene Arguments"
         type: string?
         default: ""
@@ -275,9 +275,8 @@ $graph:
         inputBinding:
           prefix: --processes
           position: 13
-      scalene_args:
+      scalene:
         type: string?
-        default: ""
         inputBinding:
           prefix: --scalene
           position: 14

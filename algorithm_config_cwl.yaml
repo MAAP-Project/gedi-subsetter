@@ -1,6 +1,7 @@
-algorithm_description: Subset GEDI L1B, L2A, L2B, L4A, or L4C granules within an area of interest (AOI)
 algorithm_name: gedi-subset
 algorithm_version: 0.13.0
+algorithm_description: >-
+  Subset GEDI L1B, L2A, L2B, L4A, or L4C granules within an area of interest (AOI).
 keywords: OGC, GEDI
 code_repository: https://github.com/MAAP-Project/gedi-subsetter.git
 citation: https://zenodo.org/records/15284245
@@ -30,20 +31,6 @@ inputs:
       GEDI collection to subset.  For convenience, one of these logical
       names may be specified instead: L1B, L2A, L2B, L4A, L4C.
 
-  - name: lat
-    label: Latitude Variable
-    type: string?
-    default: lat_lowestmode
-    doc: >-
-      Name of the variable (dataset) containing latitude values.
-
-  - name: lon
-    label: Longitude Variable
-    type: string?
-    default: lon_lowestmode
-    doc: >-
-      Name of the variable (dataset) containing longitude values.
-
   - name: columns
     label: Columns
     type: string
@@ -59,6 +46,20 @@ inputs:
       provided, all rows are included.  For details on query syntax, see
       https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.query.html.
 
+  - name: lat
+    label: Latitude Variable
+    type: string?
+    default: lat_lowestmode
+    doc: >-
+      Name of the variable (dataset) containing latitude values.
+
+  - name: lon
+    label: Longitude Variable
+    type: string?
+    default: lon_lowestmode
+    doc: >-
+      Name of the variable (dataset) containing longitude values.
+
   - name: temporal
     label: Temporal Range
     type: string?
@@ -71,7 +72,7 @@ inputs:
   - name: beams
     label: Beams
     type: string?
-    default: "all"
+    default: all
     doc: >-
       Which beams to include: all, coverage, power, or a comma-separated
       list of specific beam names, with or without the BEAM prefix (e.g.,
@@ -80,7 +81,7 @@ inputs:
   - name: limit
     label: Limit
     type: int?
-    default: 100_000
+    default: "100_000"
     doc: >-
       Maximum number of GEDI granules to subset, regardless of the number
       of granules within the spatio-temporal range.
@@ -111,7 +112,7 @@ inputs:
   - name: tolerated_failure_percentage
     label: Tolerated Failure Percentage
     type: int?
-    default: 0
+    default: "0"
     doc: >-
       Integral percentage of individual granule subset failures tolerated
       before causing job failure.  For example, a value of 0 indicates that
@@ -135,19 +136,25 @@ inputs:
   - name: processes
     label: "[Advanced] Number of Processes"
     type: int?
-    default: 0
+    default: "0"
     doc: >-
       Number of processes to use for parallel processing.  If not provided, or
-      a value less than 1 is provided, defaults to the number of available CPUs
-      available on the provisioned instance.
+      a value less than 1 is provided, defaults to the number of CPUs available
+      on the provisioned instance.
 
   - name: scalene_args
     label: "[Advanced] Scalene Arguments"
     type: string?
     default: ""
-    description: >-
+    doc: >-
       Space-separated list of arguments to pass to Scalene for memory and CPU
-      profiling.  If not provided, Scalene will not be used.
+      profiling.  See https://github.com/plasma-umass/scalene/blob/v2.2.1/README.md
+      for documentation on available arguments.
+
+      If not provided, Scalene will not be used.  To use Scalene, specify at
+      least 2 arguments (due to an argument-parsing limitation) supported by the
+      `scalene run` command.  Minimally, `--on --async` should work and should
+      use all default settings for Scalene.
 
 outputs:
   - name: output
