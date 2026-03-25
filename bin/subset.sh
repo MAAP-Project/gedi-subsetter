@@ -19,10 +19,7 @@ function normalize_args() {
             normalize_keyword_args "$@"
             ;;
         *)
-            if ! raw_kwargs=$(positional_to_keyword_args "$@"); then
-                exit $?
-            fi
-
+            raw_kwargs=$(positional_to_keyword_args "$@") || exit $?
             readarray -t kwargs <<< "${raw_kwargs}"
             normalize_keyword_args "${kwargs[@]}"
             ;;
@@ -40,12 +37,12 @@ function normalize_keyword_args() {
                 # the specified output file with the output directory, which the
                 # user is not expected to supply.  We assume a value was given,
                 # but it can be an empty string.
-                subset_args+=("${1}" "${output_dir}/${2}")
+                subset_args+=("${1}" "${output_dir}/${2:-}")
                 shift 2
                 ;;
             --scalene)
                 # We assume a value was given, but it can be an empty string.
-                scalene_arg="${2}"
+                scalene_arg="${2:-}"
                 shift 2
                 ;;
             *)
@@ -110,38 +107,6 @@ function positional_to_keyword_args() {
     done
 }
 
-function parse_scalene_arg() {
-    local scalene_arg
-
-    # The first argument is a string of scalene arguments joined into a single,
-    # space-separated string that we have to split into separate arguments.
-    # For example, we need to split "arg1 ... argN" into ("arg1" ... "argN").
-    scalene_arg=$1
-    ext="html"
-
-    # Split joined scalene arguments into array of arguments to pass to scalene.
-    readrray -t scalene_args <<< "${scalene_arg}"
-
-    for arg in "${scalene_args[@]}"; do
-        if [[ "${arg}" == "--json" ]]; then
-            ext="json"
-        elif [[ "${arg}" == "--cli" ]]; then
-            ext="txt"
-        fi
-    done
-
-    # Force output to be written to the output directory by adding the
-    # `--outfile` argument after any user-provided arguments.  If the user
-    # provides their own `--outfile` argument, it will be ignored.  Also,
-    # add `--no-browser` to ensure that scalene does not attempt to open a
-    # browser.
-    scalene_args+=(--no-browser --outfile "${output_dir}/profile.${ext}")
-
-    for arg in "${scalene_args[@]}"; do
-        echo "${arg}"
-    done
-}
-
 function build_command() {
     args=("$@")
     scalene_arg=${args[0]}
@@ -150,13 +115,10 @@ function build_command() {
     if [[ -z "${scalene_arg}" ]]; then
         echo gedi-subset
     else
-        if ! raw_scalene_args=$(parse_scalene_arg "${scalene_arg}"); then
-            exit $?
-        fi
-
-        readarray -t scalene_args <<< "${raw_scalene_args}"
+        IFS=' ' read -ra scalene_args <<< "${scalene_arg}"
 
         echo scalene
+        echo run
 
         for arg in "${scalene_args[@]}"; do
             echo "${arg}"
@@ -165,7 +127,7 @@ function build_command() {
         # Scalene doesn't recognize the installed gedi-subset command, because
         # it expects to be able to locate the file on the file system, so we
         # have to specify the python file directly.
-        echo src/gedi_subset/subset.py
+        echo "${base_dir}/src/gedi_subset/subset.py"
         echo ---
     fi
 
@@ -192,16 +154,10 @@ function run_command() {
 function main() {
     args=("$@")
 
-    if ! normalized_args=$(normalize_args "$@"); then
-        exit $?
-    fi
-
+    normalized_args=$(normalize_args "$@") || exit $?
     readarray -t args <<< "${normalized_args}"
 
-    if ! raw_command=$(build_command "${args[@]}"); then
-        exit $?
-    fi
-
+    raw_command=$(build_command "${args[@]}") || exit $?
     readarray -t command <<< "${raw_command}"
 
     run_command "${command[@]}"

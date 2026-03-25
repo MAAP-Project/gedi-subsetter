@@ -47,12 +47,12 @@ pandas = "*"
 pyarrow = "*"
 pydantic = "*"
 s3fs = ">=2025.9.0"
-scalene = "*"
 shapely = "*"
 typer = "*"
 
 [tool.pixi.pypi-dependencies]
 maap-py = "*"
+scalene = "*"
 
 [tool.pixi.feature.dev.dependencies]
 backoff = "*"

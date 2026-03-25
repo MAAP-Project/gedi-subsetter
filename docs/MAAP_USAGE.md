@@ -281,25 +281,21 @@ optional inputs:
   available command-line options, see
   <https://github.com/plasma-umass/scalene?tab=readme-ov-file#scalene>.
 
-  By default, the name of the profile output file is `profile.html` (placed in
-  your job's output folder).  If you specify the `--json` flag, it will be named
-  `profile.json`.  If you specify the `--cli` flag, it will be named
-  `profile.txt`.
-
-  If you want to use all of Scalene's default values (i.e.  not specify any
+  If you want to use all of Scalene's default values (i.e., not specify any
   override values), you cannot leave this input blank, otherwise Scalene will
   not be used at all (as mentioned above).  In this case, you must supply _some_
-  value for this input, so the simplest valid Scalene option is `--on`.
-
-  **Note:** Since no browser is available in DPS, when any value is supplied for
-  this input, the `--no-browser` option will be included to prevent Scalene from
-  attempting to open a browser.
+  value for this input.  Due to an argument-parsing limitation, at least 2
+  options must be specified, so the simplest value would be `--on --async`.
 
   > _Added in version 0.7.0_
 
   > _Changed in version 0.8.0_: Specifying the `--json` flag changes the name of
   > the profile output file to `profile.json` and specifying `--cli` changes it
   > to `profile.txt`.
+
+  > _Changed in version 0.13.1_: Scalene was upgraded from 1.x to 2.x.  The
+  > `--json` and `--cli` options are no longer available.  Scalene will always
+  > produce a `.html` and a `.json` file.
 
 ### Specifying an AOI
 
