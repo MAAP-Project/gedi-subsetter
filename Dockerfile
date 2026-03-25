@@ -1,17 +1,27 @@
-FROM ghcr.io/prefix-dev/pixi:0.66.0
+FROM mas.dit.maap-project.org/root/maap-workspaces/custom_images/maap_base:develop
 
 SHELL [ "/bin/bash", "-c" ]
+
+# Once the maap_base image is tidied up, the following block can go away.
+RUN <<EOF
+rm -f Miniforge3-installer.sh
+apt-get remove vim -y
+apt-get autoremove -y
+apt-get autoclean -y
+apt-get clean all -y
+rm -rf /var/lib/apt/lists/*
+EOF
 
 # Simulate result of algorithm registration.  We first copy necessary files to
 # mimic cloning the repository, but don't copy everything wholesale, because
 # it's not necessary for our purposes here.  We just need enough to be able to
 # run the build command in the next step.
 WORKDIR /app/gedi-subsetter
-COPY bin/build.sh ./bin/
+COPY bin/build.sh bin/install-*.sh ./bin/
 COPY src/ ./src/
 COPY pixi.lock pyproject.toml ./
 
-# Run the build script, just like the alogorithm registration process does.
+# Run the build script, just like the algorithm registration process does.
 WORKDIR /app
 RUN /app/gedi-subsetter/bin/build.sh
 

@@ -9,7 +9,7 @@ author: MAAP
 contributor: MAAP
 license: https://github.com/MAAP-Project/gedi-subsetter/blob/main/LICENSE
 release_notes: None
-docker_container_url: ghcr.io/prefix-dev/pixi:0.66.0
+docker_container_url: mas.dit.maap-project.org/root/maap-workspaces/custom_images/maap_base:develop
 build_command: gedi-subsetter/bin/build.sh
 run_command: gedi-subsetter/bin/subset.sh
 ram_min: 8 # mebibytes
