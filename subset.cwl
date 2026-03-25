@@ -122,7 +122,7 @@ $graph:
           a value such as `my_aoi.parquet` (where `my_aoi` can be whatever name
           you prefer).
 
-      tolerated_failure_percentage:
+      tolerated-failure-percentage:
         label: Tolerated Failure Percentage
         type: int?
         default: 0
@@ -137,7 +137,7 @@ $graph:
           encountered for every granule, the job will still succeed, resulting
           in an empty output file.
 
-      fsspec_kwargs:
+      fsspec-kwargs:
         label: "[Advanced] Keyword Arguments for fsspec configuration"
         type: string?
         default: "{}"
@@ -155,13 +155,13 @@ $graph:
           a value less than 1 is provided, defaults to the number of available CPUs
           available on the provisioned instance.
 
-      scalene:
-        label: "[Advanced] Scalene Arguments"
-        type: string?
-        default: ""
-        doc: >-
-          Space-separated list of arguments to pass to Scalene for memory and CPU
-          profiling.  If not provided, Scalene will not be used.
+      # scalene-args:
+      #   label: "[Advanced] Scalene Arguments"
+      #   type: string?
+      #   default: ""
+      #   doc: >-
+      #     Space-separated list of arguments to pass to Scalene for memory and CPU
+      #     profiling.  If not provided, Scalene will not be used.
 
     outputs:
       out:
@@ -182,7 +182,10 @@ $graph:
           beams: beams
           limit: limit
           output: output
-          tolerated_failure_percentage: tolerated_failure_percentage
+          tolerated-failure-percentage: tolerated-failure-percentage
+          fsspec-kwargs: fsspec-kwargs
+          processes: processes
+          # scalene: scalene-args
         out:
           - outputs_result
 
@@ -257,13 +260,13 @@ $graph:
         inputBinding:
           prefix: --output
           position: 10
-      tolerated_failure_percentage:
+      tolerated-failure-percentage:
         type: int?
         default: 0
         inputBinding:
           prefix: --tolerated-failure-percentage
           position: 11
-      fsspec_kwargs:
+      fsspec-kwargs:
         type: string?
         default: "{}"
         inputBinding:
@@ -275,11 +278,11 @@ $graph:
         inputBinding:
           prefix: --processes
           position: 13
-      scalene:
-        type: string?
-        inputBinding:
-          prefix: --scalene
-          position: 14
+      # scalene-args:
+      #   type: string?
+      #   inputBinding:
+      #     prefix: --scalene
+      #     position: 14
 
     outputs:
       outputs_result:
