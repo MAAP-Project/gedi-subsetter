@@ -413,6 +413,15 @@ def cli(
             ),
         ),
     ] = None,
+    earthdata_s3_credentials_endpoint: Annotated[
+        str,
+        typer.Option(
+            help=(
+                "Earthdata S3 credentials endpoint URL for fetching temporary"
+                " AWS credentials to access protected S3 granules"
+            ),
+        ),
+    ] = "https://data.ornldaac.earthdata.nasa.gov/s3credentials",
     processes: Annotated[
         int,
         typer.Option(
@@ -437,6 +446,13 @@ def cli(
     dest.unlink(missing_ok=True)
 
     maap = MAAP()
+    creds = maap.aws.earthdata_s3_credentials(earthdata_s3_credentials_endpoint)
+    fsspec_kwargs = {
+        "key": creds["accessKeyId"],
+        "secret": creds["secretAccessKey"],
+        "token": creds["sessionToken"],
+        **(fsspec_kwargs or {}),
+    }
     cmr_host = "cmr.earthdata.nasa.gov"
 
     aoi_gdf = cast(gpd.GeoDataFrame, gpd.read_file(aoi))
