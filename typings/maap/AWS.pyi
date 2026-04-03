@@ -5,6 +5,11 @@ class AWSCredentials(TypedDict):
     secretAccessKey: str
     sessionToken: str
 
+class AWSRequesterPaysCredentials(TypedDict):
+    aws_access_key_id: str
+    aws_secret_access_key: str
+    aws_session_token: str
+
 class AWS:
     def __init__(
         self,
@@ -15,3 +20,6 @@ class AWS:
         api_header: Mapping[str, str],
     ): ...
     def earthdata_s3_credentials(self, endpoint_uri: str) -> AWSCredentials: ...
+    def requester_pays_credentials(
+        self, expiration: int = ...
+    ) -> AWSRequesterPaysCredentials: ...

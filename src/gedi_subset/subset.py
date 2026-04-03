@@ -1,5 +1,7 @@
 #!/usr/bin/env -S python -W ignore::FutureWarning -W ignore::UserWarning
 
+from __future__ import annotations
+
 import json
 import logging
 import multiprocessing
@@ -8,6 +10,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Annotated,
     Any,
     Callable,
@@ -36,6 +39,9 @@ from gedi_subset.gedi_utils import (
 )
 from gedi_subset.maapx import find_collection
 
+if TYPE_CHECKING:
+    from maap.AWS import AWSRequesterPaysCredentials
+
 logical_dois = {
     "L1B": "C2142749196-LPCLOUD",  # DOI: 10.5067/GEDI/GEDI01_B.002
     "L2A": "C2142771958-LPCLOUD",  # DOI: 10.5067/GEDI/GEDI02_A.002
@@ -55,6 +61,8 @@ logging.Formatter.default_time_format = "%Y-%m-%dT%H:%M:%S"
 logging.Formatter.default_msec_format = "%s,%03dZ"
 
 logger = logging.getLogger("gedi_subset")
+
+_requester_pays_credentials: AWSRequesterPaysCredentials | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -179,6 +187,7 @@ def subset_granule(props: SubsetGranuleProps) -> Path | None | Exception:
         "default_block_size": 5 * 1024 * 1024,  # fsspec default is 5 MB
         "default_fill_cache": True,
         "requester_pays": True,
+        **(_requester_pays_credentials or {}),
         # Allow the caller to override the default values above.
         **props.fsspec_kwargs,
     }
@@ -225,7 +234,10 @@ def subset_granule(props: SubsetGranuleProps) -> Path | None | Exception:
     return err if (err := fp.safely(gdf.to_parquet, outpath)) else outpath
 
 
-def init_process(logging_level: int) -> None:
+def init_process(logging_level: int, creds: AWSRequesterPaysCredentials | None) -> None:
+    global _requester_pays_credentials
+
+    _requester_pays_credentials = creds
     set_logging_level(logging_level)
 
 
@@ -465,6 +477,11 @@ def cli(
         and (url := granule.getDownloadUrl())
     )
 
+    creds = maap.aws.requester_pays_credentials() if "MAAP_PGT" in os.environ else None
+
+    if creds:
+        logger.info("Using requester pays credentials")
+
     if not granule_urls:
         logger.info("No granules intersect the AOI within the temporal range.")
     elif paths := subset_granules(
@@ -476,7 +493,7 @@ def cli(
         query,
         output_dir,
         dest,
-        (logging_level,),
+        (logging_level, creds),
         granule_urls,
         fsspec_kwargs,
         # Use user-supplied value only if it is an integer greater than 0.

@@ -5023,7 +5023,7 @@ packages:
   timestamp: 1770387898414
 - pypi: ./
   name: gedi-subset
-  version: 0.13.1.dev7+g160011814.d20260324
+  version: 0.13.1.dev8+g85c432a81.d20260325
   sha256: 58bcbf7e55a9fcda5911eb4f704166c4d05cafa92ef4707a72909b2dded19fb0
   requires_python: '>=3.12'
   editable: true
