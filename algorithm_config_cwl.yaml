@@ -40,7 +40,7 @@ inputs:
 
   - name: query
     label: Query Expression
-    type: string?
+    type: string
     doc: >-
       Boolean query expression for subsetting the rows of data.  If not
       provided, all rows are included.  For details on query syntax, see
@@ -48,21 +48,21 @@ inputs:
 
   - name: lat
     label: Latitude Variable
-    type: string?
+    type: string
     default: lat_lowestmode
     doc: >-
       Name of the variable (dataset) containing latitude values.
 
   - name: lon
     label: Longitude Variable
-    type: string?
+    type: string
     default: lon_lowestmode
     doc: >-
       Name of the variable (dataset) containing longitude values.
 
   - name: temporal
     label: Temporal Range
-    type: string?
+    type: string
     # We are forced to supply a non-empty default due to MAAP Hub Job UI limitation.
     default: "2018-01-01T00:00:00Z/"
     doc: >-
@@ -73,7 +73,7 @@ inputs:
 
   - name: beams
     label: Beams
-    type: string?
+    type: string
     default: all
     doc: >-
       Which beams to include: all, coverage, power, or a comma-separated
@@ -82,7 +82,7 @@ inputs:
 
   - name: limit
     label: Limit
-    type: int?
+    type: int
     default: 100000
     doc: >-
       Maximum number of GEDI granules to subset, regardless of the number
@@ -90,7 +90,7 @@ inputs:
 
   - name: output
     label: Output Filename
-    type: string?
+    type: string
     default: gedi-subset.parquet
     doc: >-
       Name of the output file produced by the algorithm.  Defaults to using
@@ -114,8 +114,8 @@ inputs:
 
   - name: tolerated-failure-percentage
     label: Tolerated Failure Percentage
-    type: int?
-    default: "0"
+    type: int
+    default: 0
     doc: >-
       Integral percentage of individual granule subset failures tolerated
       before causing job failure.  For example, a value of 0 indicates that
@@ -129,7 +129,7 @@ inputs:
 
   - name: fsspec-kwargs
     label: "[Advanced] Keyword Arguments for fsspec configuration"
-    type: string?
+    type: string
     default: "{}"
     doc: >-
       JSON object representing keyword arguments to pass to the
@@ -138,8 +138,8 @@ inputs:
 
   - name: processes
     label: "[Advanced] Number of Processes"
-    type: int?
-    default: "0"
+    type: int
+    default: 0
     doc: >-
       Number of processes to use for parallel processing.  If not provided, or
       a value less than 1 is provided, defaults to the number of CPUs available
