@@ -18,6 +18,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    TypedDict,
     cast,
 )
 
@@ -62,7 +63,14 @@ logging.Formatter.default_msec_format = "%s,%03dZ"
 
 logger = logging.getLogger("gedi_subset")
 
-_requester_pays_credentials: AWSRequesterPaysCredentials | None = None
+
+class FsspecAWSCredentials(TypedDict):
+    key: str
+    secret: str
+    token: str
+
+
+_fsspec_aws_credentials: FsspecAWSCredentials | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -186,10 +194,8 @@ def subset_granule(props: SubsetGranuleProps) -> Path | None | Exception:
         "default_cache_type": "mmap",
         "default_block_size": 5 * 1024 * 1024,  # fsspec default is 5 MB
         "default_fill_cache": True,
-        "storage_options": {
-            "requester_pays": True,
-            **(_requester_pays_credentials or {}),
-        },
+        "requester_pays": True,
+        **(_fsspec_aws_credentials or {}),
         # Allow the caller to override the default values above.
         **props.fsspec_kwargs,
     }
@@ -198,7 +204,10 @@ def subset_granule(props: SubsetGranuleProps) -> Path | None | Exception:
     urlpath: str
     fs, urlpath = fsspec.url_to_fs(granule_url, **fsspec_kwargs)
 
-    with fs.open(urlpath, mode="rb") as f, h5py.File(f) as hdf5:
+    with (
+        fs.open(urlpath, mode="rb") as f,
+        h5py.File(f) as hdf5,
+    ):
         gdf = fp.safely(
             subset_hdf5,
             hdf5,
@@ -237,9 +246,15 @@ def subset_granule(props: SubsetGranuleProps) -> Path | None | Exception:
 
 
 def init_process(logging_level: int, creds: AWSRequesterPaysCredentials | None) -> None:
-    global _requester_pays_credentials
+    global _fsspec_aws_credentials
 
-    _requester_pays_credentials = creds
+    if creds:
+        _fsspec_aws_credentials = FsspecAWSCredentials(
+            key=creds["aws_access_key_id"],
+            secret=creds["aws_secret_access_key"],
+            token=creds["aws_session_token"],
+        )
+
     set_logging_level(logging_level)
 
 
