@@ -43,6 +43,12 @@ from gedi_subset.maapx import find_collection
 if TYPE_CHECKING:
     from maap.AWS import AWSRequesterPaysCredentials
 
+    class FsspecAWSCredentials(TypedDict):
+        key: str
+        secret: str
+        token: str
+
+
 logical_dois = {
     "L1B": "C2142749196-LPCLOUD",  # DOI: 10.5067/GEDI/GEDI01_B.002
     "L2A": "C2142771958-LPCLOUD",  # DOI: 10.5067/GEDI/GEDI02_A.002
@@ -62,12 +68,6 @@ logging.Formatter.default_time_format = "%Y-%m-%dT%H:%M:%S"
 logging.Formatter.default_msec_format = "%s,%03dZ"
 
 logger = logging.getLogger("gedi_subset")
-
-
-class FsspecAWSCredentials(TypedDict):
-    key: str
-    secret: str
-    token: str
 
 
 _fsspec_aws_credentials: FsspecAWSCredentials | None = None
@@ -249,11 +249,11 @@ def init_process(logging_level: int, creds: AWSRequesterPaysCredentials | None) 
     global _fsspec_aws_credentials
 
     if creds:
-        _fsspec_aws_credentials = FsspecAWSCredentials(
-            key=creds["aws_access_key_id"],
-            secret=creds["aws_secret_access_key"],
-            token=creds["aws_session_token"],
-        )
+        _fsspec_aws_credentials = {
+            "key": creds["aws_access_key_id"],
+            "secret": creds["aws_secret_access_key"],
+            "token": creds["aws_session_token"],
+        }
 
     set_logging_level(logging_level)
 
