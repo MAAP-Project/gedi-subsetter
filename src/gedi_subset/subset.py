@@ -186,8 +186,10 @@ def subset_granule(props: SubsetGranuleProps) -> Path | None | Exception:
         "default_cache_type": "mmap",
         "default_block_size": 5 * 1024 * 1024,  # fsspec default is 5 MB
         "default_fill_cache": True,
-        "requester_pays": True,
-        **(_requester_pays_credentials or {}),
+        "storage_options": {
+            "requester_pays": True,
+            **(_requester_pays_credentials or {}),
+        },
         # Allow the caller to override the default values above.
         **props.fsspec_kwargs,
     }
