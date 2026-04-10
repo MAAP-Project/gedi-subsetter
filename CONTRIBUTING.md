@@ -137,11 +137,24 @@ pixi run cwltool subset.cwl --aoi input/GAB-ADM0.geojson --doi L4A --columns agb
 > ```
 
 This will run the Subsetter within a Docker container (which is automatically
-built as part of the `pixi run` command above), but at the moment, the Subsetter
-will fail because it attempts to use S3, which won't work locally. However, you
-should at least be able to get the Subsetter running, then fail with a "no
-credentials found" error because it will attempt to find AWS credentials within
-the container.
+built as part of the `pixi run` command above), but it will fail with an
+"HTTPError: 401 Client Error" because `MAAP_PGT` is not set.  This indicates
+that it is attempting to fetch temporary AWS credentials via the MAAP API, but
+fails without having a valid value for the `MAAP_PGT` environment variable.
+
+However, if you obtain a `MAAP_PGT` value from your MAAP Profile page, export it
+as an environment variable, then add `--preserve-environment MAAP_PGT`
+immediately following `cwltool` in the `pixi` command above, then the Subsetter
+should be able to fetch temporary credentials.  It should then fail with a
+`PermissionError: Forbidden` indicating that it attempted to read from S3
+(using the temporary credentials it obtained), which is forbidden when running
+on a machine that is not within the AWS cloud in the us-west-2 region:
+
+```plain
+export MAAP_PGT="<token obtained from your MAAP Profile page>"
+pixi run cwltool --preserve-environment MAAP_PGT \
+   subset.cwl --aoi input/GAB-ADM0.geojson --doi L4A --columns agbd --limit 5
+```
 
 > [!WARNING]
 >

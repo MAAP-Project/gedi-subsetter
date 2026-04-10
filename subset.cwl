@@ -213,6 +213,7 @@ $graph:
     inputs:
       verbose:
         type: boolean
+        default: false
         inputBinding:
           position: 0
           prefix: --verbose

@@ -7,6 +7,7 @@ from maap.maap import MAAP
 
 
 def s3_credentials_api_endpoint(c: Collection) -> str:
+    """Return the AWS S3 credentials endpoint for a CMR Collection."""
     return c["Collection"]["DirectDistributionInformation"]["S3CredentialsAPIEndpoint"]
 
 
