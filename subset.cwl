@@ -29,6 +29,10 @@ $graph:
       Subset GEDI L1B, L2A, L2B, L4A, or L4C granules within an area of interest (AOI)
 
     inputs:
+      verbose:
+        label: Verbose logging
+        type: boolean
+        default: false
 
       aoi:
         label: Area of Interest (AOI)
@@ -172,6 +176,7 @@ $graph:
       process:
         run: '#main'
         in:
+          verbose: verbose
           aoi: aoi
           doi: doi
           lat: lat
@@ -206,6 +211,11 @@ $graph:
     successCodes: [0]
 
     inputs:
+      verbose:
+        type: boolean
+        inputBinding:
+          position: 0
+          prefix: --verbose
       aoi:
         type: File
         inputBinding:
