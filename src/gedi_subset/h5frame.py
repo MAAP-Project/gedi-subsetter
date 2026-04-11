@@ -784,7 +784,7 @@ def _to_pandas(
             _to_pandas({name: array}, expand=expand)
             for name, array in projection.items()
         )
-        return pd.concat(objs, axis=1, copy=False)
+        return pd.concat(objs, axis=1, copy=False)  # type: ignore
 
     # We have only 1 column in the projection, so get its name and value.
     (name, array), *_ = projection.items()
