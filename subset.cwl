@@ -6,7 +6,7 @@ $schemas:
   - https://raw.githubusercontent.com/schemaorg/schemaorg/refs/heads/main/data/releases/9.0/schemaorg-current-http.rdf
 
 s:author:
-  - class: s:Person
+  - class: s:Organization
     s:name: MAAP
 s:citation: https://zenodo.org/doi/10.5281/zenodo.10019412
 s:codeRepository: https://github.com/MAAP-Project/gedi-subsetter.git
