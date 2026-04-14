@@ -8,7 +8,7 @@
 # - Install pixi production environment (i.e., all required dependencies)
 # - Clean pixi cache and pixi default environment to reduce image size
 
-set -euo pipefail
+set -eou pipefail
 
 base_dir=$(dirname "$(dirname "$(readlink -f "$0")")")
 manifest_path=(--manifest-path "${base_dir}/pyproject.toml")
