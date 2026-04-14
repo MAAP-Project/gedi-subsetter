@@ -241,14 +241,17 @@ optional inputs:
   > _Changed in version 0.10.0_: Output formats other than GeoPackage (`.gpkg`)
   are now supported.
 
-- `tolerated_failure_percentage` (_optional_; default: 0): Integral percentage
+- `tolerated-failure-percentage` (_optional_; default: 0): Integral percentage
   of individual granule subset failures to tolerate before failing a job.
   Default tolerance is 0 (i.e., fail fast), thus any single granule failure will
   immediately fail the job.
 
   > _Added in version 0.12.0_
 
-- `fsspec_kwargs` (_optional_; default:
+  > _Changed in version 0.14.0_: Renamed from `tolerated_failure_percentage` to
+  > `tolerated-failure-percentage`.
+
+- `fsspec-kwargs` (_optional_; default:
   `'{"default_cache_type": "mmap", "default_block_size": 5242880, "requester_pays": true}'`
   JSON object representing keyword arguments to pass to the [fsspec.url_to_fs]
   function when reading granule files.  **ADVANCED:** Normal usage should leave
@@ -263,6 +266,8 @@ optional inputs:
   to provide good performance while reducing both the volume of transferred data
   and peak memory usage.
 
+  > _Changed in version 0.14.0_: Renamed from `fsspec_kwargs` to `fsspec-kwargs`.
+
 - `processes` (_optional_; default: number of available CPUs): Number of
   processes to use for parallel processing.  **ADVANCED:** Normal usage should
   leave this input blank, meaning that the algorithm will use all available
@@ -270,7 +275,7 @@ optional inputs:
 
   > _Added in version 0.8.0_
 
-- `scalene_args` (_optional_; default: `--off --async`): Arguments to pass to
+- `scalene-args` (_optional_; default: `--off --async`): Arguments to pass to
   [Scalene] for performance profiling. **ADVANCED:** Normal usage should leave
   this argument blank, meaning that Scalene will _not_ be used. This input is
   intended only for performance profiling purposes.
@@ -293,10 +298,12 @@ optional inputs:
   > the profile output file to `profile.json` and specifying `--cli` changes it
   > to `profile.txt`.
 
-  > _Changed in version 0.13.1_: Scalene was upgraded from 1.x to 2.x.  The
+  > _Changed in version 0.14.0_: Scalene was upgraded from 1.x to 2.x.  The
   > `--json` and `--cli` options are no longer available.  Scalene will always
   > produce a `.html` and a `.json` file.  At least 2 options must be supplied
   > (due to a system limitation).
+
+  > _Changed in version 0.14.0_: Renamed from `scalene_args` to `scalene-args`.
 
 ### Specifying an AOI
 

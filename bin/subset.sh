@@ -14,7 +14,7 @@ output_dir="${PWD}/output"
 base_dir=$(dirname "$(dirname "$(readlink -f "$0")")")
 
 function normalize_args() {
-    case "${1}" in
+    case "${1:-}" in
         --*)
             normalize_keyword_args "$@"
             ;;
@@ -40,7 +40,7 @@ function normalize_keyword_args() {
                 subset_args+=("${1}" "${output_dir}/${2:-}")
                 shift 2
                 ;;
-            --scalene)
+            --scalene-args)
                 # We assume a value was given, but it can be an empty string.
                 scalene_arg="${2:-}"
                 shift 2
