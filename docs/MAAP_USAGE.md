@@ -270,16 +270,16 @@ optional inputs:
 
   > _Added in version 0.8.0_
 
-- `scalene_args` (_optional_; default: none): Arguments to pass to [Scalene] for
-  performance profiling.  **ADVANCED:** Normal usage should leave this argument
-  blank, meaning that Scalene will _not_ be used.  This input is intended only
-  for performance profiling purposes.
+- `scalene_args` (_optional_; default: `--off --async`): Arguments to pass to
+  [Scalene] for performance profiling. **ADVANCED:** Normal usage should leave
+  this argument blank, meaning that Scalene will _not_ be used. This input is
+  intended only for performance profiling purposes.
 
-  When this input is supplied, the algorithm will be run via the `scalene`
-  command for collecting performance metrics (i.e.  CPU and RAM usage), and the
-  value of this input will be passed as arguments to the command.  For a list of
+  When this input is supplied, the algorithm will be run via the `scalene run`
+  command for collecting performance metrics (i.e., CPU and RAM usage), and the
+  value of this input will be passed as arguments to the command. For a list of
   available command-line options, see
-  <https://github.com/plasma-umass/scalene?tab=readme-ov-file#scalene>.
+  <https://github.com/plasma-umass/scalene/blob/v2.2.1/README.md>.
 
   If you want to use all of Scalene's default values (i.e., not specify any
   override values), you cannot leave this input blank, otherwise Scalene will
@@ -295,7 +295,8 @@ optional inputs:
 
   > _Changed in version 0.13.1_: Scalene was upgraded from 1.x to 2.x.  The
   > `--json` and `--cli` options are no longer available.  Scalene will always
-  > produce a `.html` and a `.json` file.
+  > produce a `.html` and a `.json` file.  At least 2 options must be supplied
+  > (due to a system limitation).
 
 ### Specifying an AOI
 

@@ -145,26 +145,22 @@ inputs:
       a value less than 1 is provided, defaults to the number of CPUs available
       on the provisioned instance.
 
-  # NOTE: Scalene support is currently disabled.  This is due to a limitation
-  # in the MAAP Hub Job Submission UI, which requires a non-blank default value
-  # for optional inputs.  Unfortunately, that means we cannot supply an empty
-  # default to effectively disable Scalene.  Any non-empty value supplied for
-  # this input (default or not) automatically enables Scalene, meaning that it
-  # is currently impossible to disable Scalene when submitting a job via the UI.
+  - name: scalene-args
+    label: "[Advanced] Scalene Arguments"
+    type: string
+    default: "--off --async"
+    doc: >-
+      Space-separated list of arguments to pass to Scalene for memory and CPU
+      profiling.  See https://github.com/plasma-umass/scalene/blob/v2.2.1/README.md
+      for documentation on available arguments.
 
-  # - name: scalene-args
-  #   label: "[Advanced] Scalene Arguments"
-  #   type: string?
-  #   default: ""
-  #   doc: >-
-  #     Space-separated list of arguments to pass to Scalene for memory and CPU
-  #     profiling.  See https://github.com/plasma-umass/scalene/blob/v2.2.1/README.md
-  #     for documentation on available arguments.
-
-  #     If not provided, Scalene will not be used.  To use Scalene, specify at
-  #     least 2 arguments (due to an argument-parsing limitation) supported by the
-  #     `scalene run` command.  Minimally, `--on --async` should work and should
-  #     use all default settings for Scalene.
+      By default, Scalene will not be used, specified via the `--off` option in
+      the default input value.  To use Scalene, specify at least 2 arguments
+      (due to an argument-parsing limitation) supported by the `scalene run`
+      command.  Minimally, `--on --async` should work and should use all default
+      settings for Scalene (`--on` and `--async` are set by default when running
+      Scalene from the command line, but we must specify them explicitly here
+      due to DPS/CWL input processing limitations).
 
 outputs:
   - name: output
