@@ -241,14 +241,17 @@ optional inputs:
   > _Changed in version 0.10.0_: Output formats other than GeoPackage (`.gpkg`)
   are now supported.
 
-- `tolerated_failure_percentage` (_optional_; default: 0): Integral percentage
+- `tolerated-failure-percentage` (_optional_; default: 0): Integral percentage
   of individual granule subset failures to tolerate before failing a job.
   Default tolerance is 0 (i.e., fail fast), thus any single granule failure will
   immediately fail the job.
 
   > _Added in version 0.12.0_
 
-- `fsspec_kwargs` (_optional_; default:
+  > _Changed in version 0.14.0_: Renamed from `tolerated_failure_percentage` to
+  > `tolerated-failure-percentage`.
+
+- `fsspec-kwargs` (_optional_; default:
   `'{"default_cache_type": "mmap", "default_block_size": 5242880, "requester_pays": true}'`
   JSON object representing keyword arguments to pass to the [fsspec.url_to_fs]
   function when reading granule files.  **ADVANCED:** Normal usage should leave
@@ -263,43 +266,14 @@ optional inputs:
   to provide good performance while reducing both the volume of transferred data
   and peak memory usage.
 
+  > _Changed in version 0.14.0_: Renamed from `fsspec_kwargs` to `fsspec-kwargs`.
+
 - `processes` (_optional_; default: number of available CPUs): Number of
   processes to use for parallel processing.  **ADVANCED:** Normal usage should
   leave this input blank, meaning that the algorithm will use all available
   CPUs.  This input is intended only for performance profiling purposes.
 
   > _Added in version 0.8.0_
-
-- `scalene_args` (_optional_; default: none): Arguments to pass to [Scalene] for
-  performance profiling.  **ADVANCED:** Normal usage should leave this argument
-  blank, meaning that Scalene will _not_ be used.  This input is intended only
-  for performance profiling purposes.
-
-  When this input is supplied, the algorithm will be run via the `scalene`
-  command for collecting performance metrics (i.e.  CPU and RAM usage), and the
-  value of this input will be passed as arguments to the command.  For a list of
-  available command-line options, see
-  <https://github.com/plasma-umass/scalene?tab=readme-ov-file#scalene>.
-
-  By default, the name of the profile output file is `profile.html` (placed in
-  your job's output folder).  If you specify the `--json` flag, it will be named
-  `profile.json`.  If you specify the `--cli` flag, it will be named
-  `profile.txt`.
-
-  If you want to use all of Scalene's default values (i.e.  not specify any
-  override values), you cannot leave this input blank, otherwise Scalene will
-  not be used at all (as mentioned above).  In this case, you must supply _some_
-  value for this input, so the simplest valid Scalene option is `--on`.
-
-  **Note:** Since no browser is available in DPS, when any value is supplied for
-  this input, the `--no-browser` option will be included to prevent Scalene from
-  attempting to open a browser.
-
-  > _Added in version 0.7.0_
-
-  > _Changed in version 0.8.0_: Specifying the `--json` flag changes the name of
-  > the profile output file to `profile.json` and specifying `--cli` changes it
-  > to `profile.txt`.
 
 ### Specifying an AOI
 
@@ -690,5 +664,3 @@ administrative boundaries.  PLoS ONE 15(4): e0231866.
   https://www.geoboundaries.org
 [geoBoundaries API]:
   https://www.geoboundaries.org/api.html
-[Scalene]:
-  https://github.com/plasma-umass/scalene

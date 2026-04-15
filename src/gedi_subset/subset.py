@@ -1,13 +1,17 @@
 #!/usr/bin/env -S python -W ignore::FutureWarning -W ignore::UserWarning
 
+from __future__ import annotations
+
 import json
 import logging
-import multiprocessing
+import multiprocessing as mp
 import os
 import time
 from dataclasses import dataclass, field
+from multiprocessing.managers import ValueProxy
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Annotated,
     Any,
     Callable,
@@ -15,6 +19,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    TypedDict,
     cast,
 )
 
@@ -23,8 +28,9 @@ import geopandas as gpd
 import h5py
 import typer
 from maap.maap import MAAP
-from maap.Result import Collection
 
+import gedi_subset.aws as aws
+import gedi_subset.cmr as cmr
 import gedi_subset.fp as fp
 from gedi_subset.gedi_utils import (
     beam_filter_from_names,
@@ -34,7 +40,15 @@ from gedi_subset.gedi_utils import (
     is_power_beam,
     subset_hdf5,
 )
-from gedi_subset.maapx import find_collection
+
+if TYPE_CHECKING:
+    from maap.AWS import AWSCredentials
+
+    class FsspecAWSCredentials(TypedDict):
+        key: str
+        secret: str
+        token: str
+
 
 logical_dois = {
     "L1B": "C2142749196-LPCLOUD",  # DOI: 10.5067/GEDI/GEDI01_B.002
@@ -56,6 +70,8 @@ logging.Formatter.default_msec_format = "%s,%03dZ"
 
 logger = logging.getLogger("gedi_subset")
 
+_aws_creds_proxy: ValueProxy["AWSCredentials"] | None = None
+
 
 @dataclass(frozen=True, kw_only=True)
 class SubsetGranuleProps:
@@ -76,60 +92,6 @@ class SubsetGranuleProps:
     columns: Sequence[str]
     query: Optional[str]
     output_dir: Path
-
-
-def is_gedi_collection(c: Collection) -> bool:
-    """Return True if the specified collection is a GEDI collection containing granule
-    data files in HDF5 format; False otherwise."""
-
-    c = c.get("Collection", {})
-    attrs = c.get("AdditionalAttributes", {}).get("AdditionalAttribute", [])
-    data_format_attrs = (attr for attr in attrs if attr.get("Name") == "Data Format")
-    data_format = next(data_format_attrs, {"Value": c.get("DataFormat")}).get("Value")
-
-    return c.get("ShortName", "").startswith("GEDI") and data_format == "HDF5"
-
-
-def find_gedi_collection(maap: MAAP, params: Mapping[str, str]) -> Collection:
-    """Find a GEDI collection matching search parameters.
-
-    Parameters
-    ----------
-    maap
-        MAAP client to use for searching for the collection.
-    params
-        Search parameters to use when searching for the collection.  For
-        available search parameters, see the
-        [CMR Search API documentation](https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html). # noqa: E501
-
-    Returns
-    -------
-    collection
-        First GEDI collection that matches the search parameters.
-
-    Raises
-    ------
-    ValueError
-        If the query failed, no GEDI collection was found, or multiple collections were
-        found.
-
-    Examples
-    --------
-    >>> maap = MAAP("api.maap-project.org")
-    >>> find_collection(
-    ...     maap, {"cloud_hosted": "true", "doi": "10.3334/ORNLDAAC/2056"}
-    ... )  # doctest: +SKIP
-    {'concept-id': 'C2237824918-ORNL_CLOUD', 'revision-id': '28',
-     'format': 'application/echo10+xml',
-     'Collection': {'ShortName': 'GEDI_L4A_AGB_Density_V2_1_2056', ...}}
-    """
-    if not is_gedi_collection(collection := find_collection(maap, params)):
-        raise ValueError(
-            f"Collection {collection['Collection']['ShortName']} is not a GEDI"
-            " collection, or does not contain HDF5 data files."
-        )
-
-    return collection
 
 
 def beam_filter(beams: str) -> Callable[[h5py.Group], bool]:
@@ -159,6 +121,18 @@ def check_beams_option(value: str) -> str:
     )
 
 
+def fsspec_creds() -> "FsspecAWSCredentials | None":
+    if not _aws_creds_proxy or not _aws_creds_proxy.value:
+        return None
+
+    if aws_credentials := _aws_creds_proxy.value:
+        return {
+            "key": aws_credentials["accessKeyId"],
+            "secret": aws_credentials["secretAccessKey"],
+            "token": aws_credentials["sessionToken"],
+        }
+
+
 def subset_granule(props: SubsetGranuleProps) -> Path | None | Exception:
     """Subset a granule to a GeoParquet file.
 
@@ -178,16 +152,19 @@ def subset_granule(props: SubsetGranuleProps) -> Path | None | Exception:
         "default_cache_type": "mmap",
         "default_block_size": 5 * 1024 * 1024,  # fsspec default is 5 MB
         "default_fill_cache": True,
-        "requester_pays": True,
         # Allow the caller to override the default values above.
         **props.fsspec_kwargs,
+        **(fsspec_creds() or {}),
     }
 
     fs: fsspec.AbstractFileSystem
     urlpath: str
     fs, urlpath = fsspec.url_to_fs(granule_url, **fsspec_kwargs)
 
-    with fs.open(urlpath, mode="rb") as f, h5py.File(f) as hdf5:
+    with (
+        fs.open(urlpath, mode="rb") as f,
+        h5py.File(f) as hdf5,
+    ):
         gdf = fp.safely(
             subset_hdf5,
             hdf5,
@@ -225,7 +202,9 @@ def subset_granule(props: SubsetGranuleProps) -> Path | None | Exception:
     return err if (err := fp.safely(gdf.to_parquet, outpath)) else outpath
 
 
-def init_process(logging_level: int) -> None:
+def init_process(logging_level: int, creds_proxy: ValueProxy | None = None) -> None:
+    global _aws_creds_proxy
+    _aws_creds_proxy = creds_proxy
     set_logging_level(logging_level)
 
 
@@ -280,11 +259,11 @@ def subset_granules(
         for granule_url in granule_urls
     )
 
-    logger.info(f"Subsetting on {processes} CPUs")
+    n_processes = processes or os.cpu_count() or 1
+    suffix = "" if n_processes == 1 else "es"
+    logger.info("Subsetting across %s process%s", n_processes, suffix)
 
-    with multiprocessing.get_context("spawn").Pool(
-        processes, init_process, init_args
-    ) as pool:
+    with mp.get_context("spawn").Pool(processes, init_process, init_args) as pool:
         files = tuple(
             file
             for result in pool.imap_unordered(subset_granule, payloads)
@@ -323,20 +302,6 @@ def cli(
             ),
         ),
     ],
-    lat: Annotated[
-        str,
-        typer.Option(
-            show_default=False,
-            help=("Latitude dataset used in the geometry of the dataframe"),
-        ),
-    ],
-    lon: Annotated[
-        str,
-        typer.Option(
-            show_default=False,
-            help=("Longitude dataset used in the geometry of the dataframe"),
-        ),
-    ],
     columns: Annotated[
         str,
         typer.Option(
@@ -358,6 +323,18 @@ def cli(
             readable=True,
         ),
     ],
+    lat: Annotated[
+        str,
+        typer.Option(
+            help=("Latitude dataset used in the geometry of the dataframe"),
+        ),
+    ] = "lat_lowestmode",
+    lon: Annotated[
+        str,
+        typer.Option(
+            help=("Longitude dataset used in the geometry of the dataframe"),
+        ),
+    ] = "lon_lowestmode",
     beams: Annotated[
         str,
         typer.Option(
@@ -413,8 +390,12 @@ def cli(
         ),
     ] = None,
     processes: Annotated[
-        int, typer.Option(help="Number of processes to use for parallel processing")
-    ] = (os.cpu_count() or 1),
+        int,
+        typer.Option(
+            help="Number of processes to use for parallel processing.  "
+            "A value of 0 or smaller will use 1 process per available CPU."
+        ),
+    ] = 0,
 ) -> None:
     logging_level = logging.DEBUG if verbose else logging.INFO
     set_logging_level(logging_level)
@@ -436,16 +417,15 @@ def cli(
 
     aoi_gdf = cast(gpd.GeoDataFrame, gpd.read_file(aoi))
     aoi_geometry = aoi_gdf.union_all()
-    collection_concept_id = (
-        doi
-        # Assume `doi` value is actually a collection concept ID, and thus avoid
-        # a search for the collection, since all we need is the concept ID.
-        if doi.startswith("C")
-        # Otherwise, search for collection by DOI so we can get its concept ID.
-        else find_gedi_collection(
-            maap, dict(cmr_host=cmr_host, doi=doi, cloud_hosted="true")
-        )["concept-id"]
+    collection = cmr.find_gedi_collection(
+        maap,
+        {
+            "cmr_host": cmr_host,
+            "cloud_hosted": "true",
+            **({"concept_id": doi} if doi.startswith("C") else {"doi": doi}),
+        },
     )
+    collection_concept_id = collection["concept-id"]
     granule_urls = tuple(
         url
         for granule in maap.searchGranule(
@@ -460,26 +440,42 @@ def cli(
         and (url := granule.getDownloadUrl())
     )
 
+    logger.info(
+        "Number of granules that intersect the AOI within the temporal range: %d",
+        len(granule_urls),
+    )
+
     if not granule_urls:
-        logger.info("No granules intersect the AOI within the temporal range.")
-    elif paths := subset_granules(
-        aoi_gdf,
-        lat,
-        lon,
-        beams,
-        [c.strip() for c in columns.split(",")],
-        query,
-        output_dir,
-        dest,
-        (logging_level,),
-        granule_urls,
-        fsspec_kwargs,
-        processes,
-        tolerated_failure_percentage,
-    ):
-        logger.info(f"Subset {len(paths)} granule(s) to {dest}.")
-    else:
-        logger.info(f"Empty subset: no rows satisfy the query {query!r}")
+        logger.info("Nothing to subset. Exiting.")
+        return
+
+    creds_uri = cmr.s3_credentials_api_endpoint(collection)
+
+    with aws.credentials_proxy(
+        mp.get_context("spawn"),
+        lambda: maap.aws.earthdata_s3_credentials(creds_uri),
+    ) as creds_proxy:
+        if paths := subset_granules(
+            aoi_gdf,
+            lat,
+            lon,
+            beams,
+            [c.strip() for c in columns.split(",")],
+            query,
+            output_dir,
+            dest,
+            (logging_level, creds_proxy),
+            granule_urls,
+            fsspec_kwargs,
+            # Use user-supplied value only if it is an integer greater than 0.
+            # Otherwise, use None in order to cause multiprocessing.Pool to use its
+            # default value.
+            processes if processes > 0 else None,
+            tolerated_failure_percentage,
+        ):
+            logger.info("Number of granules subsetted to %s: %d", dest, len(paths))
+        else:
+            logger.info("Empty subset: no rows satisfy the query '%s'", query)
 
 
 def main():

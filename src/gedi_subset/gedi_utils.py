@@ -425,7 +425,7 @@ def subset_hdf5(
         for name, group in hdf5.items()
         if name.startswith("BEAM") and beam_filter(group)
     )
-    beams_gdf = pd.concat(map(subset_beam, beams), ignore_index=True, copy=False)
+    beams_gdf = pd.concat(map(subset_beam, beams), ignore_index=True, copy=False)  # type: ignore
     beams_gdf.insert(0, "filename", os.path.basename(hdf5.file.filename))
 
     return cast(gpd.GeoDataFrame, beams_gdf)

@@ -4,6 +4,7 @@ class AWSCredentials(TypedDict):
     accessKeyId: str
     secretAccessKey: str
     sessionToken: str
+    expiration: str  # Example: "2026-04-09 20:38:01+00:00"
 
 class AWS:
     def __init__(

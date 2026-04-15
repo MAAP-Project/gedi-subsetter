@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add support for running in the MAAP DPS via CWL
+  ([#158](https://github.com/MAAP-Project/gedi-subsetter/issues/158))
+
+### Removed
+
+- **Breaking change:** Remove Scalene support with no planned replacement.
+  This is technically a breaking change since the algorithm no longer defines
+  a `--scalene-args` input, but end-users were not using it, so this almost
+  certainly does not cause breakage for end-users.
+
 ## [0.13.0] (2025-09-30)
 
 ### Added
