@@ -78,8 +78,3 @@ inputs:
         defaults to the number of available CPUs.
       required: false
       default: ""
-    - name: scalene_args
-      description: Arguments to pass to Scalene for memory and CPU profiling.  If not
-        provided, Scalene will not be used.
-      required: false
-      default: ""

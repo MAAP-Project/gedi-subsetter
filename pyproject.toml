@@ -52,7 +52,6 @@ typer = "*"
 
 [tool.pixi.pypi-dependencies]
 maap-py = "*"
-scalene = "*"
 
 [tool.pixi.feature.dev.dependencies]
 backoff = "*"

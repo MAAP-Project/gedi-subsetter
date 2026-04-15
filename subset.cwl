@@ -159,14 +159,6 @@ $graph:
           a value less than 1 is provided, defaults to the number of available CPUs
           available on the provisioned instance.
 
-      # scalene-args:
-      #   label: "[Advanced] Scalene Arguments"
-      #   type: string?
-      #   default: ""
-      #   doc: >-
-      #     Space-separated list of arguments to pass to Scalene for memory and CPU
-      #     profiling.  If not provided, Scalene will not be used.
-
     outputs:
       out:
         type: Directory
@@ -190,7 +182,6 @@ $graph:
           tolerated-failure-percentage: tolerated-failure-percentage
           fsspec-kwargs: fsspec-kwargs
           processes: processes
-          # scalene: scalene-args
         out:
           - outputs_result
 
@@ -289,11 +280,6 @@ $graph:
         inputBinding:
           prefix: --processes
           position: 13
-      # scalene-args:
-      #   type: string?
-      #   inputBinding:
-      #     prefix: --scalene
-      #     position: 14
 
     outputs:
       outputs_result:

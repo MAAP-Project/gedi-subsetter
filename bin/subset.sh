@@ -28,7 +28,6 @@ function normalize_args() {
 
 function normalize_keyword_args() {
     subset_args=()
-    scalene_arg=""
 
     while [[ ${#} -gt 0 ]]; do
         case "${1}" in
@@ -40,11 +39,6 @@ function normalize_keyword_args() {
                 subset_args+=("${1}" "${output_dir}/${2:-}")
                 shift 2
                 ;;
-            --scalene-args)
-                # We assume a value was given, but it can be an empty string.
-                scalene_arg="${2:-}"
-                shift 2
-                ;;
             *)
                 # Otherwise, just collect each argument as-is.
                 subset_args+=("${1}")
@@ -53,8 +47,6 @@ function normalize_keyword_args() {
         esac
     done
 
-    echo "${scalene_arg}"
-
     for arg in "${subset_args[@]}"; do
         echo "${arg}"
     done
@@ -62,7 +54,7 @@ function normalize_keyword_args() {
 
 function positional_to_keyword_args() {
     n_actual=${#}
-    n_expected=13
+    n_expected=12
 
     if test ${n_actual} -ne ${n_expected}; then
         echo "Expected ${n_expected} inputs, but got ${n_actual}:$(printf " '%b'" "$@")" >&2
@@ -100,7 +92,6 @@ function positional_to_keyword_args() {
     [[ -n "${10}" ]] && kwargs+=(--tolerated-failure-percentage "${10}")
     [[ -n "${11}" ]] && kwargs+=(--fsspec-kwargs "${11}")
     [[ -n "${12}" ]] && kwargs+=(--processes "${12}")
-    [[ -n "${13}" ]] && kwargs+=(--scalene "${13}")
 
     for kwarg in "${kwargs[@]}"; do
         echo "${kwarg}"
@@ -109,29 +100,10 @@ function positional_to_keyword_args() {
 
 function build_command() {
     args=("$@")
-    scalene_arg=${args[0]}
-    subset_args=("${args[@]:1}")
 
-    if [[ -z "${scalene_arg}" ]]; then
-        echo gedi-subset
-    else
-        IFS=' ' read -ra scalene_args <<< "${scalene_arg}"
+    echo gedi-subset
 
-        echo scalene
-        echo run
-
-        for arg in "${scalene_args[@]}"; do
-            echo "${arg}"
-        done
-
-        # Scalene doesn't recognize the installed gedi-subset command, because
-        # it expects to be able to locate the file on the file system, so we
-        # have to specify the python file directly.
-        echo "${base_dir}/src/gedi_subset/subset.py"
-        echo ---
-    fi
-
-    for arg in "${subset_args[@]}"; do
+    for arg in "${args[@]}"; do
         echo "${arg}"
     done
 }

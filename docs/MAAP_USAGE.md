@@ -275,36 +275,6 @@ optional inputs:
 
   > _Added in version 0.8.0_
 
-- `scalene-args` (_optional_; default: `--off --async`): Arguments to pass to
-  [Scalene] for performance profiling. **ADVANCED:** Normal usage should leave
-  this argument blank, meaning that Scalene will _not_ be used. This input is
-  intended only for performance profiling purposes.
-
-  When this input is supplied, the algorithm will be run via the `scalene run`
-  command for collecting performance metrics (i.e., CPU and RAM usage), and the
-  value of this input will be passed as arguments to the command. For a list of
-  available command-line options, see
-  <https://github.com/plasma-umass/scalene/blob/v2.2.1/README.md>.
-
-  If you want to use all of Scalene's default values (i.e., not specify any
-  override values), you cannot leave this input blank, otherwise Scalene will
-  not be used at all (as mentioned above).  In this case, you must supply _some_
-  value for this input.  Due to an argument-parsing limitation, at least 2
-  options must be specified, so the simplest value would be `--on --async`.
-
-  > _Added in version 0.7.0_
-
-  > _Changed in version 0.8.0_: Specifying the `--json` flag changes the name of
-  > the profile output file to `profile.json` and specifying `--cli` changes it
-  > to `profile.txt`.
-
-  > _Changed in version 0.14.0_: Scalene was upgraded from 1.x to 2.x.  The
-  > `--json` and `--cli` options are no longer available.  Scalene will always
-  > produce a `.html` and a `.json` file.  At least 2 options must be supplied
-  > (due to a system limitation).
-
-  > _Changed in version 0.14.0_: Renamed from `scalene_args` to `scalene-args`.
-
 ### Specifying an AOI
 
 If your AOI is a publicly available geoBoundary, see
@@ -694,5 +664,3 @@ administrative boundaries.  PLoS ONE 15(4): e0231866.
   https://www.geoboundaries.org
 [geoBoundaries API]:
   https://www.geoboundaries.org/api.html
-[Scalene]:
-  https://github.com/plasma-umass/scalene

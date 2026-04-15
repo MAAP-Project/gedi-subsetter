@@ -145,23 +145,6 @@ inputs:
       a value less than 1 is provided, defaults to the number of CPUs available
       on the provisioned instance.
 
-  - name: scalene-args
-    label: "[Advanced] Scalene Arguments"
-    type: string
-    default: "--off --async"
-    doc: >-
-      Space-separated list of arguments to pass to Scalene for memory and CPU
-      profiling.  See https://github.com/plasma-umass/scalene/blob/v2.2.1/README.md
-      for documentation on available arguments.
-
-      By default, Scalene will not be used, specified via the `--off` option in
-      the default input value.  To use Scalene, specify at least 2 arguments
-      (due to an argument-parsing limitation) supported by the `scalene run`
-      command.  Minimally, `--on --async` should work and should use all default
-      settings for Scalene (`--on` and `--async` are set by default when running
-      Scalene from the command line, but we must specify them explicitly here
-      due to DPS/CWL input processing limitations).
-
 outputs:
   - name: output
     type: Directory
