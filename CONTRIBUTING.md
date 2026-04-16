@@ -277,8 +277,9 @@ a new release:
 1. Create a new branch named `release-<VERSION>`, where `<VERSION>` is an
    appropriate version number for the changes being made, according to
    [Semantic Versioning].
-1. In `algorithm_config.yaml` change the value of `algorithm_version` to the
-   same value as `<VERSION>` from the previous step.
+1. In `algorithm_config.yaml` and `algorithm_config_cwl.yaml` change the value
+   of `algorithm_version` to the same value as `<VERSION>` from the previous
+   step.
 1. In the [Changelog](./CHANGELOG.md), immediately below the `Unreleased`
    heading add a new heading (at the same level) using the format
    `[<VERSION>] (<YYYY-MM-DD>)` (including the square brackets and parentheses),
