@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+## [0.14.0] (2026-04-16)
+
 ### Added
 
 - Add support for running in the MAAP DPS via CWL
@@ -284,4 +286,5 @@ The format is based on [Keep a Changelog], and this project adheres to
 [0.11.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.11.0
 [0.12.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.12.0
 [0.13.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.13.0
-[Unreleased]: https://github.com/MAAP-Project/gedi-subsetter/compare/0.13.0...HEAD
+[0.14.0]: https://github.com/MAAP-Project/gedi-subsetter/releases/tag/0.14.0
+[Unreleased]: https://github.com/MAAP-Project/gedi-subsetter/compare/0.14.0...HEAD

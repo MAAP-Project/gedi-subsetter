@@ -1,5 +1,5 @@
 algorithm_name: gedi-subset
-algorithm_version: 0.13.0
+algorithm_version: 0.14.0
 algorithm_description: >-
   Subset GEDI L1B, L2A, L2B, L4A, or L4C granules within an area of interest (AOI).
 keywords: OGC, GEDI
