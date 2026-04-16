@@ -1,4 +1,4 @@
-FROM mas.dit.maap-project.org/root/maap-workspaces/custom_images/maap_base:develop
+FROM mas.maap-project.org/root/maap-workspaces/custom_images/maap_base:v5.0.0
 
 SHELL [ "/bin/bash", "-c" ]
 
