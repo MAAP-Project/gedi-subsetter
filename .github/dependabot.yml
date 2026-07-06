@@ -17,7 +17,7 @@ updates:
     schedule:
       interval: monthly
     groups:
-      github-actions:
+      pre-commit:
         patterns:
           - "*"
     cooldown:
@@ -28,7 +28,7 @@ updates:
     schedule:
       interval: monthly
     groups:
-      github-actions:
+      python-dependencies:
         patterns:
           - "*"
     cooldown:
