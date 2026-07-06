@@ -1,0 +1,6 @@
+# GitHub Actions updates
+/.github/workflows/** @MAAP-Project/data-security
+
+# Python dependency manifests/locks
+/pyproject.toml @MAAP-Project/data-security
+/pixi.lock @MAAP-Project/data-security
