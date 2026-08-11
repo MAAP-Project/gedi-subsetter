@@ -4,3 +4,4 @@
 # Python dependency manifests/locks
 /pyproject.toml @MAAP-Project/data-security
 /pixi.lock @MAAP-Project/data-security
+/.pre-commit-config.yaml @MAAP-Project/data-security
